@@ -1,0 +1,19 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]ser[Ss]ettings/
+[Ss]ysroot/
+*.csproj
+*.sln
+*.user
+*.unitypackage
+.vs/
+.idea/
+*.swp
+# Кэш Addressables
+[Aa]ssets/**/AddressableAssetsData/*/*.bin*
