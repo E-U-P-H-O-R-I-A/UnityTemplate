@@ -18,5 +18,12 @@
         //public const string Locations = "LocationUpgrades.asset";
         //public const string WorkstationUpgradeConfig = "WorkstationLevelConfig.asset";
         
+        //Scenes
+        public const string MAIN_SCENE = "MainScene";
+        public const string LOADING_SCENE = "LoadingScene";
+        
+        //Infrastructure
+        public const string GAMEBOOTSTRAPPER = "Infrastructure/GameBootstrapper";
+        public const string COROUTINE_RUNNER = "Infrastructure/CoroutineRunner";
     }
 }

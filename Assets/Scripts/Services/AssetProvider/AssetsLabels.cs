@@ -7,4 +7,4 @@ namespace CodeBase.Infrastructure.AssetManagement
         //public const string GameplayState = "GameplayState";
         //public const string ObjectPool = "PoolableObject";
     }
-}
+}  
