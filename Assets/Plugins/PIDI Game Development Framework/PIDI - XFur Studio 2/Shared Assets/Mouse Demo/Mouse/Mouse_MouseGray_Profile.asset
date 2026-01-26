@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6075f16cad504384da2ecc08dbfbbaaa, type: 3}
+  m_Name: Mouse_MouseGray_Profile
+  m_EditorClassIdentifier: 
+  FurTemplate:
+    DoubleSided: 0
+    ProbeUse: 1
+    FurLength: 0.12
+    FurThickness: 0.48
+    FurThicknessCurve: 0.31
+    FurOcclusion: 0.98
+    FurOcclusionCurve: 0.34
+    FurRimPower: 3.25
+    FurSmoothness: 0.2
+    FurStrandsAsset: {fileID: 11400000, guid: 2cb1919df50ef8b4f801a712277cacb0, type: 2}
+    FurColorVariation: {fileID: 0}
+    FurMainTint: {r: 0.745283, g: 0.71692216, b: 0.6784888, a: 1}
+    FurColorA: {r: 1, g: 1, b: 1, a: 1}
+    FurColorB: {r: 1, g: 1, b: 1, a: 1}
+    FurColorC: {r: 1, g: 1, b: 1, a: 1}
+    FurColorD: {r: 1, g: 1, b: 1, a: 1}
+    FurShadowsTint: {r: 0.12973465, g: 0.11865363, b: 0.11865363, a: 1}
+    FurRim: {r: 0.3962264, g: 0.32594034, b: 0.20745817, a: 1}
+    ReceiveShadows: 1
+    CastShadows: 1
+    FurSamples: 30
+    FurUVTiling: 20
+    FurColorMap: {fileID: 2800000, guid: 9d4a68218f559bd46be27a3eb5db82b8, type: 3}
+    FurData0: {fileID: 2800000, guid: 0a90f9b14add8ce45a07e93781207ea4, type: 3}
+    FurData1: {fileID: 2800000, guid: e533ab852bcf3cf459a36cea2e4e07c8, type: 3}
+    SelfWindStrength: 0
+    SkinColorMap: {fileID: 0}
+    SkinNormalMap: {fileID: 0}
+    SkinColor: {r: 1, g: 1, b: 1, a: 1}
+    SkinSmoothness: 0.3
