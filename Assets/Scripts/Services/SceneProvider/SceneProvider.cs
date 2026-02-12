@@ -9,9 +9,9 @@ namespace Services.SceneProvider
 {
     public class SceneProvider : ISceneProvider
     {
-        private ILogService _log;
+        private ILogService logService;
 
-        public SceneProvider(ILogService log) => _log = log;
+        public SceneProvider(ILogService logService) => this.logService = logService;
 
         public async UniTask Load(string sceneName)
         {
@@ -20,7 +20,7 @@ namespace Services.SceneProvider
             await handler.ToUniTask();
             await handler.Result.ActivateAsync().ToUniTask();
             
-            _log.Log($"Loaded scene '{sceneName}'.");
+            logService.Log($"Loaded scene '{sceneName}'.");
         }
     }
 }

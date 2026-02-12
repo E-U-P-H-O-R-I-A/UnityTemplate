@@ -1,32 +1,31 @@
 using Cysharp.Threading.Tasks;
 using Services.AssetProvider;
 using UnityEngine;
-using Zenject;
+using VContainer;
+using VContainer.Unity;
 
 namespace Utility.Factory
 {
     public class Factory : IFactory
     {
-        private readonly DiContainer diContainer;
-        private readonly IInstantiator instantiator;
+        private readonly IObjectResolver resolver;
         private readonly IAssetsProvider assetsProvider;
 
-        public Factory(DiContainer diContainer, IInstantiator instantiator, IAssetsProvider assetsProvider)
+        public Factory(IObjectResolver resolver, IAssetsProvider assetsProvider)
         {
-            this.diContainer = diContainer;
-            this.instantiator = instantiator;
+            this.resolver = resolver;
             this.assetsProvider = assetsProvider;
         }
 
         public TObject Create<TObject>() => 
-            instantiator.Instantiate<TObject>();
+            resolver.Resolve<TObject>();
 
         public async UniTask<TObject> CreateFromAssets<TObject>(string key)
         {
             var prefab = await assetsProvider.Load<GameObject>(key);
 
-            return diContainer
-                .InstantiatePrefab(prefab)
+            return resolver
+                .Instantiate(prefab)
                 .GetComponent<TObject>();
         }
     }
