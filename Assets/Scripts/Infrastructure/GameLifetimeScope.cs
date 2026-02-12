@@ -2,8 +2,8 @@ using Infrastructure.States;
 using Services.AssetProvider;
 using Services.LogService;
 using Services.SceneProvider;
+using Utility.CoroutineRunner;
 using Utility.Factory;
-using Utility.StateMachine;
 using VContainer; 
 using VContainer.Unity;
 
@@ -15,7 +15,9 @@ namespace Infrastructure
         {
             // --- Infrastructure ---
             builder.RegisterEntryPoint<GameBootstrapper>();
+            
             builder.Register<GameStateMachine>(Lifetime.Singleton);
+            builder.RegisterComponentOnNewGameObject<CoroutineRunner>(Lifetime.Singleton).As<ICoroutineRunner>();
             
             // --- Services ---
             builder.Register<AssetsProvider>(Lifetime.Singleton).As<IAssetsProvider>();
