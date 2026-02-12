@@ -1,7 +1,5 @@
-using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
 using Services.LogService;
-using Services.SceneProvider;
 using Utility.StateMachine;
 
 namespace Infrastructure.States
@@ -9,14 +7,11 @@ namespace Infrastructure.States
     public class GameLoadingState : IState
     {
         private readonly GameStateMachine gameStateMachine;
-        private readonly ISceneProvider sceneProvider;
         private readonly ILogService logService;
 
-        public GameLoadingState(GameStateMachine gameStateMachine, ISceneProvider sceneProvider, 
-            ILogService logService)
+        public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService)
         {
             this.gameStateMachine = gameStateMachine;
-            this.sceneProvider = sceneProvider;
             this.logService = logService;
         }
         
