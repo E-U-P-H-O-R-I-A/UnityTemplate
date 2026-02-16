@@ -1,6 +1,7 @@
 using Infrastructure.States;
 using Services.AssetProvider;
 using Services.LogService;
+using Services.Provider.Public;
 using Services.SceneProvider;
 using Utility.CoroutineRunner;
 using Utility.Factory;
@@ -20,11 +21,12 @@ namespace Infrastructure
             builder.RegisterComponentOnNewGameObject<CoroutineRunner>(Lifetime.Singleton).As<ICoroutineRunner>();
             
             // --- Services ---
+            builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
             builder.Register<AssetsProvider>(Lifetime.Singleton).As<IAssetsProvider>();
             builder.Register<SceneProvider>(Lifetime.Singleton).As<ISceneProvider>();
             builder.Register<LogService>(Lifetime.Singleton).As<ILogService>();
             builder.Register<Factory>(Lifetime.Singleton).As<IFactory>();
-            
+
             // --- Game states ---
             builder.Register<GameBootstrapState>(Lifetime.Singleton);
             builder.Register<GameLoadingState>(Lifetime.Singleton);

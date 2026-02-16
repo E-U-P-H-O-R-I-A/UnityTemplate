@@ -5,14 +5,19 @@ using UnityEngine;
 
 namespace Data.Model
 {
-    public abstract class BasePublicModel<TScheme> : ScriptableObject where TScheme : BasePublicScheme
+    public abstract class BasePublicModel<TScheme> : IPublicModel where TScheme : BasePublicScheme
     {
-        protected abstract List<TScheme> Schemes { get; }
+        [SerializeField] private List<TScheme> schemes;
+        
+        public List<string> GetAllId()
+        {
+            return schemes.Select(scheme => scheme.ID).ToList();
+        }
             
         public bool GetScheme(string id, out TScheme scheme)
         {
-            scheme = Schemes.FirstOrDefault(scheme => scheme.ID == id);
-            return scheme == null;
+            scheme = schemes.FirstOrDefault(scheme => scheme.ID == id);
+            return scheme != null;
         }
     }
 }

@@ -6,6 +6,8 @@ namespace Data.Scheme.Public
     [Serializable]
     public class CurrencyPublicScheme : BasePublicScheme
     {
-        [SerializeField] private string currencyType;
+        [SerializeField] private Sprite sprite;
+
+        public Sprite Sprite => sprite;
     }
 }

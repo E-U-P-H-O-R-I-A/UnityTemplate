@@ -12,3 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fbf222712df4cd4badb1fe9992aa366, type: 3}
   m_Name: New Currency Public Model
   m_EditorClassIdentifier: Assembly-CSharp::Data.Model.Public.CurrencyPublicModel
+  schemes:
+  - id: Soft
+    sprite: {fileID: 21300002, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
+  - id: Hard
+    sprite: {fileID: 21300000, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
