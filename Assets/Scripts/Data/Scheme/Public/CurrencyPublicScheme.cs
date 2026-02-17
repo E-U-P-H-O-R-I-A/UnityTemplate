@@ -16,6 +16,6 @@ namespace Data.Scheme.Public
         [SerializeField] private Sprite sprite;
         
         public Sprite Sprite => sprite;
-        public override string ID => ((int)type).ToString();
+        public override int ID => (int)type;
     }
 }

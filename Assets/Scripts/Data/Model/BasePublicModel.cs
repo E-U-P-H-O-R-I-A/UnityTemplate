@@ -11,7 +11,7 @@ namespace Data.Model
         
         public IReadOnlyList<TScheme> Schemes => schemes;
             
-        public TScheme GetScheme(string id)
+        public TScheme GetScheme(int id)
         {
             return schemes.FirstOrDefault(scheme => scheme.ID == id);;
         }
