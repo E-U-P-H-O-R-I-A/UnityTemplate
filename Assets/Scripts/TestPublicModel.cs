@@ -11,7 +11,7 @@ namespace DefaultNamespace
 {
     public class TestPublicModel : MonoBehaviour
     {
-        [SerializeField] private string id;
+        [SerializeField] private CurrencyType type;
         [SerializeField] private Image spriteRenderer;
 
         private IPublicModelProvider publicModelProvider;
@@ -25,9 +25,9 @@ namespace DefaultNamespace
         [Button]
         public void UpdateIcon()
         {
-            if (publicModelProvider.GetModel(CurrencyPublicModel.ID, out IPublicModel model))
+            if (publicModelProvider.GetModel(out CurrencyPublicModel model))
             {
-                if (((CurrencyPublicModel)model).GetScheme(id, out CurrencyPublicScheme scheme))
+                if (model.GetScheme(type.ToString(), out CurrencyPublicScheme scheme))
                 {
                     spriteRenderer.sprite = scheme.Sprite;
                 }

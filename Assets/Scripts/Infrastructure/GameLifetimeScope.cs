@@ -31,6 +31,8 @@ namespace Infrastructure
             builder.Register<GameBootstrapState>(Lifetime.Singleton);
             builder.Register<GameLoadingState>(Lifetime.Singleton);
             builder.Register<GameplayState>(Lifetime.Singleton);
+            
+            DontDestroyOnLoad(this);
         }
     }
 }

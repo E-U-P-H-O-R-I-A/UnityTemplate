@@ -1,17 +1,19 @@
+using Data.Scheme.Public;
+
 namespace Data.Scheme.Private
 {
     public class CurrencyPrivateScheme : BasePrivateScheme
     {
-        private string id;
+        private CurrencyType type;
 
         private int value;
 
         public int Value => value;
-        public override string ID => id;
+        public override string ID => type.ToString();
 
-        public CurrencyPrivateScheme(string id, int value = 0)
+        public CurrencyPrivateScheme(CurrencyType type, int value = 0)
         {
-            this.id = id;
+            this.type = type;
             this.value = value;
         }
 
