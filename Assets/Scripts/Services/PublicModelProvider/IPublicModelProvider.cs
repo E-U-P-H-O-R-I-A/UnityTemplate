@@ -5,6 +5,6 @@ namespace Services.Provider.Public
     public interface IPublicModelProvider : IService
     {
         public void Init();
-        public bool GetModel<TModel>(out TModel model) where TModel : IPublicModel;
+        public bool GetModel<TModel>(out TModel model) where TModel : BasePublicModel;
     }
 }
