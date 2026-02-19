@@ -1,12 +1,14 @@
+using System;
 using Data.Scheme.Public;
+using UnityEngine;
 
 namespace Data.Scheme.Private
 {
+    [Serializable]
     public class CurrencyPrivateScheme : BasePrivateScheme
     {
-        private int type;
-
-        private int value;
+        [SerializeField] private int type;
+        [SerializeField] private int value;
 
         public int Value => value;
         public override int ID => type;

@@ -21,6 +21,7 @@ namespace Infrastructure
             builder.RegisterComponentOnNewGameObject<CoroutineRunner>(Lifetime.Singleton).As<ICoroutineRunner>();
             
             // --- Services ---
+            builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
             builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
             builder.Register<AssetsProvider>(Lifetime.Singleton).As<IAssetsProvider>();
             builder.Register<SceneProvider>(Lifetime.Singleton).As<ISceneProvider>();

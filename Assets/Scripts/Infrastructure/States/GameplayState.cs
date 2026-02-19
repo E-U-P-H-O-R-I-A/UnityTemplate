@@ -1,7 +1,10 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
+using Data.Model;
+using Data.Scheme.Public;
 using Services.LogService;
 using Services.SceneProvider;
+using UnityEngine;
 using Utility.StateMachine;
 
 namespace Infrastructure.States
