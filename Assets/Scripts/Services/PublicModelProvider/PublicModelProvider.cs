@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
 using Data.Model;
@@ -18,10 +19,12 @@ namespace Services.PublicModelProvider
             this.assetsProvider = assetsProvider;
         }
         
-        public async UniTask Init()
+        public async UniTask Init(CancellationToken ct = default)
         {
             var keys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
+            ct.ThrowIfCancellationRequested();
             var loaded = await assetsProvider.LoadAll<IPublicModel>(keys);
+            ct.ThrowIfCancellationRequested();
             
             models = loaded
                 .Where(m => m != null)

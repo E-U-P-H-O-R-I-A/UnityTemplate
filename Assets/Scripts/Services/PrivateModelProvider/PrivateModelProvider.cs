@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Data.Model;
 using UnityEngine;
 
@@ -13,39 +15,50 @@ namespace Services.PrivateModelProvider
     
         private readonly Dictionary<Type, IPrivateModel> models = new();
     
-        public void Init()
+        public async UniTask Init(CancellationToken ct = default)
         {
             models.Clear();
-        
+
             var modelTypes = FindPrivateModelTypes();
-        
+
             foreach (var t in modelTypes)
             {
+                ct.ThrowIfCancellationRequested();
+                
                 try
                 {
                     var instance = (IPrivateModel)Activator.CreateInstance(t);
                     models[t] = instance;
 
                     var path = GetPathForType(t);
+
                     if (File.Exists(path))
                     {
-                        var json = File.ReadAllText(path);
+                        var json = await File.ReadAllTextAsync(path, ct);
                         instance.ImportFromJson(json);
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
                     Debug.LogError($"[PrivateModelProvider] Failed to init model {t.FullName}: {e}");
                 }
+                
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
         }
 
-        public void SaveAll()
+        public async UniTask SaveAll(CancellationToken ct = default)
         {
             EnsureFolder();
 
-            foreach (var kv in models)
+            foreach (var kv in models.ToArray())
             {
+                ct.ThrowIfCancellationRequested();
+                
                 try
                 {
                     var type = kv.Key;
@@ -54,16 +67,22 @@ namespace Services.PrivateModelProvider
                     var json = model.ExportToJson();
                     var path = GetPathForType(type);
 
-                    File.WriteAllText(path, json);
+                    await File.WriteAllTextAsync(path, json, ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
                     Debug.LogError($"[PrivateModelProvider] Failed to save model {kv.Key.FullName}: {e}");
                 }
+                
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
         }
 
-        public void SaveModel<TModel>() where TModel : IPrivateModel
+        public async UniTask SaveModel<TModel>(CancellationToken ct = default) where TModel : IPrivateModel
         {
             var m = GetModel<TModel>();
             if (m == null)
@@ -77,7 +96,11 @@ namespace Services.PrivateModelProvider
                 var json = m.ExportToJson();
                 var path = GetPathForType(type);
 
-                File.WriteAllText(path, json);
+                await File.WriteAllTextAsync(path, json, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception e)
             {

@@ -26,9 +26,8 @@ namespace Infrastructure.States
         {
             logService.Log("GameLoadingState Enter");
 
-            privateModelProvider.Init();
-            
             await publicModelProvider.Init();
+            await privateModelProvider.Init();
 
             gameStateMachine.Enter<GameplayState>();
         }

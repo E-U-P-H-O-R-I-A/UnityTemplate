@@ -1,12 +1,14 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Data.Model;
 
 namespace Services.PrivateModelProvider
 {
     public interface IPrivateModelProvider : IService
     {
-        public void Init();
-        public void SaveAll();
-        public void SaveModel<TModel>() where TModel : IPrivateModel;
+        public UniTask Init(CancellationToken ct = default);
+        public UniTask SaveAll(CancellationToken ct = default);
+        public UniTask SaveModel<TModel>(CancellationToken ct = default) where TModel : IPrivateModel;
         public TModel GetModel<TModel>() where TModel : IPrivateModel;
     }
 }
