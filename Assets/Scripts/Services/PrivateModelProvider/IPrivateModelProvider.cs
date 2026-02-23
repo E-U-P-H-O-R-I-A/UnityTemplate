@@ -1,6 +1,6 @@
 using Data.Model;
 
-namespace Services.Provider.Public
+namespace Services.PrivateModelProvider
 {
     public interface IPrivateModelProvider : IService
     {

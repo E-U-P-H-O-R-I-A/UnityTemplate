@@ -1,7 +1,8 @@
 using Infrastructure.States;
 using Services.AssetProvider;
 using Services.LogService;
-using Services.Provider.Public;
+using Services.PrivateModelProvider;
+using Services.PublicModelProvider;
 using Services.SceneProvider;
 using Utility.CoroutineRunner;
 using Utility.Factory;

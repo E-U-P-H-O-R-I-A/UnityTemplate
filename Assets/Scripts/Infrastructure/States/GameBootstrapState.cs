@@ -19,7 +19,7 @@ namespace Infrastructure.States
         {
             logService.Log("GameBootstrapState Enter");
             
-            gameStateMachine.Enter<GameLoadingState>().Forget();
+            gameStateMachine.Enter<GameLoadingState>();
         }
         
         public async UniTask Exit()

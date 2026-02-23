@@ -1,20 +1,30 @@
 using System.Collections.Generic;
 using System.Linq;
+using CodeBase.Infrastructure.AssetManagement;
+using Cysharp.Threading.Tasks;
 using Data.Model;
-using UnityEngine;
+using Services.AssetProvider;
 
-namespace Services.Provider.Public
+namespace Services.PublicModelProvider
 {
     public class PublicModelProvider : IPublicModelProvider
     {
+        private readonly IAssetsProvider assetsProvider;
+        
         private Dictionary<System.Type, IPublicModel> models = new();
 
-        public void Init()
+        public PublicModelProvider(IAssetsProvider assetsProvider)
         {
-            var loaded = Resources.LoadAll<ScriptableObject>("Data");
-
+            this.assetsProvider = assetsProvider;
+        }
+        
+        public async UniTask Init()
+        {
+            var keys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
+            var loaded = await assetsProvider.LoadAll<IPublicModel>(keys);
+            
             models = loaded
-                .OfType<IPublicModel>()     
+                .Where(m => m != null)
                 .GroupBy(m => m.GetType())
                 .ToDictionary(g => g.Key, g => g.First());
         }

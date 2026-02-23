@@ -1,10 +1,7 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
-using Data.Model;
-using Data.Scheme.Public;
 using Services.LogService;
 using Services.SceneProvider;
-using UnityEngine;
 using Utility.StateMachine;
 
 namespace Infrastructure.States
@@ -14,10 +11,9 @@ namespace Infrastructure.States
         private readonly ILogService logService;
         private readonly ISceneProvider sceneProvider;
 
-        public GameplayState(ILogService logService, ISceneProvider sceneProvider)
+        public GameplayState(ILogService logService)
         {
             this.logService = logService;
-            this.sceneProvider = sceneProvider;
         }
 
         public async UniTask Enter()

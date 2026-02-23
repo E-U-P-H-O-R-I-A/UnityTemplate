@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using Services.LogService;
-using Services.Provider.Public;
+using Services.PrivateModelProvider;
+using Services.PublicModelProvider;
 using Utility.StateMachine;
 
 namespace Infrastructure.States
@@ -26,9 +27,10 @@ namespace Infrastructure.States
             logService.Log("GameLoadingState Enter");
 
             privateModelProvider.Init();
-            publicModelProvider.Init();
+            
+            await publicModelProvider.Init();
 
-            gameStateMachine.Enter<GameplayState>().Forget();
+            gameStateMachine.Enter<GameplayState>();
         }
 
         public async UniTask Exit()
