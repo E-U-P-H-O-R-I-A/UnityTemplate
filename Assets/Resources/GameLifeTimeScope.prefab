@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6878785848675361357}
   - component: {fileID: 7455479556625790735}
   m_Layer: 0
-  m_Name: GameLifetimeScope
+  m_Name: GameLifeTimeScope
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -48,3 +48,4 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  loadingCurtain: {fileID: 0}
