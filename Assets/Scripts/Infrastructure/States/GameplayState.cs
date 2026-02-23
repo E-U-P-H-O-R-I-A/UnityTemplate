@@ -11,9 +11,10 @@ namespace Infrastructure.States
         private readonly ILogService logService;
         private readonly ISceneProvider sceneProvider;
 
-        public GameplayState(ILogService logService)
+        public GameplayState(ILogService logService, ISceneProvider sceneProvider)
         {
             this.logService = logService;
+            this.sceneProvider = sceneProvider;
         }
 
         public async UniTask Enter()
