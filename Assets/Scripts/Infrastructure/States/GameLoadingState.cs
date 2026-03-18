@@ -1,5 +1,6 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
+using Services.CurrencyService;
 using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
@@ -14,13 +15,16 @@ namespace Infrastructure.States
         private readonly IPrivateModelProvider privateModelProvider;
         private readonly IPublicModelProvider publicModelProvider;
         private readonly GameStateMachine gameStateMachine;
+        private readonly ICurrencyService currencyService;
         private readonly ILoadingCurtain loadingCurtain;
         private readonly ISceneProvider sceneProvider;
         private readonly ILogService logService;
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
-            IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider)
+            IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider, 
+            ICurrencyService currencyService)
         {
+            this.currencyService = currencyService;
             this.privateModelProvider = privateModelProvider;
             this.publicModelProvider = publicModelProvider;
             this.gameStateMachine = gameStateMachine;
@@ -34,12 +38,14 @@ namespace Infrastructure.States
             logService.Log("GameLoadingState Enter");
             
             loadingCurtain.Show();
-
+            
             var publicDataTask = publicModelProvider.Init();
             await loadingCurtain.AnimatePhase(publicDataTask, 0.20f);
 
             var privateDataTask = privateModelProvider.Init();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
+            
+            currencyService.Init();
             
             var loadSceneTask = sceneProvider.Load(AssetsPath.MAIN_SCENE);
             await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
