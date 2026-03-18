@@ -1,0 +1,143 @@
+fileFormatVersion: 2
+guid: 7d795e2cf0b55d24c83f751403ca670c
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: Ear_L
+    100002: Ear_L_end
+    100004: Ear_R
+    100006: Ear_R_end
+    100008: Head
+    100010: //RootNode
+    100012: Root
+    100014: Root_end
+    100016: Spine1
+    100018: Spine2
+    100020: Tail
+    100022: Tail1
+    100024: Tail2
+    100026: Tail3
+    100028: Tail3_end
+    100030: Armature
+    100032: Mouse
+    400000: Ear_L
+    400002: Ear_L_end
+    400004: Ear_R
+    400006: Ear_R_end
+    400008: Head
+    400010: //RootNode
+    400012: Root
+    400014: Root_end
+    400016: Spine1
+    400018: Spine2
+    400020: Tail
+    400022: Tail1
+    400024: Tail2
+    400026: Tail3
+    400028: Tail3_end
+    400030: Armature
+    400032: Mouse
+    2100000: MouseGray
+    2100002: BlackSmooth
+    2300000: Mouse
+    3300000: Mouse
+    4300000: Mouse
+    9500000: //RootNode
+    13700000: Mouse
+    2186277476908879412: ImportLogs
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlackSmooth
+    second: {fileID: 2100000, guid: 773a224b7952ff44eafd7f2454ce4d05, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MouseGray
+    second: {fileID: 2100000, guid: e177ea9b9f8283343a25b0a896bac7d1, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    importVisibility: 0
+    importBlendShapes: 0
+    importCameras: 0
+    importLights: 0
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 0
+    normalSmoothingSource: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

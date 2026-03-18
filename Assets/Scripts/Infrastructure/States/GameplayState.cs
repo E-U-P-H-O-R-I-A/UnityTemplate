@@ -9,19 +9,15 @@ namespace Infrastructure.States
     public class GameplayState : IState
     {
         private readonly ILogService logService;
-        private readonly ISceneProvider sceneProvider;
 
-        public GameplayState(ILogService logService, ISceneProvider sceneProvider)
+        public GameplayState(ILogService logService)
         {
             this.logService = logService;
-            this.sceneProvider = sceneProvider;
         }
 
         public async UniTask Enter()
         {
             logService.Log("GamePlayState Enter");
-            
-            await sceneProvider.Load(AssetsPath.MAIN_SCENE);
         }
         
         public async UniTask Exit()

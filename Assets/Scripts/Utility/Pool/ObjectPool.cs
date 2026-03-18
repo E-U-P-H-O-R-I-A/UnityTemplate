@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Services.AssetProvider;
 using UnityEngine;
-using Zenject;
+using VContainer;
+using VContainer.Unity;
 using Object = UnityEngine.Object;
 
 namespace Utility.Pool
 {
     public abstract class ObjectPool<T> : IObjectPool<T> where T : Component, IPoolableObject
     {
-        private readonly DiContainer container;
+        private readonly IObjectResolver resolver;
         private readonly IAssetsProvider assetsProvider;
 
         private readonly Dictionary<T, Queue<T>> pools = new();
@@ -18,10 +19,10 @@ namespace Utility.Pool
 
         protected Func<T, UniTask<T>> CreateObjectFunc;
 
-        public ObjectPool(IAssetsProvider assetsProvider, DiContainer container)
+        public ObjectPool(IAssetsProvider assetsProvider, IObjectResolver  resolver)
         {
             this.assetsProvider = assetsProvider;
-            this.container = container;
+            this.resolver = resolver;
 
             CreateObjectFunc = CreateObject;
         }
@@ -90,7 +91,7 @@ namespace Utility.Pool
 
         private UniTask<T> CreateObject(T prefab)
         {
-            T newInstance = container.InstantiatePrefabForComponent<T>(prefab);
+            T newInstance = resolver.Instantiate(prefab);
             return UniTask.FromResult(newInstance);
         }
     }
