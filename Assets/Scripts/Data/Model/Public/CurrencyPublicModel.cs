@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Data.Model.Public
 {
-    [CreateAssetMenu(menuName = "Schemes/Currency")]
+    [CreateAssetMenu(menuName = "Models/Currency")]
     public class CurrencyPublicModel : BasePublicModel<CurrencyPublicScheme>
     {
     }

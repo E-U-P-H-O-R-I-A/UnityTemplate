@@ -15,11 +15,25 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: c5f80d917dcd77843bb20fba006d45ab
   m_SerializeEntries:
+  - m_GUID: 2ff7ccaabea04624493da9ae23e6a2f7
+    m_Address: LevelMaterialPublicModel
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data
+    - LevelEditorMaterials
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 63f5153d85d702947a23b39f2239413b
     m_Address: Data
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 967df5f26fe8f334ba389cc4c4d1a48f
+    m_Address: LevelElementsPublicModel
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data
+    - LevelEditorElements
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fc0d4010bbf28b4594072e72b8655ab
     m_Address: MainScene
