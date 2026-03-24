@@ -6,5 +6,7 @@ namespace Data.Scheme
     public abstract class BasePublicScheme : IScheme
     {
         public abstract int ID { get; }
+        
+        public abstract string StringID { get; }
     }
 }

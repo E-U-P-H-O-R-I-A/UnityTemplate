@@ -128,7 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1307951306}
-  - component: {fileID: 1307951305}
+  - component: {fileID: 1307951307}
   m_Layer: 0
   m_Name: GridEditor
   m_TagString: Untagged
@@ -136,25 +136,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1307951305
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1307951304}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e2e2aece41742afa515f2f18cd61423, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Utility.GridEditor.GridEditor
-  weight: 10
-  height: 10
-  shiftX: 0
-  shiftY: 0
-  typeCell: Assets/Resources/Cells/Ground
-  styleCell: {fileID: 5685835025532787050, guid: 5327c8a3204221f4cabc16df7b7d6d9f, type: 3}
-  test: {x: 0, y: 0}
 --- !u!4 &1307951306
 Transform:
   m_ObjectHideFlags: 0
@@ -170,6 +151,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1307951307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307951304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6255db3ca74846f8b7873ca9cd1e682f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Utility.LevelEditor.LevelEditor
+  instrumentType: 0
+  brush:
+    typeLevelElement: 2
+    styleLevelElement: {fileID: 0}
+    materialLevelElement: {fileID: 0}
+  palette:
+    materialLevelElement: {fileID: 0}
+  weight: 0
+  height: 0
+  shiftX: 0
+  shiftY: 0
+  typeLevelElement: 2
+  styleLevelElement: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
