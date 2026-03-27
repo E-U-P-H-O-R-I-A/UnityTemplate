@@ -9,9 +9,12 @@ namespace Services.SceneProvider
 {
     public class SceneProvider : ISceneProvider
     {
-        private ILogService logService;
+        private readonly ILogService logService;
 
-        public SceneProvider(ILogService logService) => this.logService = logService;
+        public SceneProvider(ILogService logService)
+        {
+            this.logService = logService;
+        }
 
         public async UniTask Load(string sceneName)
         {

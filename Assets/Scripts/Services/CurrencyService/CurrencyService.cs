@@ -2,18 +2,22 @@ using Data.Model.Private;
 using Data.Scheme.Private;
 using Data.Scheme.Public;
 using Services.PrivateModelProvider;
-using VContainer;
 
 namespace Services.CurrencyService
 {
     public class CurrencyService : ICurrencyService
     {
-        [Inject] public IPrivateModelProvider PrivateModelProvider { get; set; }
-
+        private readonly IPrivateModelProvider privateModelProvider;
+        
         private CurrencyPrivateModel currencyPrivateModel;
 
+        public CurrencyService(IPrivateModelProvider privateModelProvider)
+        {
+            this.privateModelProvider = privateModelProvider;
+        }
+
         public void Init() => 
-            currencyPrivateModel = PrivateModelProvider.GetModel<CurrencyPrivateModel>();
+            currencyPrivateModel = privateModelProvider.GetModel<CurrencyPrivateModel>();
 
         public int GetAmountCurrency(CurrencyType currencyType) => 
             GetScheme(currencyType).Value;
@@ -34,7 +38,7 @@ namespace Services.CurrencyService
         }
 
         private void Save() => 
-            PrivateModelProvider.SaveModel<CurrencyPrivateModel>();
+            privateModelProvider.SaveModel<CurrencyPrivateModel>();
 
         private CurrencyPrivateScheme GetScheme(CurrencyType currencyType) => 
             currencyPrivateModel.GetScheme((int)currencyType);
