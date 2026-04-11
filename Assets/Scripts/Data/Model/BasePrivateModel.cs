@@ -10,7 +10,7 @@ namespace Data.Model
     {
         private readonly List<TScheme> schemes = new();
         
-        public TScheme GetScheme(int id)
+        public TScheme GetScheme(string id)
         {
             var scheme = schemes.FirstOrDefault(s => s.ID == id);
 
@@ -71,6 +71,6 @@ namespace Data.Model
             }
         }
         
-        protected abstract TScheme CreateSchemeById(int id);
+        protected abstract TScheme CreateSchemeById(string id);
     }
 }

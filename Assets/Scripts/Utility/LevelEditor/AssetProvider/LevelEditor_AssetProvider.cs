@@ -29,17 +29,17 @@ namespace Utility.LevelEditor
         private IEnumerable<ValueDropdownItem<LevelElement>> GetElementsList() =>
             GetElementsByType(typeLevelElement);
 
-        private int GetElementID(LevelElement element) =>
+        private string GetElementID(LevelElement element) =>
             elementsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.Prefab == element).ID;
+                .FirstOrDefault(scheme => scheme != null && scheme.Prefab == element)?.ID ?? string.Empty;
 
-        private int GetMaterialID(Material material) =>
+        private string GetMaterialID(Material material) =>
             materialsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.Material == material).ID;
+                .FirstOrDefault(scheme => scheme != null && scheme.Material == material)?.ID ?? string.Empty;
         
-        private LevelElement GetElementPrefabByID(int elementID)
+        private LevelElement GetElementPrefabByID(string elementID)
         {
-            if (elementsPublicModel?.Schemes == null)
+            if (elementsPublicModel?.Schemes == null || string.IsNullOrEmpty(elementID))
                 return null;
 
             return elementsPublicModel.Schemes
@@ -47,9 +47,9 @@ namespace Utility.LevelEditor
                 ?.Prefab;
         }
 
-        private Material GetMaterialByID(int materialID)
+        private Material GetMaterialByID(string materialID)
         {
-            if (materialsPublicModel?.Schemes == null)
+            if (materialsPublicModel?.Schemes == null || string.IsNullOrEmpty(materialID))
                 return null;
 
             return materialsPublicModel.Schemes
@@ -64,7 +64,7 @@ namespace Utility.LevelEditor
 
             return elementsPublicModel.Schemes
                 .Where(scheme => scheme.LevelElementType == type)
-                .Select(scheme => new ValueDropdownItem<LevelElement>(scheme.StringID, scheme.Prefab));
+                .Select(scheme => new ValueDropdownItem<LevelElement>(scheme.ID, scheme.Prefab));
         }
 
         private IEnumerable<ValueDropdownItem<Material>> GetMaterials()
@@ -74,7 +74,7 @@ namespace Utility.LevelEditor
 
             return materialsPublicModel.Schemes
                 .Where(scheme => scheme != null && scheme.Material != null)
-                .Select(scheme => new ValueDropdownItem<Material>(scheme.StringID, scheme.Material));
+                .Select(scheme => new ValueDropdownItem<Material>(scheme.ID, scheme.Material));
         }
     }
 }

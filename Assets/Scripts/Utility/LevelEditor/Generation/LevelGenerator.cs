@@ -7,7 +7,7 @@ namespace Utility.LevelEditor
     {
         public static Level Generate(
             Level level,
-            int elementID,
+            string elementID,
             LevelElement styleLevelElement,
             int width,
             int height,

@@ -6,8 +6,8 @@ namespace Utility.LevelEditor
     [Serializable]
     public class LevelElementSaveData
     {
-        public int ElementID;
-        public int MaterialID;
+        public string ElementID;
+        public string MaterialID;
         public Vector3 Position;
         public Vector3 Rotation;
         public Vector3 Scale;

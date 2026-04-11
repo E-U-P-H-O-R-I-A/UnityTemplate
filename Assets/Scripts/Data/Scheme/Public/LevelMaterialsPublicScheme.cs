@@ -6,12 +6,11 @@ namespace Data.Scheme.Public
     [Serializable]
     public class LevelMaterialsPublicScheme : BasePublicScheme
     {
-        [SerializeField] private int id;
+        [SerializeField] private string id;
         [SerializeField] private Material material;
 
         public Material Material => material;
 
-        public override int ID => id;
-        public override string StringID => $"ID: {ID} Name: {material?.name}";
+        public override string ID => id;
     }
 }

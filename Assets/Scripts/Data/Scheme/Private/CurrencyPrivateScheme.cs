@@ -11,7 +11,7 @@ namespace Data.Scheme.Private
         [SerializeField] private int value;
 
         public int Value => value;
-        public override int ID => id;
+        public override string ID => id.ToString();
         public CurrencyType Type => (CurrencyType)id;
 
         public CurrencyPrivateScheme(int id, int value = 0)

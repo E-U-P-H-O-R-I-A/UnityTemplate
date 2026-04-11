@@ -28,15 +28,15 @@ namespace Utility.LevelEditor
         private Level level;
         private LevelElement previewItem;
 
-        private Func<Material, int> getMaterialID;
-        private Func<LevelElement, int> getElementID;
+        private Func<Material, string> getMaterialID;
+        private Func<LevelElement, string> getElementID;
         private Func<IEnumerable<ValueDropdownItem<Material>>> getMaterials;
         private Func<LevelElementType, IEnumerable<ValueDropdownItem<LevelElement>>> getStyles;
 
         public void Initialize(
             Level level,
-            Func<Material, int> getMaterialID,
-            Func<LevelElement, int> getElementID,
+            Func<Material, string> getMaterialID,
+            Func<LevelElement, string> getElementID,
             Func<IEnumerable<ValueDropdownItem<Material>>> getMaterials,
             Func<LevelElementType, IEnumerable<ValueDropdownItem<LevelElement>>> getStyles)
         {
@@ -94,7 +94,7 @@ namespace Utility.LevelEditor
 
             if (materialLevelElement != null)
             {
-                int materialID = getMaterialID?.Invoke(materialLevelElement) ?? 0;
+                var materialID = getMaterialID?.Invoke(materialLevelElement) ?? string.Empty;
                 previewItem.SetMaterial(materialID, materialLevelElement);
             }
         }
@@ -189,7 +189,7 @@ namespace Utility.LevelEditor
             
             if (materialLevelElement != null)
             {
-                int materialID = getMaterialID?.Invoke(materialLevelElement) ?? 0;
+                var materialID = getMaterialID?.Invoke(materialLevelElement) ?? string.Empty;
                 instance.SetMaterial(materialID, materialLevelElement);
             }
 

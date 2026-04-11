@@ -13,11 +13,11 @@ namespace Utility.LevelEditor
         [ValueDropdown(nameof(GetAvailableMaterials))]
         [LabelText("Material"), SerializeField] private Material materialLevelElement;
 
-        private Func<Material, int> getMaterialID;
+        private Func<Material, string> getMaterialID;
         private Func<IEnumerable<ValueDropdownItem<Material>>> getMaterials;
 
         public void Initialize(
-            Func<Material, int> getMaterialID,
+            Func<Material, string> getMaterialID,
             Func<IEnumerable<ValueDropdownItem<Material>>> getMaterials)
         {
             this.getMaterialID = getMaterialID;
@@ -38,7 +38,7 @@ namespace Utility.LevelEditor
             if (targetElement == null)
                 return;
 
-            int materialID = getMaterialID?.Invoke(materialLevelElement) ?? 0;
+            var materialID = getMaterialID?.Invoke(materialLevelElement) ?? string.Empty;
 
             Undo.RecordObject(targetElement, "Paint Level Element");
             targetElement.SetMaterial(materialID, materialLevelElement);

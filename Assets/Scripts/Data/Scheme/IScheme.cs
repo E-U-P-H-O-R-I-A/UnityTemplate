@@ -2,6 +2,6 @@ namespace Data.Scheme
 {
     public interface IScheme
     {
-        public int ID { get;}
+        public string ID { get;}
     }
 }

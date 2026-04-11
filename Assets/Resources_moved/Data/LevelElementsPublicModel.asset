@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LevelElementsPublicModel
   m_EditorClassIdentifier: Assembly-CSharp::Data.Model.Public.LevelElementsPublicModel
   schemes:
-  - id: 1
+  - id: Base_floor
     prefab: {fileID: 4486132903416679034, guid: 38b07cc82f21e2848997c47f94e467e1, type: 3}
-  - id: 1
+  - id: Base_wall
     prefab: {fileID: 4486132903416679034, guid: ed9ec8ca94f1e6e45bd8d3156eff5282, type: 3}

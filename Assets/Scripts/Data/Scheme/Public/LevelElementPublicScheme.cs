@@ -14,13 +14,12 @@ namespace Data.Scheme.Public
     [Serializable]
     public class LevelElementPublicScheme : BasePublicScheme
     {
-        [SerializeField] private int id;
+        [SerializeField] private string id;
         [SerializeField] private LevelElement prefab;
 
         public LevelElement Prefab => prefab;
         public LevelElementType LevelElementType => prefab != null ? prefab.LevelElementType : LevelElementType.Wall;
 
-        public override int ID => (int)LevelElementType * 10000 + id;
-        public override string StringID => $"ID: {ID} Name: {(prefab != null ? prefab.name : "")}";
+        public override string ID => id;
     }
 }

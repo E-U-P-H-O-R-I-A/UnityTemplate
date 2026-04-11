@@ -12,15 +12,15 @@ namespace Utility.LevelEditor
         [SerializeField] private Renderer renderer;
         [SerializeField] private Collider collider;
 
-        private int elementID;
-        private int materialID;
+        private string elementID;
+        private string materialID;
 
-        public int ElementID => elementID;
-        public int MaterialID => materialID;
+        public string ElementID => elementID;
+        public string MaterialID => materialID;
         public Renderer Renderer => renderer;
         public LevelElementType LevelElementType => levelElementType;
 
-        public void SetElementID(int id)
+        public void SetElementID(string id)
         {
             elementID = id;
         }
@@ -30,7 +30,7 @@ namespace Utility.LevelEditor
             collider.enabled = value;
         }
 
-        public void SetMaterial(int id, Material material)
+        public void SetMaterial(string id, Material material)
         {
             if (material == null || renderer == null)
                 return;

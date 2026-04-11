@@ -41,6 +41,6 @@ namespace Services.CurrencyService
             privateModelProvider.SaveModel<CurrencyPrivateModel>();
 
         private CurrencyPrivateScheme GetScheme(CurrencyType currencyType) => 
-            currencyPrivateModel.GetScheme((int)currencyType);
+            currencyPrivateModel.GetScheme(((int)currencyType).ToString());
     }
 }

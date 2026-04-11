@@ -150,9 +150,9 @@ namespace Utility.LevelEditor
             return instance;
         }
 
-        private void ApplyMaterial(LevelElement element, int materialID)
+        private void ApplyMaterial(LevelElement element, string materialID)
         {
-            if (element == null || materialID < 0)
+            if (element == null || string.IsNullOrEmpty(materialID))
                 return;
 
             Material material = GetMaterialByID(materialID);
