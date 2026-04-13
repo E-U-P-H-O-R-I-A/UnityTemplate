@@ -144,15 +144,17 @@ namespace Services.WindowsService
         {
             if (closedWindow != currentWindow)
                 return;
-            
-            WindowRequest previousWindow = windowHistory.Pop();
 
-            if (previousWindow.WindowType != currentWindow.Type)
+            if (windowHistory.Count > 0)
+                windowHistory.Pop();
+
+            if (windowHistory.Count > 0)
             {
+                WindowRequest previousWindow = windowHistory.Pop();
                 await OpenRequestAsync(previousWindow);
                 return;
             }
-            
+
             currentWindow = null;
 
             ProcessQueue();
