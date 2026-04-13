@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Data.Scheme.Public;
 using Services.WindowsService.Animation;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +12,6 @@ namespace Services.WindowsService.Windows
 {
     public abstract class BaseWindowParams
     {
-        public bool IsHideWindow = true;
     }
 
     public abstract class BaseWindow : MonoBehaviour
@@ -35,7 +36,7 @@ namespace Services.WindowsService.Windows
     {
         [Header("Base Window")]
         [SerializeField] private List<Button> buttonClose;
-        [SerializeField] private BaseWindowAnimation windowAnimation;
+        [SerializeField] private List<BaseWindowAnimation> windowAnimations;
 
         private bool isProcessingOpening;
         private bool isProcessingClosing;
@@ -47,18 +48,24 @@ namespace Services.WindowsService.Windows
 
         public override async UniTask OpenAsync(object @params = null)
         {
+            if (isProcessingOpening)
+                return;
+
+            if (isProcessingClosing)
+                return;
+            
+            isProcessingOpening = true;
             Params = @params as TParams;
 
             try
             {
-                windowAnimation?.Kill();
+                KillAllAnimations();
                 
                 await OnBeforeOpen(Params);
 
                 ForceShow();
 
-                if (windowAnimation != null)
-                    await windowAnimation.PlayOpenAsync();
+                await PlayOpenAnimationsAsync();
 
                 await OnAfterOpened(Params);
 
@@ -70,21 +77,29 @@ namespace Services.WindowsService.Windows
                 DisableButtons();
                 ForceHide();
             }
+            finally
+            {
+                isProcessingOpening = false;
+            }
         }
 
         public override async UniTask CloseAsync()
         {
+            if (isProcessingClosing)
+                return;
+
+            if (isProcessingOpening)
+                return;
+
+            isProcessingClosing = true;
             DisableButtons();
 
             try
             {
                 await OnBeforeClose();
 
-                if (windowAnimation != null)
-                {
-                    windowAnimation.Kill();
-                    await windowAnimation.PlayCloseAsync();
-                }
+                KillAllAnimations();
+                await PlayCloseAnimationsAsync();
 
                 await OnAfterClosed();
 
@@ -96,6 +111,10 @@ namespace Services.WindowsService.Windows
                 Debug.LogException(ex, this);
                 ForceHide();
                 RaiseClosed();
+            }
+            finally
+            {
+                isProcessingClosing = false;
             }
         }
 
@@ -112,5 +131,74 @@ namespace Services.WindowsService.Windows
 
         private void DisableButtons() => 
             buttonClose.ForEach(button => button.onClick.RemoveListener(OnCloseClick));
+        
+        private void KillAllAnimations()
+        {
+            if (windowAnimations == null || windowAnimations.Count == 0)
+                return;
+
+            foreach (var animation in windowAnimations)
+            {
+                if (animation == null)
+                    continue;
+
+                animation.Kill();
+            }
+        }
+        
+        private async UniTask PlayOpenAnimationsAsync()
+        {
+            if (windowAnimations == null || windowAnimations.Count == 0)
+                return;
+
+            var tasks = new List<UniTask>();
+
+            foreach (var animation in windowAnimations)
+            {
+                if (animation == null)
+                    continue;
+
+                tasks.Add(animation.PlayOpenAsync());
+            }
+
+            if (tasks.Count > 0)
+                await UniTask.WhenAll(tasks);
+        }
+        
+        private async UniTask PlayCloseAnimationsAsync()
+        {
+            if (windowAnimations == null || windowAnimations.Count == 0)
+                return;
+
+            var tasks = new List<UniTask>();
+
+            foreach (var animation in windowAnimations)
+            {
+                if (animation == null)
+                    continue;
+
+                tasks.Add(animation.PlayCloseAsync());
+            }
+
+            if (tasks.Count > 0)
+                await UniTask.WhenAll(tasks);
+        }
+        
+#if UNITY_EDITOR
+        [PropertySpace]
+        [Button("Find All Window Animations")]
+        private void FindAllWindowAnimations()
+        {
+            windowAnimations = GetComponentsInChildren<BaseWindowAnimation>(true)
+                .Distinct()
+                .ToList();
+
+            UnityEditor.EditorUtility.SetDirty(this);
+
+            Debug.Log($"[{name}] Found {windowAnimations.Count} BaseWindowAnimation components.", this);
+        }
+
+#endif
+
     }
 }

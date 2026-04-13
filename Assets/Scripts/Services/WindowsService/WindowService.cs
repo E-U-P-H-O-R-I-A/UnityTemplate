@@ -8,24 +8,26 @@ using Services.PublicModelProvider;
 using Services.WindowsService.Windows;
 using UnityEngine;
 using Utility.Factory;
+using VContainer;
 
 namespace Services.WindowsService
 {
     public class WindowService : MonoBehaviour, IWindowService
     {
-        private readonly IPublicModelProvider publicModelProvider;
-        private readonly IFactory factory;
-        
         [SerializeField] private Canvas canvas;
             
         private readonly Dictionary<WindowType, BaseWindow> windows = new();
         private readonly Stack<WindowRequest> windowHistory = new();
         private readonly List<WindowRequest> queue = new();
+        
+        private IPublicModelProvider publicModelProvider;
+        private IFactory factory;
 
         private WindowsPublicModel publicModel;
         private BaseWindow currentWindow;
         
-        public WindowService(IPublicModelProvider publicModelProvider, IFactory factory)
+        [Inject]
+        public void Construct(IPublicModelProvider publicModelProvider, IFactory factory)
         {
             this.publicModelProvider = publicModelProvider;
             this.factory = factory;
@@ -103,9 +105,12 @@ namespace Services.WindowsService
         {
             if (currentWindow != null)
                 return;
-            
+
             if (queue.Count == 0)
+            {
+                ClearHistory();
                 return;
+            }
             
             WindowRequest request = queue.First();
             
