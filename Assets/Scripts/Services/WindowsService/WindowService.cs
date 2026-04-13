@@ -19,13 +19,15 @@ namespace Services.WindowsService
         private readonly Dictionary<WindowType, BaseWindow> windows = new();
         private readonly Stack<WindowRequest> windowHistory = new();
         private readonly List<WindowRequest> queue = new();
-        
+
         private IPublicModelProvider publicModelProvider;
         private IFactory factory;
 
         private WindowsPublicModel publicModel;
         private BaseWindow currentWindow;
         
+        private bool isProcessingOpenRequest;
+
         [Inject]
         public void Construct(IPublicModelProvider publicModelProvider, IFactory factory)
         {
@@ -58,7 +60,7 @@ namespace Services.WindowsService
             if (@params?.IsHidePrevious == true)
                 currentWindow.ForceHide();
             
-            OpenRequestAsync(request);
+            OpenRequestAsync(request).Forget();
         }
         
         private void ClearHistory() => 
@@ -120,11 +122,16 @@ namespace Services.WindowsService
             queue.Remove(request);
 
             ClearHistory();
-            OpenRequestAsync(request);
+            OpenRequestAsync(request).Forget();
         }
 
         private async UniTask OpenRequestAsync(WindowRequest request)
         {
+            while (isProcessingOpenRequest)
+                await UniTask.Yield();
+
+            isProcessingOpenRequest = true;
+
             try
             {
                 windowHistory.Push(request);
@@ -140,8 +147,30 @@ namespace Services.WindowsService
             catch(Exception ex)
             {
                 Debug.LogException(ex, this);
+
+                if (windowHistory.Count > 0)
+                    windowHistory.Pop();
+
+                if (windowHistory.Count > 0)
+                {
+                    WindowRequest previousRequest = windowHistory.Peek();
+                    BaseWindow previousWindow = GetWindow(previousRequest.WindowType);
+
+                    currentWindow = previousWindow;
+
+                    if (request.Params?.IsHidePrevious == true || !previousWindow.gameObject.activeSelf)
+                        previousWindow.ForceShow();
+
+                    previousWindow.transform.SetAsLastSibling();
+                    return;
+                }
+
                 currentWindow = null;
                 ProcessQueue();
+            }
+            finally
+            {
+                isProcessingOpenRequest = false;
             }
         }
         
@@ -149,13 +178,6 @@ namespace Services.WindowsService
         {
             if (closedWindow != currentWindow)
                 return;
-
-            if (windowHistory.Count == 0)
-            {
-                currentWindow = null;
-                ProcessQueue();
-                return;
-            }
             
             if (windowHistory.Count > 0)
             {
@@ -164,13 +186,18 @@ namespace Services.WindowsService
                 if (windowHistory.Count > 0)
                 {
                     WindowRequest previousRequest = windowHistory.Pop();
+                    BaseWindow previousWindow = GetWindow(previousRequest.WindowType);
+
+                    if (previousWindow == closedWindow)
+                        await UniTask.Yield();
+
                     await OpenRequestAsync(previousRequest);
                     return;
                 }
             }
 
+            await UniTask.Yield();
             currentWindow = null;
-
             ProcessQueue();
         }
     }

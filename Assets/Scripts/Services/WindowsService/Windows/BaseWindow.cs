@@ -132,7 +132,7 @@ namespace Services.WindowsService.Windows
             buttonClose.ForEach(button => button.onClick.AddListener(OnCloseClick));
 
         private void DisableButtons() => 
-            buttonClose.ForEach(button => button.onClick.RemoveAllListeners());
+            buttonClose.ForEach(button => button.onClick.RemoveListener(OnCloseClick));
         
         private void KillAllAnimations()
         {
