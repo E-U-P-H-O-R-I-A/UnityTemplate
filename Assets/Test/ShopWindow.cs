@@ -11,9 +11,7 @@ namespace Test
 {
     public class ShopWindow : BaseWindow<BaseWindowParams>
     {
-
         [Inject] public IWindowService WindowService;
-        
         
         [Space]
         [SerializeField] private Button buyButton;
@@ -28,7 +26,7 @@ namespace Test
 
         private void OnButtonClick()
         {
-            WindowService.OpenSubWindow(WindowType.NoAds);
+            WindowService.OpenSubWindow(WindowType.NoAds, new BaseWindowParams { IsHidePrevious = true });
         }
     }
 }

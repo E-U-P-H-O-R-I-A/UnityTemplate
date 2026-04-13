@@ -54,6 +54,9 @@ namespace Services.WindowsService
                 OpenWindow(type, @params);
                 return;
             }
+
+            if (@params?.IsHidePrevious == true)
+                currentWindow.ForceHide();
             
             OpenRequestAsync(request);
         }

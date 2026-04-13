@@ -10,8 +10,9 @@ using UnityEngine.UI;
 
 namespace Services.WindowsService.Windows
 {
-    public abstract class BaseWindowParams
+    public class BaseWindowParams
     {
+        public bool IsHidePrevious = false;
     }
 
     public abstract class BaseWindow : MonoBehaviour
@@ -22,10 +23,10 @@ namespace Services.WindowsService.Windows
         public abstract UniTask CloseAsync();
         public abstract UniTask OpenAsync(object windowParams);
 
-        protected void ForceHide() => 
+        public void ForceHide() => 
             gameObject.SetActive(false);
 
-        protected void ForceShow() => 
+        public void ForceShow() => 
             gameObject.SetActive(true);
 
         protected void RaiseClosed() => 
