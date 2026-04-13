@@ -5,6 +5,7 @@ using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
+using Services.WindowsService;
 using Utility.LoadingCurtain;
 using Utility.StateMachine;
 
@@ -18,11 +19,12 @@ namespace Infrastructure.States
         private readonly ICurrencyService currencyService;
         private readonly ILoadingCurtain loadingCurtain;
         private readonly ISceneProvider sceneProvider;
+        private readonly IWindowService windowService;
         private readonly ILogService logService;
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
             IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider, 
-            ICurrencyService currencyService)
+            ICurrencyService currencyService, IWindowService windowService)
         {
             this.currencyService = currencyService;
             this.privateModelProvider = privateModelProvider;
@@ -30,6 +32,7 @@ namespace Infrastructure.States
             this.gameStateMachine = gameStateMachine;
             this.loadingCurtain = loadingCurtain;
             this.sceneProvider = sceneProvider;
+            this.windowService = windowService;
             this.logService = logService;
         }
         
@@ -41,12 +44,14 @@ namespace Infrastructure.States
             
             var publicDataTask = publicModelProvider.Init();
             await loadingCurtain.AnimatePhase(publicDataTask, 0.20f);
+          
 
             var privateDataTask = privateModelProvider.Init();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
-            
-            currencyService.Init();
-            
+
+            currencyService.Initialize();
+            windowService.Initialize();
+
             var loadSceneTask = sceneProvider.Load(AssetsPath.MAIN_SCENE);
             await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
             

@@ -16,7 +16,7 @@ namespace Services.CurrencyService
             this.privateModelProvider = privateModelProvider;
         }
 
-        public void Init() => 
+        public void Initialize() => 
             currencyPrivateModel = privateModelProvider.GetModel<CurrencyPrivateModel>();
 
         public int GetAmountCurrency(CurrencyType currencyType) => 

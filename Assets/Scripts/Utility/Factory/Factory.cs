@@ -19,6 +19,16 @@ namespace Utility.Factory
 
         public TObject Create<TObject>() => 
             resolver.Resolve<TObject>();
+        
+        public TObject CreateFromPrefab<TObject>(TObject prefab, Transform parent = null)
+            where TObject : Component
+        {
+            var instance = parent == null
+                ? resolver.Instantiate(prefab.gameObject)
+                : resolver.Instantiate(prefab.gameObject, parent);
+
+            return instance.GetComponent<TObject>();
+        }
 
         public async UniTask<TObject> CreateFromAssets<TObject>(string key)
         {

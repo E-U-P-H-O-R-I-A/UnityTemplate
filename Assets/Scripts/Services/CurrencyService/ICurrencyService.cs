@@ -4,7 +4,7 @@ namespace Services.CurrencyService
 {
     public interface ICurrencyService
     {
-        void Init();
+        void Initialize();
         
         int GetAmountCurrency(CurrencyType currencyType);
 

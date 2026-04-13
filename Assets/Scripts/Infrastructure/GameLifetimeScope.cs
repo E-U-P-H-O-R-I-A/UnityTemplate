@@ -5,6 +5,7 @@ using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
+using Services.WindowsService;
 using UnityEngine;
 using Utility.CoroutineRunner;
 using Utility.Factory;
@@ -17,17 +18,20 @@ namespace Infrastructure
     public class GameLifetimeScope : LifetimeScope
     {
         [Space]
+        [SerializeField] private WindowService windowService;
         [SerializeField] private LoadingCurtain loadingCurtain;
-        
+        [SerializeField] private CoroutineRunner coroutineRunner;
+
         protected override void Configure(IContainerBuilder builder)
         {
             // --- Infrastructure ---
             builder.RegisterEntryPoint<GameBootstrapper>();
             
             builder.Register<GameStateMachine>(Lifetime.Singleton);
-            builder.RegisterInstance(loadingCurtain).As<ILoadingCurtain>();
-            builder.RegisterComponentOnNewGameObject<CoroutineRunner>(Lifetime.Singleton).As<ICoroutineRunner>();
-            
+            builder.RegisterComponentInNewPrefab(windowService, Lifetime.Singleton).As<IWindowService>();
+            builder.RegisterComponentInNewPrefab(loadingCurtain, Lifetime.Singleton).As<ILoadingCurtain>();
+            builder.RegisterComponentInNewPrefab(coroutineRunner, Lifetime.Singleton).As<ICoroutineRunner>();
+
             // --- Services ---
             builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
             builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
