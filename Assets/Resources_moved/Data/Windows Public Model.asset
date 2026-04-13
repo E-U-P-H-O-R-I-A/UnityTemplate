@@ -12,10 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf6c3a6e8d444ed19da03e6b41b654f6, type: 3}
   m_Name: Windows Public Model
   m_EditorClassIdentifier: Assembly-CSharp::Data.Model.Public.WindowsPublicModel
-  schemes:
-  - type: 0
-    priority: 0
-    prefab: {fileID: 4142562605265811935, guid: 8a18b6305bf4f9a4880d43ef7a16518a, type: 3}
-  - type: 1
-    priority: 0
-    prefab: {fileID: 5088948662824913354, guid: becf5d1d949b75342838ccdc0a012ab8, type: 3}
+  schemes: []
