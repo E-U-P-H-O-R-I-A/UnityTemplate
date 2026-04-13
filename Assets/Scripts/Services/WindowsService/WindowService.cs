@@ -143,18 +143,31 @@ namespace Services.WindowsService
             }
         }
         
-        private async void OnWindowClosed(BaseWindow closedWindow)
+        private void OnWindowClosed(BaseWindow closedWindow)
         {
             if (closedWindow != currentWindow)
                 return;
 
-            if (windowHistory.Count > 0)
-                windowHistory.Pop();
+            if (windowHistory.Count == 0)
+            {
+                currentWindow = null;
+                ProcessQueue();
+                return;
+            }
+
+            WindowRequest closedRequest = windowHistory.Pop();
 
             if (windowHistory.Count > 0)
             {
-                WindowRequest previousWindow = windowHistory.Pop();
-                await OpenRequestAsync(previousWindow);
+                WindowRequest previousRequest = windowHistory.Peek();
+                BaseWindow previousWindow = GetWindow(previousRequest.WindowType);
+
+                currentWindow = previousWindow;
+
+                if (closedRequest.Params?.IsHidePrevious == true)
+                    previousWindow.ForceShow();
+
+                previousWindow.transform.SetAsLastSibling();
                 return;
             }
 
