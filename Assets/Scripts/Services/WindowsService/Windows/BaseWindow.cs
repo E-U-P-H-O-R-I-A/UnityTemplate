@@ -70,6 +70,7 @@ namespace Services.WindowsService.Windows
 
                 await OnAfterOpened(Params);
 
+                DisableButtons();
                 EnableButtons();
             }
             catch (Exception ex)
@@ -131,7 +132,7 @@ namespace Services.WindowsService.Windows
             buttonClose.ForEach(button => button.onClick.AddListener(OnCloseClick));
 
         private void DisableButtons() => 
-            buttonClose.ForEach(button => button.onClick.RemoveListener(OnCloseClick));
+            buttonClose.ForEach(button => button.onClick.RemoveAllListeners());
         
         private void KillAllAnimations()
         {

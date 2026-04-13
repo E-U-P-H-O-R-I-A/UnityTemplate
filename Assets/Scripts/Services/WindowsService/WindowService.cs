@@ -134,6 +134,8 @@ namespace Services.WindowsService
                 currentWindow = window;
 
                 await window.OpenAsync(request.Params);
+                
+                currentWindow.transform.SetAsLastSibling();
             }
             catch(Exception ex)
             {
@@ -143,7 +145,7 @@ namespace Services.WindowsService
             }
         }
         
-        private void OnWindowClosed(BaseWindow closedWindow)
+        private async void OnWindowClosed(BaseWindow closedWindow)
         {
             if (closedWindow != currentWindow)
                 return;
@@ -154,21 +156,17 @@ namespace Services.WindowsService
                 ProcessQueue();
                 return;
             }
-
-            WindowRequest closedRequest = windowHistory.Pop();
-
+            
             if (windowHistory.Count > 0)
             {
-                WindowRequest previousRequest = windowHistory.Peek();
-                BaseWindow previousWindow = GetWindow(previousRequest.WindowType);
+                windowHistory.Pop();
 
-                currentWindow = previousWindow;
-
-                if (closedRequest.Params?.IsHidePrevious == true)
-                    previousWindow.ForceShow();
-
-                previousWindow.transform.SetAsLastSibling();
-                return;
+                if (windowHistory.Count > 0)
+                {
+                    WindowRequest previousRequest = windowHistory.Pop();
+                    await OpenRequestAsync(previousRequest);
+                    return;
+                }
             }
 
             currentWindow = null;
