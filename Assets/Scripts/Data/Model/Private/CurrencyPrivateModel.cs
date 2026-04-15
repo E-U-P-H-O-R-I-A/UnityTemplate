@@ -1,4 +1,6 @@
+using System;
 using Data.Scheme.Private;
+using Data.Scheme.Public;
 
 namespace Data.Model.Private
 {
@@ -6,8 +8,8 @@ namespace Data.Model.Private
     {
         protected override CurrencyPrivateScheme CreateSchemeById(string id)
         {
-            return int.TryParse(id, out var parsedId)
-                ? new CurrencyPrivateScheme(parsedId)
+            return Enum.TryParse(id, out CurrencyType type) 
+                ? new CurrencyPrivateScheme(type) 
                 : null;
         }
     }

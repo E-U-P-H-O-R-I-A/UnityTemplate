@@ -5,6 +5,7 @@ using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
+using Services.TutorialService;
 using Services.WindowsService;
 using UnityEngine;
 using Utility.CoroutineRunner;
@@ -35,6 +36,7 @@ namespace Infrastructure
             // --- Services ---
             builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
             builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
+            builder.Register<TutorialService>(Lifetime.Singleton).As<ITutorialService>();
             builder.Register<CurrencyService>(Lifetime.Singleton).As<ICurrencyService>();
             builder.Register<AssetsProvider>(Lifetime.Singleton).As<IAssetsProvider>();
             builder.Register<SceneProvider>(Lifetime.Singleton).As<ISceneProvider>();

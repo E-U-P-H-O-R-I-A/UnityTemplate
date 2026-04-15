@@ -7,16 +7,16 @@ namespace Data.Scheme.Private
     [Serializable]
     public class CurrencyPrivateScheme : BasePrivateScheme
     {
-        [SerializeField] private int id;
+        [SerializeField] private CurrencyType type;
         [SerializeField] private int value;
 
         public int Value => value;
-        public override string ID => id.ToString();
-        public CurrencyType Type => (CurrencyType)id;
+        public CurrencyType Type => type;
+        public override string ID => type.ToString();
 
-        public CurrencyPrivateScheme(int id, int value = 0)
+        public CurrencyPrivateScheme(CurrencyType type, int value = 0)
         {
-            this.id = id;
+            this.type = type;
             this.value = value;
         }
 

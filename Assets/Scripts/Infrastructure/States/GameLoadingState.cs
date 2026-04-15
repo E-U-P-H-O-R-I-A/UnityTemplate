@@ -5,6 +5,7 @@ using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
+using Services.TutorialService;
 using Services.WindowsService;
 using Utility.LoadingCurtain;
 using Utility.StateMachine;
@@ -16,6 +17,7 @@ namespace Infrastructure.States
         private readonly IPrivateModelProvider privateModelProvider;
         private readonly IPublicModelProvider publicModelProvider;
         private readonly GameStateMachine gameStateMachine;
+        private readonly ITutorialService tutorialService;
         private readonly ICurrencyService currencyService;
         private readonly ILoadingCurtain loadingCurtain;
         private readonly ISceneProvider sceneProvider;
@@ -24,12 +26,13 @@ namespace Infrastructure.States
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
             IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider, 
-            ICurrencyService currencyService, IWindowService windowService)
+            ICurrencyService currencyService, IWindowService windowService, ITutorialService tutorialService)
         {
-            this.currencyService = currencyService;
             this.privateModelProvider = privateModelProvider;
             this.publicModelProvider = publicModelProvider;
             this.gameStateMachine = gameStateMachine;
+            this.currencyService = currencyService;
+            this.tutorialService = tutorialService;
             this.loadingCurtain = loadingCurtain;
             this.sceneProvider = sceneProvider;
             this.windowService = windowService;
@@ -49,6 +52,7 @@ namespace Infrastructure.States
             var privateDataTask = privateModelProvider.Init();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
+            tutorialService.Initialize();
             currencyService.Initialize();
             windowService.Initialize();
 
