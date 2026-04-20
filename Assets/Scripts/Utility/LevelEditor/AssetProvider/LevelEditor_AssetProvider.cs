@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeBase.Infrastructure.AssetManagement;
+using Data.Model;
 using Data.Model.Public;
 using Data.Scheme.Public;
-using Services.AssetProvider;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -14,16 +14,16 @@ namespace Utility.LevelEditor
     /// </summary>
     public partial class LevelEditor
     {
-        private IAssetsProvider assetsProvider;
         private LevelElementsPublicModel elementsPublicModel;
         private LevelMaterialPublicModel materialsPublicModel;
 
         private async void InitializeAssetProvider()
         {
-            assetsProvider = new AssetsProvider();
+            var modelKeys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
+            var models = await assetsProvider.LoadAll<IPublicModel>(modelKeys);
 
-            elementsPublicModel = await assetsProvider.Load<LevelElementsPublicModel>(AssetsLabels.LEVEL_EDITOR_ELEMENTS);
-            materialsPublicModel = await assetsProvider.Load<LevelMaterialPublicModel>(AssetsLabels.LEVEL_EDITOR_MATERIALS);
+            elementsPublicModel = models.OfType<LevelElementsPublicModel>().FirstOrDefault();
+            materialsPublicModel = models.OfType<LevelMaterialPublicModel>().FirstOrDefault();
         }
 
         private IEnumerable<ValueDropdownItem<LevelElement>> GetElementsList() =>

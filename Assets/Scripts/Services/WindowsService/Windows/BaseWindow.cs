@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Data.Scheme.Public;
+using Services.LogService;
 using Services.WindowsService.Animation;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace Services.WindowsService.Windows
 {
@@ -41,8 +43,17 @@ namespace Services.WindowsService.Windows
 
         private bool isProcessingOpening;
         private bool isProcessingClosing;
+        
+        private ILogService logService;
+        private ILogService LogService => logService ??= new global::Services.LogService.LogService();
 
         protected TParams Params { get; private set; }
+
+        [Inject]
+        public void Construct(ILogService logService)
+        {
+            this.logService = logService;
+        }
 
         protected virtual void Awake() => 
             ForceHide();
@@ -75,7 +86,7 @@ namespace Services.WindowsService.Windows
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex, this);
+                LogService.LogError($"[{name}] Failed to open window: {ex}", LogCategory.Windows);
                 DisableButtons();
                 ForceHide();
             }
@@ -110,7 +121,7 @@ namespace Services.WindowsService.Windows
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex, this);
+                LogService.LogError($"[{name}] Failed to close window: {ex}", LogCategory.Windows);
                 ForceHide();
                 RaiseClosed();
             }
@@ -197,7 +208,7 @@ namespace Services.WindowsService.Windows
 
             UnityEditor.EditorUtility.SetDirty(this);
 
-            Debug.Log($"[{name}] Found {windowAnimations.Count} BaseWindowAnimation components.", this);
+            LogService.Log($"[{name}] Found {windowAnimations.Count} BaseWindowAnimation components.", LogCategory.Windows);
         }
 
 #endif

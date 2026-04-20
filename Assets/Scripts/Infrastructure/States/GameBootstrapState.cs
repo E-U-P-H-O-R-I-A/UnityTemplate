@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Data.Scheme.Public;
 using Services.LogService;
 using Utility.StateMachine;
 
@@ -17,14 +18,14 @@ namespace Infrastructure.States
 
         public async UniTask Enter()
         {
-            logService.Log("GameBootstrapState Enter");
+            logService.Log("GameBootstrapState Enter", LogCategory.Infrastructure);
             
             gameStateMachine.Enter<GameLoadingState>();
         }
         
         public async UniTask Exit()
         {
-            logService.Log("GameBootstrapState Exit");
+            logService.Log("GameBootstrapState Exit", LogCategory.Infrastructure);
         }
     }
 }

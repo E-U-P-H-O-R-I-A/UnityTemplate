@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Services.AssetProvider;
+using Services.LogService;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -11,17 +12,19 @@ namespace Utility.Pool
 {
     public abstract class ObjectPool<T> : IObjectPool<T> where T : Component, IPoolableObject
     {
-        private readonly IObjectResolver resolver;
-        private readonly IAssetsProvider assetsProvider;
-
-        private readonly Dictionary<T, Queue<T>> pools = new();
         private readonly Dictionary<T, T> instanceToPrefab = new();
+        private readonly Dictionary<T, Queue<T>> pools = new();
 
+        private readonly IAssetsProvider assetsProvider;
+        private readonly IObjectResolver resolver;
+        private readonly ILogService logService;
+        
         protected Func<T, UniTask<T>> CreateObjectFunc;
 
-        public ObjectPool(IAssetsProvider assetsProvider, IObjectResolver  resolver)
+        public ObjectPool(IAssetsProvider assetsProvider, IObjectResolver  resolver, ILogService logService)
         {
             this.assetsProvider = assetsProvider;
+            this.logService = logService;
             this.resolver = resolver;
 
             CreateObjectFunc = CreateObject;
@@ -64,7 +67,7 @@ namespace Utility.Pool
 
             if (!instanceToPrefab.TryGetValue(instance, out var prefab))
             {
-                Debug.LogWarning($"[GenericPrefabPool] Returned object not created by this pool: {instance.name}");
+                logService.LogWarning($"[GenericPrefabPool] Returned object not created by this pool: {instance.name}", LogCategory.Utility);
                 Object.Destroy(instance.gameObject); // або ігнорувати
 
                 return;

@@ -23,7 +23,7 @@ namespace Services.SceneProvider
             await handler.ToUniTask();
             await handler.Result.ActivateAsync().ToUniTask();
             
-            logService.Log($"Loaded scene '{sceneName}'.");
+            logService.Log($"Loaded scene '{sceneName}'.", LogCategory.Scene);
         }
     }
 }

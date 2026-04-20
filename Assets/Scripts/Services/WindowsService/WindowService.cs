@@ -4,6 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Data.Model.Public;
 using Data.Scheme.Public;
+using Services.LogService;
 using Services.PublicModelProvider;
 using Services.WindowsService.Windows;
 using UnityEngine;
@@ -22,6 +23,7 @@ namespace Services.WindowsService
 
         private IPublicModelProvider publicModelProvider;
         private IFactory factory;
+        private ILogService logService;
 
         private WindowsPublicModel publicModel;
         private BaseWindow currentWindow;
@@ -29,10 +31,11 @@ namespace Services.WindowsService
         private bool isProcessingOpenRequest;
 
         [Inject]
-        public void Construct(IPublicModelProvider publicModelProvider, IFactory factory)
+        public void Construct(IPublicModelProvider publicModelProvider, IFactory factory, ILogService logService)
         {
             this.publicModelProvider = publicModelProvider;
             this.factory = factory;
+            this.logService = logService;
         }
 
         public void Awake() => 
@@ -146,7 +149,7 @@ namespace Services.WindowsService
             }
             catch(Exception ex)
             {
-                Debug.LogException(ex, this);
+                logService.LogError($"[{name}] Failed to open window request {request.WindowType}: {ex}", LogCategory.Windows);
 
                 if (windowHistory.Count > 0)
                     windowHistory.Pop();

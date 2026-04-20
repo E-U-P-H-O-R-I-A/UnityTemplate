@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Services.LogService;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -11,6 +12,12 @@ namespace Services.AssetProvider
     public class AssetsProvider : IAssetsProvider
     {
         private readonly Dictionary<string, AsyncOperationHandle> assetRequests = new ();
+        private readonly ILogService logService;
+
+        public AssetsProvider(ILogService logService)
+        {
+            this.logService = logService;
+        }
 
         public async UniTask InitializeAsync() => 
             await Addressables.InitializeAsync().ToUniTask();
@@ -33,7 +40,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load asset with key {key}, error : {e}");
+                logService.LogError($"Failed to load asset with key {key}, error : {e}", LogCategory.Service);
                 
                 return null;
             }
@@ -58,7 +65,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load asset with key {key}, error : {e}");
+                logService.LogError($"Failed to load asset with key {key}, error : {e}", LogCategory.Service);
                 
                 return null;
             }
@@ -72,7 +79,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load asset with reference {assetReference}, error : {e}");
+                logService.LogError($"Failed to load asset with reference {assetReference}, error : {e}", LogCategory.Service);
                 
                 return null;
             }
@@ -86,7 +93,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get assets list by label {label}, error : {e}");
+                logService.LogError($"Failed to get assets list by label {label}, error : {e}", LogCategory.Service);
                 
                 return new List<string>();
             }
@@ -112,7 +119,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get assets list by label {label}, error : {e}");
+                logService.LogError($"Failed to get assets list by label {label}, error : {e}", LogCategory.Service);
                 
                 return new List<string>();
             }
@@ -133,7 +140,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load all assets, error : {e}");
+                logService.LogError($"Failed to load all assets, error : {e}", LogCategory.Service);
                 
                 return Array.Empty<TAsset>();
             }
@@ -148,7 +155,7 @@ namespace Services.AssetProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to warmup assets by label {label}, error : {e}");
+                logService.LogError($"Failed to warmup assets by label {label}, error : {e}", LogCategory.Service);
             }
         }
 

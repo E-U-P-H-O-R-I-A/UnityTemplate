@@ -1,5 +1,6 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
+using Data.Scheme.Public;
 using Services.LogService;
 using Services.SceneProvider;
 using Utility.LoadingCurtain;
@@ -22,7 +23,7 @@ namespace Infrastructure.States
 
         public async UniTask Enter()
         {
-            logService.Log("GamePlayState Enter");
+            logService.Log("GamePlayState Enter", LogCategory.Infrastructure);
             
             var loadSceneTask = sceneProvider.Load(AssetsPath.MAIN_SCENE);
             
@@ -36,7 +37,7 @@ namespace Infrastructure.States
         
         public async UniTask Exit()
         {
-            logService.Log("GamePlayState Exit");
+            logService.Log("GamePlayState Exit", LogCategory.Infrastructure);
         }
     }
 }

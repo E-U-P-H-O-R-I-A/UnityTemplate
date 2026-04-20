@@ -1,5 +1,6 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
+using Data.Scheme.Public;
 using Game.UI.Lobby;
 using Services.LogService;
 using Services.SceneProvider;
@@ -27,7 +28,7 @@ namespace Infrastructure.States
 
         public async UniTask Enter()
         {
-            logService.Log("GameLobbyState Enter");
+            logService.Log("GameLobbyState Enter", LogCategory.Infrastructure);
             
             var loadSceneTask = sceneProvider.Load(AssetsPath.LOBBY_SCENE);
             
@@ -44,7 +45,7 @@ namespace Infrastructure.States
 
         public async UniTask Exit()
         {
-            logService.Log("GameLobbyState Exit");
+            logService.Log("GameLobbyState Exit", LogCategory.Infrastructure);
             
             loadingCurtain.Show();
         }

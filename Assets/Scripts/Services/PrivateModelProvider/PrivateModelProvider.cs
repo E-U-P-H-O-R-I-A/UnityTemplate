@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Data.Model;
+using Services.LogService;
 using UnityEngine;
 
 namespace Services.PrivateModelProvider
@@ -12,9 +13,15 @@ namespace Services.PrivateModelProvider
     public class PrivateModelProvider : IPrivateModelProvider
     {
         private const string FOLDER_NAME = "PrivateData";
-    
+
         private readonly Dictionary<Type, IPrivateModel> models = new();
-    
+        private readonly ILogService logService;
+
+        public PrivateModelProvider(ILogService logService)
+        {
+            this.logService = logService;
+        }
+        
         public async UniTask Init(CancellationToken ct = default)
         {
             models.Clear();
@@ -44,7 +51,7 @@ namespace Services.PrivateModelProvider
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[PrivateModelProvider] Failed to init model {t.FullName}: {e}");
+                    logService.LogError($"[PrivateModelProvider] Failed to init model {t.FullName}: {e}", LogCategory.PrivateModel);
                 }
                 
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
@@ -75,7 +82,7 @@ namespace Services.PrivateModelProvider
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[PrivateModelProvider] Failed to save model {kv.Key.FullName}: {e}");
+                    logService.LogError($"[PrivateModelProvider] Failed to save model {kv.Key.FullName}: {e}", LogCategory.PrivateModel);
                 }
                 
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
@@ -104,7 +111,7 @@ namespace Services.PrivateModelProvider
             }
             catch (Exception e)
             {
-                Debug.LogError($"[PrivateModelProvider] Failed to save model {typeof(TModel).FullName}: {e}");
+                logService.LogError($"[PrivateModelProvider] Failed to save model {typeof(TModel).FullName}: {e}", LogCategory.PrivateModel);
             }
         }
 

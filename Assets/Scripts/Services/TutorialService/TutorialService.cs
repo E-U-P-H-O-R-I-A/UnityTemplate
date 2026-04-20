@@ -3,9 +3,9 @@ using Data.Model.Private;
 using Data.Model.Public;
 using Data.Scheme.Private;
 using Data.Scheme.Public;
+using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
-using UnityEngine;
 using VContainer;
 
 namespace Services.TutorialService
@@ -13,19 +13,21 @@ namespace Services.TutorialService
     public class TutorialService : ITutorialService
     {
         private readonly Tutorial currentTutorial = new();
-        
-        private readonly IObjectResolver objectResolver;
-        private readonly IPublicModelProvider publicModelProvider;
+
         private readonly IPrivateModelProvider privateModelProvider;
-        
+        private readonly IPublicModelProvider publicModelProvider;
+        private readonly IObjectResolver objectResolver;
+        private readonly ILogService logService;
+
         private TutorialPrivateModel privateModel;
         private TutorialPublicModel publicModel;
 
         private bool IsRunning => currentTutorial.IsRunning;
         
         public TutorialService(IObjectResolver objectResolver, IPublicModelProvider publicModelProvider, 
-            IPrivateModelProvider privateModelProvider)
+            IPrivateModelProvider privateModelProvider, ILogService logService)
         {
+            this.logService = logService;
             this.objectResolver = objectResolver;
             this.publicModelProvider = publicModelProvider;
             this.privateModelProvider = privateModelProvider;
@@ -41,19 +43,19 @@ namespace Services.TutorialService
         {
             if (tutorialType is TutorialType.None)
             {
-                Debug.LogWarning("Tutorial type None can't be started.");
+                logService.LogError("Tutorial type None can't be started.", LogCategory.Tutorial);
                 return;
             }
 
             if (publicModel is null || privateModel is null)
             {
-                Debug.LogError("TutorialService is not initialized. Call Init() after model providers are initialized.");
+                logService.LogError("TutorialService is not initialized. Call Init() after model providers are initialized.", LogCategory.Tutorial);
                 return;
             }
 
             if (IsRunning)
             {
-                Debug.LogWarning($"Tutorial already running: {currentTutorial}");
+                logService.LogError($"Tutorial already running: {currentTutorial}", LogCategory.Tutorial);
                 return;
             }
             
@@ -61,14 +63,14 @@ namespace Services.TutorialService
 
             if (currentTutorial.PrivateScheme is null)
             {
-                Debug.LogWarning($"Missing tutorial private scheme: {tutorialType}");
+                logService.LogError($"Missing tutorial private scheme: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
 
             if (currentTutorial.PrivateScheme is { IsComplete: true })
             {
-                Debug.Log($"Tutorial type: {tutorialType} was completed before.");
+                logService.Log($"Tutorial type: {tutorialType} was completed before.", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
@@ -77,14 +79,14 @@ namespace Services.TutorialService
             
             if (currentTutorial.PublicScheme is null)
             {
-                Debug.LogWarning($"Missing tutorial public scheme: {tutorialType}");
+                logService.LogError($"Missing tutorial public scheme: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
 
             if (currentTutorial.PublicScheme.Steps is null || currentTutorial.PublicScheme.Steps.Count == 0)
             {
-                Debug.LogWarning($"Tutorial has no steps: {tutorialType}");
+                logService.LogError($"Tutorial has no steps: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
@@ -94,7 +96,7 @@ namespace Services.TutorialService
 
             if (!TryGetCurrentStep(out var currentStep))
             {
-                Debug.LogWarning($"Missing tutorial step: {currentTutorial}");
+                logService.LogError($"Missing tutorial step: {currentTutorial}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
@@ -135,7 +137,7 @@ namespace Services.TutorialService
             currentTutorial.PrivateScheme.CompleteTutorial();
             privateModelProvider.SaveModel<TutorialPrivateModel>();
 
-            Debug.Log($"Tutorial {currentTutorial} completed.");
+            logService.Log($"Tutorial {currentTutorial} completed.", LogCategory.Tutorial);
 
             StopInternal();
         }
@@ -177,7 +179,7 @@ namespace Services.TutorialService
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error while starting tutorial step {currentTutorial.StepIndex}: {e}");
+                logService.LogError($"Error while starting tutorial step {currentTutorial.StepIndex}: {e}", LogCategory.Tutorial);
                 step.Completed -= OnStepCompleted;
                 MoveToNextStep();
             }
@@ -194,7 +196,7 @@ namespace Services.TutorialService
 
                 if (currentTutorial.PublicScheme?.Steps is null)
                 {
-                    Debug.LogWarning($"Tutorial has no steps collection: {currentTutorial.Type}");
+                    logService.LogError($"Tutorial has no steps collection: {currentTutorial.Type}", LogCategory.Tutorial);
                     StopInternal();
                     return;
                 }
@@ -207,7 +209,7 @@ namespace Services.TutorialService
                 
                 if (!TryGetCurrentStep(out var step))
                 {
-                    Debug.LogWarning($"Missing tutorial step: {currentTutorial}");
+                    logService.LogError($"Missing tutorial step: {currentTutorial}", LogCategory.Tutorial);
                     continue;
                 }
                 

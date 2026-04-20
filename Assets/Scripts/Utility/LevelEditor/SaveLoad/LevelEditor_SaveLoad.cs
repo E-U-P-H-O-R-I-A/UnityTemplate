@@ -1,4 +1,5 @@
 using System.IO;
+using Services.LogService;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace Utility.LevelEditor
         {
             if (level == null)
             {
-                Debug.LogError("Level is null");
+                logService.LogError("Level is null", LogCategory.LevelEditor);
                 return;
             }
 
@@ -39,7 +40,7 @@ namespace Utility.LevelEditor
             File.WriteAllText(path, json);
             AssetDatabase.Refresh();
 
-            Debug.Log($"Level saved to: {path}");
+            logService.Log($"Level saved to: {path}", LogCategory.LevelEditor);
         }
 
         [TabGroup("Instruments", "SaveLoad")]
@@ -48,7 +49,7 @@ namespace Utility.LevelEditor
         {
             if (level == null)
             {
-                Debug.LogError("Level is null");
+                logService.LogError("Level is null", LogCategory.LevelEditor);
                 return;
             }
 
@@ -62,7 +63,7 @@ namespace Utility.LevelEditor
 
             if (!File.Exists(path))
             {
-                Debug.LogError($"File not found: {path}");
+                logService.LogError($"File not found: {path}", LogCategory.LevelEditor);
                 return;
             }
 
@@ -71,13 +72,13 @@ namespace Utility.LevelEditor
 
             if (saveData == null || saveData.Elements == null)
             {
-                Debug.LogError("Failed to parse level json");
+                logService.LogError("Failed to parse level json", LogCategory.LevelEditor);
                 return;
             }
 
             RestoreLevel(saveData);
 
-            Debug.Log($"Level loaded from: {path}");
+            logService.Log($"Level loaded from: {path}", LogCategory.LevelEditor);
         }
 
         private LevelSaveData BuildSaveData()
@@ -113,7 +114,7 @@ namespace Utility.LevelEditor
                 LevelElement prefab = GetElementPrefabByID(elementData.ElementID);
                 if (prefab == null)
                 {
-                    Debug.LogWarning($"Element prefab not found by ID: {elementData.ElementID}");
+                    logService.LogWarning($"Element prefab not found by ID: {elementData.ElementID}", LogCategory.LevelEditor);
                     continue;
                 }
 
@@ -158,7 +159,7 @@ namespace Utility.LevelEditor
             Material material = GetMaterialByID(materialID);
             if (material == null)
             {
-                Debug.LogWarning($"Material not found by ID: {materialID}");
+                logService.LogWarning($"Material not found by ID: {materialID}", LogCategory.LevelEditor);
                 return;
             }
 

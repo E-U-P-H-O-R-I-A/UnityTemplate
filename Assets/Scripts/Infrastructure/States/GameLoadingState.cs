@@ -1,5 +1,6 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
+using Data.Scheme.Public;
 using Services.CurrencyService;
 using Services.LogService;
 using Services.PrivateModelProvider;
@@ -39,7 +40,7 @@ namespace Infrastructure.States
         
         public async UniTask Enter()
         {
-            logService.Log("GameLoadingState Enter");
+            logService.Log("GameLoadingState Enter", LogCategory.Infrastructure);
             
             loadingCurtain.Show();
             
@@ -58,7 +59,7 @@ namespace Infrastructure.States
 
         public async UniTask Exit()
         {
-            logService.Log("GameLoadingState Exit");
+            logService.Log("GameLoadingState Exit", LogCategory.Infrastructure);
         }
     }
 }
