@@ -27,7 +27,7 @@ namespace Services.LogService
     {
         private static readonly Dictionary<LogSeverity, bool> SEVERITY_ENABLED = new()
         {
-            { LogSeverity.Info, false },
+            { LogSeverity.Info, true },
             { LogSeverity.Error, true },
             { LogSeverity.Warning, true },
         };
