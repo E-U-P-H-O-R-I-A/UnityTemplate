@@ -35,17 +35,10 @@ MonoBehaviour:
     - Data
     - LevelEditorElements
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9fc0d4010bbf28b4594072e72b8655ab
-    m_Address: MainScene
+  - m_GUID: fa78ac8426399e345a86f584da17db39
+    m_Address: Scenes
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Scenes
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e817dbd49a9808a49bac578905a15720
-    m_Address: LoadingScene
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Scenes
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: c1b5325cc5bac9f41b217e3e30ac8e8b, type: 2}

@@ -19,7 +19,8 @@
         //public const string WorkstationUpgradeConfig = "WorkstationLevelConfig.asset";
         
         //Scenes
-        public const string MAIN_SCENE = "MainScene";
-        public const string LOADING_SCENE = "LoadingScene";
+        public const string MAIN_SCENE = "Scenes/MainScene.unity";
+        public const string LOBBY_SCENE = "Scenes/LobbyScene.unity";
+        public const string LOADING_SCENE = "Scenes/LoadingScene.unity";
     }
 }

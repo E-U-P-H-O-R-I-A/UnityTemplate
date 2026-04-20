@@ -20,13 +20,12 @@ namespace Infrastructure.States
         private readonly ITutorialService tutorialService;
         private readonly ICurrencyService currencyService;
         private readonly ILoadingCurtain loadingCurtain;
-        private readonly ISceneProvider sceneProvider;
         private readonly IWindowService windowService;
         private readonly ILogService logService;
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
-            IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider, 
-            ICurrencyService currencyService, IWindowService windowService, ITutorialService tutorialService)
+            IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
+            IWindowService windowService, ITutorialService tutorialService)
         {
             this.privateModelProvider = privateModelProvider;
             this.publicModelProvider = publicModelProvider;
@@ -34,7 +33,6 @@ namespace Infrastructure.States
             this.currencyService = currencyService;
             this.tutorialService = tutorialService;
             this.loadingCurtain = loadingCurtain;
-            this.sceneProvider = sceneProvider;
             this.windowService = windowService;
             this.logService = logService;
         }
@@ -47,8 +45,7 @@ namespace Infrastructure.States
             
             var publicDataTask = publicModelProvider.Init();
             await loadingCurtain.AnimatePhase(publicDataTask, 0.20f);
-          
-
+            
             var privateDataTask = privateModelProvider.Init();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
@@ -56,14 +53,7 @@ namespace Infrastructure.States
             currencyService.Initialize();
             windowService.Initialize();
 
-            var loadSceneTask = sceneProvider.Load(AssetsPath.MAIN_SCENE);
-            await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
-            
-            await loadingCurtain.Finish();
-
-            loadingCurtain.Hide();
-
-            gameStateMachine.Enter<GameplayState>();
+            gameStateMachine.Enter<GameLobbyState>();
         }
 
         public async UniTask Exit()

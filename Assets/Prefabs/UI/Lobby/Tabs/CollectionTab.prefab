@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &5445276235059880352
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1219560145502024979, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_Name
+      value: CollectionTab
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066322387428452, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066322387428452, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066322387428452, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066322387428452, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2936066322387428452, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1219560145502024979, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4972932672966864891}
+  m_SourcePrefab: {fileID: 100100000, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+--- !u!1 &6592494282299528371 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1219560145502024979, guid: d89c1a184309cc24194b575a0d819aee, type: 3}
+  m_PrefabInstance: {fileID: 5445276235059880352}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4972932672966864891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6592494282299528371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0da122962c048b1992cb1a175603558, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Lobby.Tabs.CollectionTab

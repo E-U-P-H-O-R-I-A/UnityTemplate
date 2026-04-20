@@ -19,6 +19,7 @@ namespace Utility.LoadingCurtain
 
         public void Show()
         {
+            gameObject.SetActive(true);
             canvasGroup.alpha = 1f;
             progressFill.value = 0f;
             current = 0f;
@@ -27,6 +28,7 @@ namespace Utility.LoadingCurtain
         public void Hide()
         {
             canvasGroup.alpha = 0f;
+            gameObject.SetActive(false);
         }
 
         public async UniTask Finish()

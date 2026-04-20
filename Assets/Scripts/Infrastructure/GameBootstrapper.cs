@@ -19,6 +19,7 @@ namespace Infrastructure
         {
             gameStateMachine.RegisterState(factory.Create<GameBootstrapState>());
             gameStateMachine.RegisterState(factory.Create<GameLoadingState>());
+            gameStateMachine.RegisterState(factory.Create<GameLobbyState>());
             gameStateMachine.RegisterState(factory.Create<GameplayState>()); 
             
             gameStateMachine.Enter<GameBootstrapState>();
