@@ -47,56 +47,15 @@ namespace TND.Upscaling.Framework
             UpdateDefines();
         }
 
-        /// <summary>
-        /// Update the unity pipeline defines for URP
-        /// </summary>
         private static void UpdateDefines()
         {
-            var pipeline = GetPipeline();
-
-            if (pipeline == PipelineType.URP)
-            {
-                AddDefine("TND_URP");
-            }
-            else
-            {
-                RemoveDefine("TND_URP");
-            }
-
-            if (pipeline == PipelineType.HDRP)
-            {
-                AddDefine("TND_HDRP");
-
-                // Ensure the DLSS defines are added when the Nvidia plugin module is installed.
-                // This allows the HDRP DLSS upscaler injection method to work across all platforms. 
-#if UNITY_2023_1_OR_NEWER
-                if (UnityEditor.PackageManager.PackageInfo.IsPackageRegistered("com.unity.modules.nvidia"))
-#else
-                var registeredPackages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
-                if (registeredPackages.Any(pi => pi.name == "com.unity.modules.nvidia"))
-#endif
-                {
-                    List<string> definesList = GetDefines(EditorUserBuildSettings.activeBuildTarget);
-                    if (!definesList.Contains("ENABLE_NVIDIA") || !definesList.Contains("ENABLE_NVIDIA_MODULE"))
-                    {
-                        AddDefine("ENABLE_NVIDIA");
-                        AddDefine("ENABLE_NVIDIA_MODULE");
-                    }
-                }
-            }
-            else
-            {
-                RemoveDefine("TND_HDRP");
-            }
-
-            if (pipeline == PipelineType.BIRP)
-            {
-                AddDefine("TND_BIRP");
-            }
-            else
-            {
-                RemoveDefine("TND_BIRP");
-            }
+            // Remove any project-wide defines we may have added previously.
+            // We now handle these defines with version defines on the appropriate assembly definitions.
+            RemoveDefine("TND_BIRP");
+            RemoveDefine("TND_HDRP");
+            RemoveDefine("TND_URP");
+            RemoveDefine("ENABLE_NVIDIA");
+            RemoveDefine("ENABLE_NVIDIA_MODULE");
         }
 
         private static PipelineType GetPipeline()

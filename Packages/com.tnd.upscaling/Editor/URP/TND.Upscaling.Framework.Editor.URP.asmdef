@@ -20,6 +20,12 @@
     "defineConstraints": [
         "TND_URP"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "1.0.0",
+            "define": "TND_URP"
+        }
+    ],
     "noEngineReferences": false
 }

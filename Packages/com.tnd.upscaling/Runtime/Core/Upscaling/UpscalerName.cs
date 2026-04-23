@@ -19,7 +19,7 @@ namespace TND.Upscaling.Framework
         /// <summary>
         /// FidelityFX Super Resolution 2.2 (analytical temporal upscaling)
         /// </summary>
-        [Obsolete] FSR2 = 12000,
+        FSR2 = 12000,
         
         /// <summary>
         /// FidelityFX Super Resolution 3.1 (analytical temporal upscaling)
@@ -55,6 +55,11 @@ namespace TND.Upscaling.Framework
         /// Intel Xe Super Sampling 2.x (ML-based temporal upscaling)
         /// </summary>
         XeSS2 = 42000,
+        
+        /// <summary>
+        /// Intel Xe Super Sampling 3.x (ML-based temporal upscaling)
+        /// </summary>
+        XeSS3 = 43000,
         
         /// <summary>
         /// Snapdragon Game Super Resolution 1 (mobile-optimized spatial upscaling)

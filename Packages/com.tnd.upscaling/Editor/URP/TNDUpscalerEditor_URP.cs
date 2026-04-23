@@ -158,14 +158,14 @@ namespace TND.Upscaling.Framework.URP
                     EditorGUILayout.HelpBox("Unity currently doesn't support stacked cameras for upscaling, we're still investigating ways to work around this limitation.", MessageType.Warning);
                 }
                 
-                // Upscaling Filter should be set to Point (or Linear) 
-                if (_activeRenderPipelineAsset.upscalingFilter != UpscalingFilterSelection.Auto)
+                // Upscaling Filter should be set to Linear for After-PP upscaling to work correctly everywhere 
+                if (_activeRenderPipelineAsset.upscalingFilter != UpscalingFilterSelection.Linear)
                 {
-                    EditorGUILayout.HelpBox("Upscaling Filter should be set to Automatic for the best compatibility.", MessageType.Warning);
-                    if (GUILayout.Button("Set to 'Automatic'"))
+                    EditorGUILayout.HelpBox("Upscaling Filter should be set to Bilinear for the best compatibility.", MessageType.Warning);
+                    if (GUILayout.Button("Set to 'Bilinear'"))
                     {
                         _serializedPipelineAsset.Update();
-                        _serializedPipelineAsset.FindProperty("m_UpscalingFilter").SetEnumValue(UpscalingFilterSelection.Auto);
+                        _serializedPipelineAsset.FindProperty("m_UpscalingFilter").SetEnumValue(UpscalingFilterSelection.Linear);
                         _serializedPipelineAsset.ApplyModifiedProperties();
                         EditorUtility.SetDirty(_serializedPipelineAsset.targetObject);
                     }

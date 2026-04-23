@@ -3,7 +3,7 @@ using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 using UnityEngine.Rendering.RenderGraphModule;
 #pragma warning disable 0672    // Disable obsolete warnings
 #pragma warning disable 0618    // Disable obsolete warnings
@@ -31,41 +31,56 @@ namespace TND.Upscaling.Framework.URP
                 _opaqueOnlyColor = null;
             }
         }
+        
+        private RenderTextureDescriptor GetTextureDescriptor(in RenderTextureDescriptor cameraTargetDescriptor)
+        {
+            var descriptor = cameraTargetDescriptor;
+            descriptor.depthStencilFormat = GraphicsFormat.None;
+            descriptor.useMipMap = false;
+            descriptor.autoGenerateMips = false;
+            return descriptor;
+        }
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
+        private TextureHandle _opaqueOnlyColorHandle;
+        public TextureHandle TextureHandle => _opaqueOnlyColorHandle;
+        
         private class PassData
         {
             public TextureHandle activeColorTexture;
-            public RTHandle opaqueOnlyColor;
+            public TextureHandle opaqueOnlyColor;
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            // Setting up the render pass in RenderGraph
             using (var builder = renderGraph.AddUnsafePass<PassData>(PassName, out var passData))
             {
                 var cameraData = frameData.Get<UniversalCameraData>();
                 var resourceData = frameData.Get<UniversalResourceData>();
-
-                CreateResources(ref cameraData.cameraTargetDescriptor);
+                
+                _opaqueOnlyColorHandle = UniversalRenderer.CreateRenderGraphTexture(renderGraph, GetTextureDescriptor(cameraData.cameraTargetDescriptor), "_CameraOpaqueOnlyColor", false);
 
                 passData.activeColorTexture = resourceData.activeColorTexture;
-                passData.opaqueOnlyColor = _opaqueOnlyColor;
+                passData.opaqueOnlyColor = _opaqueOnlyColorHandle;
 
-                builder.UseTexture(passData.activeColorTexture, AccessFlags.Read);
+                builder.UseTexture(passData.activeColorTexture);
+                builder.UseTexture(passData.opaqueOnlyColor, AccessFlags.Write);
+                
                 builder.AllowPassCulling(false);
+                
                 builder.SetRenderFunc(static (PassData data, UnsafeGraphContext context) =>
                 {
-                    CommandBuffer unsafeCmd = CommandBufferHelpers.GetNativeCommandBuffer(context.cmd);
-                    unsafeCmd.CopyTexture(data.activeColorTexture, data.opaqueOnlyColor);
+                    var cmd = CommandBufferHelpers.GetNativeCommandBuffer(context.cmd);
+                    cmd.CopyTexture(data.activeColorTexture, data.opaqueOnlyColor);
                 });
             }
         }
 #endif
 
+#if TND_URP_COMPATIBILITY
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            CreateResources(ref renderingData.cameraData.cameraTargetDescriptor);
+            CreateResources(renderingData.cameraData.cameraTargetDescriptor);
         }
 
         public override void OnCameraCleanup(CommandBuffer cmd)
@@ -73,13 +88,9 @@ namespace TND.Upscaling.Framework.URP
             ReleaseResources();
         }
 
-        private void CreateResources(ref RenderTextureDescriptor cameraTargetDescriptor)
+        private void CreateResources(in RenderTextureDescriptor cameraTargetDescriptor)
         {
-            var descriptor = cameraTargetDescriptor;
-            descriptor.depthStencilFormat = GraphicsFormat.None;
-            descriptor.useMipMap = false;
-            descriptor.autoGenerateMips = false;
-            UpscalingHelpers.AllocateRTHandle(ref _opaqueOnlyColor, descriptor, FilterMode.Point, TextureWrapMode.Clamp, "_CameraOpaqueOnlyColor");
+            UpscalingHelpers.AllocateRTHandle(ref _opaqueOnlyColor, GetTextureDescriptor(cameraTargetDescriptor), FilterMode.Point, TextureWrapMode.Clamp, "_CameraOpaqueOnlyColor");
         }
 
         private void ReleaseResources()
@@ -91,16 +102,18 @@ namespace TND.Upscaling.Framework.URP
         {
             CommandBuffer cmd = CommandBufferPool.Get(PassName);
 
-            var cameraColorTarget =
+            
 #if UNITY_2022_1_OR_NEWER
-                renderingData.cameraData.renderer.cameraColorTargetHandle;
+            var cameraColorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            Blitter.BlitCameraTexture(cmd, cameraColorTarget, _opaqueOnlyColor);
 #else
-                renderingData.cameraData.renderer.cameraColorTarget;
+            var cameraColorTarget = renderingData.cameraData.renderer.cameraColorTarget;
+            cmd.Blit(cameraColorTarget, _opaqueOnlyColor);
 #endif
-            cmd.CopyTexture(cameraColorTarget, _opaqueOnlyColor);
-
+            
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
+#endif
     }
 }

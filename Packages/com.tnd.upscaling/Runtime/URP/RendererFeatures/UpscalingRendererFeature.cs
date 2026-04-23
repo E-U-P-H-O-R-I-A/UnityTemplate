@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -14,10 +16,14 @@ namespace TND.Upscaling.Framework.URP
 
         private UpscalingRenderPass _upscalingRenderPass;
         private OpaqueCopyPass _opaqueCopyPass;
+        private AutoReactiveMaskPass _autoReactiveMaskPass;
         private CustomReactiveMaskPass _customReactiveMaskPass;
+        private SetupPass _setupPass;
         private CleanupPass _cleanupPass;
         private Material _copyDepthMaterial;
         private Material _upsampleDepthMaterial;
+
+        private bool _anyUpscalingCameras;
         
         public override void Create()
         {
@@ -38,19 +44,59 @@ namespace TND.Upscaling.Framework.URP
             name = "TND Upscaling";
             _upscalingRenderPass = new UpscalingRenderPass();
             _opaqueCopyPass = new OpaqueCopyPass();
+            _autoReactiveMaskPass = new AutoReactiveMaskPass();
             _customReactiveMaskPass = new CustomReactiveMaskPass();
+            _setupPass = new SetupPass();
             _cleanupPass = new CleanupPass();
             _copyDepthMaterial = new Material(copyDepthShader);
             _upsampleDepthMaterial = new Material(upsampleDepthShader);
 
-            RenderPipelineManager.beginCameraRendering += BeginCameraRendering;
+            RenderPipelineManager.beginContextRendering += BeginContextRendering;
+            AddBeginCameraRenderingDelegate();
             RenderPipelineManager.endCameraRendering += EndCameraRendering;
+            RenderPipelineManager.endContextRendering += EndContextRendering;
+        }
+
+        /// <summary>
+        /// We need to guarantee that upscaling is the first listener to be invoked before camera rendering starts, because we modify the render scale.
+        /// Any other listeners that make use of render scale to allocate render textures need to come after, otherwise they will use incorrect resolution values.
+        /// Since Unity calls Awake on game object scripts before initializing renderer features, we cannot be sure in what order event listeners are registered and invoked.
+        /// This leaves us with no choice but to use reflection to manually reorder the event invocation list, guaranteeing that we come first. 
+        /// </summary>
+        private void AddBeginCameraRenderingDelegate()
+        {
+            var eventInfo = RenderPipelineManagerMembers.BeginCameraRenderingEvent;
+            var eventFieldValue = (Delegate)RenderPipelineManagerMembers.BeginCameraRenderingField.GetValue(null);
+
+            // Remove all current listeners from the event
+            var invocationList = eventFieldValue?.GetInvocationList();
+            if (invocationList != null)
+            {
+                foreach (var listener in invocationList)
+                {
+                    eventInfo.RemoveEventHandler(null, listener);
+                }
+            }
+
+            // Add our event listener at the start of the invocation list
+            RenderPipelineManager.beginCameraRendering += BeginCameraRendering;
+            
+            // Re-add all the other listeners back to the event
+            if (invocationList != null)
+            {
+                foreach (var listener in invocationList)
+                {
+                    eventInfo.AddEventHandler(null, listener);
+                }
+            }
         }
 
         protected override void Dispose(bool disposing)
         {
+            RenderPipelineManager.beginContextRendering -= BeginContextRendering;
             RenderPipelineManager.beginCameraRendering -= BeginCameraRendering;
             RenderPipelineManager.endCameraRendering -= EndCameraRendering;
+            RenderPipelineManager.endContextRendering -= EndContextRendering;
 
             if (_upsampleDepthMaterial != null)
             {
@@ -62,6 +108,12 @@ namespace TND.Upscaling.Framework.URP
             {
                 _opaqueCopyPass.Dispose();
                 _opaqueCopyPass = null;
+            }
+
+            if (_autoReactiveMaskPass != null)
+            {
+                _autoReactiveMaskPass.Dispose();
+                _autoReactiveMaskPass = null;
             }
 
             if (_customReactiveMaskPass != null)
@@ -114,6 +166,15 @@ namespace TND.Upscaling.Framework.URP
                 return;
             }
             
+            bool usingRenderGraph =
+#if TND_URP_RENDERGRAPH && TND_URP_COMPATIBILITY
+                !GraphicsSettings.GetRenderPipelineSettings<RenderGraphSettings>().enableRenderCompatibilityMode;
+#elif TND_URP_RENDERGRAPH
+                true;
+#else
+                false;
+#endif
+            
             Vector2Int maxRenderSize = controller.MaxRenderSize;
             Vector2Int displaySize = controller.DisplaySize;
 
@@ -137,6 +198,11 @@ namespace TND.Upscaling.Framework.URP
             }
 #endif
 
+            if (_setupPass.Setup(controller, _upscalingRenderPass, _autoReactiveMaskPass))
+            {
+                renderer.EnqueuePass(_setupPass);
+            }
+            
             OpaqueCopyPass opaqueOnlySource = null;
             if (controller.EnableOpaqueOnlyCopy)
             {
@@ -144,12 +210,19 @@ namespace TND.Upscaling.Framework.URP
                 opaqueOnlySource = _opaqueCopyPass;
             }
 
+            AutoReactiveMaskPass autoReactiveSource = null;
+            if (controller.autoGenerateReactiveMask && _autoReactiveMaskPass.Setup(controller, opaqueOnlySource))
+            {
+                renderer.EnqueuePass(_autoReactiveMaskPass);
+                autoReactiveSource = _autoReactiveMaskPass;
+            }
+
             if (controller.EnableCustomReactiveMask && _customReactiveMaskPass.Setup(controller.customReactiveMaskLayer))
             {
                 renderer.EnqueuePass(_customReactiveMaskPass);
             }
-
-            if (_upscalingRenderPass.Setup(_renderPipelineAsset, controller, _copyDepthMaterial, _upsampleDepthMaterial, opaqueOnlySource))
+            
+            if (_upscalingRenderPass.Setup(_renderPipelineAsset, controller, usingRenderGraph, _copyDepthMaterial, _upsampleDepthMaterial, opaqueOnlySource, autoReactiveSource))
             {
                 renderer.EnqueuePass(_upscalingRenderPass);
             }
@@ -159,6 +232,12 @@ namespace TND.Upscaling.Framework.URP
                 renderer.EnqueuePass(_cleanupPass);
             }
         }
+        
+        private void BeginContextRendering(ScriptableRenderContext arg1, List<Camera> arg2)
+        {
+            // Keep track of any cameras with upscaling that are active this frame
+            _anyUpscalingCameras = false;
+        }
 
         private void BeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
@@ -167,19 +246,18 @@ namespace TND.Upscaling.Framework.URP
                 return;
             }
 
+            _renderPipelineAsset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
             if (_renderPipelineAsset == null)
             {
-                _renderPipelineAsset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-                if (_renderPipelineAsset == null)
-                {
-                    return;
-                }
+                return;
             }
 
             if (!camera.TryGetComponent<UpscalerController_URP>(out var controller) || !controller.enabled)
             {
                 return;
             }
+            
+            _anyUpscalingCameras = true;
 
             // In non-XR scenarios we use regular URP render scale to change the camera's render resolution.
             // This is the most compatible option for proper cooperation with other third-party assets, which may not be aware of our upscaler assets.
@@ -215,14 +293,22 @@ namespace TND.Upscaling.Framework.URP
                 return;
             }
 
-            if (_renderPipelineAsset != null && !controller.XREnabled)
-            {
-                _renderPipelineAsset.renderScale = 1.0f;
-            }
-
 #if !UNITY_2022_2_OR_NEWER
             camera.ResetProjectionMatrix();
 #endif
+        }
+        
+        private void EndContextRendering(ScriptableRenderContext context, List<Camera> cameras)
+        {
+            if (!Application.isPlaying || !isActive)
+            {
+                return;
+            }
+
+            if (_anyUpscalingCameras && _renderPipelineAsset != null)
+            {
+                _renderPipelineAsset.renderScale = 1.0f;
+            }
         }
     }
 }

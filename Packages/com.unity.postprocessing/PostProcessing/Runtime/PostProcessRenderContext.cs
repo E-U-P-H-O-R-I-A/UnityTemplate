@@ -79,6 +79,13 @@ namespace UnityEngine.Rendering.PostProcessing
             m_sourceDescriptor.height = height;
         }
 
+        public void SetScreenSize(Vector2Int screenSize)
+        {
+            SetRenderSize(screenSize);
+            screenWidth = width;
+            screenHeight = height;
+        }
+
         /// <summary>
         /// The command buffer to fill render commands in.
         /// </summary>

@@ -14,9 +14,12 @@ namespace UnityEngine.Rendering.PostProcessing
         public Vector2Int MaxRenderSize => _maxRenderSize;
         public Vector2Int DisplaySize => _displaySize;
         public RenderTargetIdentifier ColorOpaqueOnly { get; set; }
+        public RenderTargetIdentifier ReactiveMask { get; set; }
         public float RenderScale => GetUpscalerContext()?.UpscalerController?.RenderScale ?? 1.0f;
         public bool EnableOpaqueOnlyCopy => GetUpscalerContext()?.UpscalerController?.EnableOpaqueOnlyCopy ?? false;
+        public bool EnableAutoReactiveMask => GetUpscalerContext()?.UpscalerController?.EnableAutoReactiveMask ?? false;
         public bool RequiresRandomWriteOutput => GetUpscalerContext()?.ActiveUpscaler?.RequiresRandomWriteOutput ?? true;
+        public GraphicsFormat ReactiveMaskFormat => GetUpscalerContext()?.UpscalerController?.ReactiveMaskFormat ?? GraphicsFormat.R8_UNorm;
 
         private readonly List<UpscalerContext> _upscalerContexts = new();
         
@@ -36,12 +39,14 @@ namespace UnityEngine.Rendering.PostProcessing
         private RenderTexture _tempDepth;
         private RenderTexture _tempMotion;
         private RenderTexture _tempOpaque;
+        private RenderTexture _tempReactive;
         private RenderTexture _tempOutput;
 
         private readonly TextureRef.BlitterDelegate _inputColorBlitter;
         private readonly TextureRef.BlitterDelegate _inputDepthBlitter;
         private readonly TextureRef.BlitterDelegate _inputMotionBlitter;
         private readonly TextureRef.BlitterDelegate _inputOpaqueBlitter;
+        private readonly TextureRef.BlitterDelegate _inputReactiveBlitter;
         private readonly TextureRef.BlitterDelegate _outputColorBlitter;
 
         public Upscaling()
@@ -50,6 +55,7 @@ namespace UnityEngine.Rendering.PostProcessing
             _inputDepthBlitter = BlitDepth;
             _inputMotionBlitter = BlitMotion;
             _inputOpaqueBlitter = BlitOpaque;
+            _inputReactiveBlitter = BlitReactive;
             _outputColorBlitter = BlitOutput;
         }
         
@@ -79,6 +85,7 @@ namespace UnityEngine.Rendering.PostProcessing
             UpscalerUtils.DestroyRenderTexture(ref _tempDepth);
             UpscalerUtils.DestroyRenderTexture(ref _tempMotion);
             UpscalerUtils.DestroyRenderTexture(ref _tempOpaque);
+            UpscalerUtils.DestroyRenderTexture(ref _tempReactive);
             UpscalerUtils.DestroyRenderTexture(ref _tempOutput);
         }
 
@@ -168,6 +175,7 @@ namespace UnityEngine.Rendering.PostProcessing
             var inputColorDesc = new RenderTextureDescriptor(_maxRenderSize.x, _maxRenderSize.y, colorFormat, GraphicsFormat.None);
             var inputDepthDesc = new RenderTextureDescriptor(_maxRenderSize.x, _maxRenderSize.y, GraphicsFormat.R32_SFloat, GraphicsFormat.None);
             var inputMotionDesc = new RenderTextureDescriptor(_maxRenderSize.x, _maxRenderSize.y, GraphicsFormat.R16G16_SFloat, GraphicsFormat.None);
+            var inputReactiveDesc = new RenderTextureDescriptor(_maxRenderSize.x, _maxRenderSize.y, ReactiveMaskFormat, GraphicsFormat.None);
             var outputColorDesc = new RenderTextureDescriptor(_displaySize.x, _displaySize.y, colorFormat, GraphicsFormat.None) { enableRandomWrite = RequiresRandomWriteOutput };
             
             var renderSize = GetScaledRenderSize(camera);
@@ -181,6 +189,7 @@ namespace UnityEngine.Rendering.PostProcessing
                 TextureRef inputOpaque = new TextureRef(ColorOpaqueOnly, inputColorDesc, _inputOpaqueBlitter);
                 TextureRef inputDepth = new TextureRef(GetDepthTexture(camera), inputDepthDesc, _inputDepthBlitter, RenderTextureSubElement.Depth);
                 TextureRef inputMotion = new TextureRef(new RenderTargetIdentifier(BuiltinRenderTextureType.MotionVectors), inputMotionDesc, _inputMotionBlitter);
+                TextureRef inputReactive = new TextureRef(ReactiveMask, inputReactiveDesc, _inputReactiveBlitter);
                 if (context.stereoActive)
                 {
                     // Create properly sized copies of the input buffers, as BiRP refuses to render them at lower resolution when XR is active
@@ -189,6 +198,7 @@ namespace UnityEngine.Rendering.PostProcessing
                         // TODO: use single texture copies for single-pass instanced because BiRP makes a complete mess of texture arrays
                         inputColor = new TextureRef(inputColor.GetTexture(cmd));
                         inputOpaque = new TextureRef(inputOpaque.GetTexture(cmd));
+                        inputReactive = new TextureRef(inputReactive.GetTexture(cmd));
                     }
                     inputDepth = new TextureRef(inputDepth.GetTexture(cmd));
                     inputMotion = new TextureRef(inputMotion.GetTexture(cmd));
@@ -205,7 +215,7 @@ namespace UnityEngine.Rendering.PostProcessing
                     inputDepth = inputDepth,
                     inputMotionVectors = inputMotion,
                     inputExposure = TextureRef.Null,
-                    inputReactiveMask = TextureRef.Null, // PPV2 does not provide a reactive mask of its own
+                    inputReactiveMask = inputReactive,
                     inputOpaqueOnly = inputOpaque,
                     outputColor = new TextureRef(context.destination, outputColorDesc, _outputColorBlitter),
                     renderSize = renderSize,
@@ -237,6 +247,47 @@ namespace UnityEngine.Rendering.PostProcessing
             }
 
             _resetHistory = false;
+        }
+
+        private static readonly int MainTexPropertyID = Shader.PropertyToID("_MainTex");
+        private static readonly int OpaqueOnlyPropertyID = Shader.PropertyToID("_OpaqueOnly");
+        private static readonly int ReactiveParamsPropertyID = Shader.PropertyToID("_ReactiveParams");
+        private static readonly int ReactiveFlagsPropertyID = Shader.PropertyToID("_ReactiveFlags");
+
+        private MaterialPropertyBlock _autoReactiveProperties;
+        
+        public void GenerateAutoReactiveMask(PostProcessRenderContext context, CommandBuffer cmd, RenderTargetIdentifier cameraColor, RenderTexture opaqueOnly, RenderTexture outReactiveMask)
+        {
+            _autoReactiveProperties ??= new MaterialPropertyBlock();
+            
+            cmd.SetRenderTarget(outReactiveMask);
+                
+            Material autoReactiveMaterial = GetUpscalerContext()?.AutoReactiveMaterial;
+            if (autoReactiveMaterial != null && opaqueOnly != null)
+            {
+                int instanceCount = 1;
+                if (context.stereoRenderingMode == PostProcessRenderContext.StereoRenderingMode.SinglePassInstanced)
+                {
+                    instanceCount = 2;
+                    cmd.EnableShaderKeyword(UpscalerContext.TexArraysKeyword);
+                }
+                else
+                {
+                    cmd.DisableShaderKeyword(UpscalerContext.TexArraysKeyword);
+                }
+
+                var autoReactiveSettings = GetUpscalerContext().UpscalerController.autoReactiveSettings;
+                _autoReactiveProperties.SetTexture(OpaqueOnlyPropertyID, opaqueOnly);
+                _autoReactiveProperties.SetVector(ReactiveParamsPropertyID, new Vector3(autoReactiveSettings.scale, autoReactiveSettings.cutoffThreshold, autoReactiveSettings.binaryValue));
+                _autoReactiveProperties.SetInt(ReactiveFlagsPropertyID, (int)autoReactiveSettings.flags);
+
+                cmd.SetGlobalTexture(MainTexPropertyID, cameraColor);
+                cmd.DrawProcedural(Matrix4x4.identity, autoReactiveMaterial, 0, MeshTopology.Triangles, 3, instanceCount, _autoReactiveProperties);
+            }
+            else
+            {
+                cmd.ClearRenderTarget(false, true, Color.clear);
+            }
         }
         
         private void ApplyJitter(Camera camera, bool singlePassInstanced, int passIndex, int viewsPerPass)
@@ -307,12 +358,14 @@ namespace UnityEngine.Rendering.PostProcessing
             }
             
             cmd.BlitFullscreenTriangle(source, texture);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return texture;
         }
 
         private Texture BlitColor(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source) => BlitColorTexture(cmd, desc, source, ref _tempColor, "_TempColor");
         private Texture BlitMotion(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source) => BlitColorTexture(cmd, desc, source, ref _tempMotion, "_TempMotion");
         private Texture BlitOpaque(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source) => BlitColorTexture(cmd, desc, source, ref _tempOpaque, "_TempOpaque");
+        private Texture BlitReactive(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source) => BlitColorTexture(cmd, desc, source, ref _tempReactive, "_TempReactive");
         
         private Texture BlitDepth(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source)
         {
@@ -325,6 +378,7 @@ namespace UnityEngine.Rendering.PostProcessing
             cmd.SetRenderTarget(_tempDepth);
             cmd.SetGlobalTexture(ShaderIDs.MainTex, source, RenderTextureSubElement.Depth);
             cmd.DrawMesh(RuntimeUtilities.fullscreenTriangle, Matrix4x4.identity, RuntimeUtilities.copyMaterial, 0, 0);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return _tempDepth;
         }
         
@@ -362,6 +416,7 @@ namespace UnityEngine.Rendering.PostProcessing
 
         private static Vector2 GetJitterOffset(int index, int phaseCount)
         {
+            phaseCount = phaseCount > 0 ? phaseCount : 1;
             return new Vector2(
                 HaltonSeq.Get((index % phaseCount) + 1, 2) - 0.5f,
                 HaltonSeq.Get((index % phaseCount) + 1, 3) - 0.5f

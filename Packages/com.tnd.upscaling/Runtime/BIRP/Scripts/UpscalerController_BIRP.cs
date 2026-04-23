@@ -24,7 +24,7 @@ namespace TND.Upscaling.Framework.BIRP
             get
             {
 #if TND_POST_PROCESSING_STACK_V2
-                if (_postProcessLayer != null && _postProcessLayer.upscaling != null && _postProcessLayer.enabled)
+                if (_postProcessLayer != null && _postProcessLayer.upscaling != null && _postProcessLayer.enabled && _postProcessLayer.antialiasingMode == PostProcessLayer.Antialiasing.AdvancedUpscaling)
                 {
                     return _postProcessLayer.upscaling.DisplaySize;
                 }
@@ -44,7 +44,7 @@ namespace TND.Upscaling.Framework.BIRP
             get
             {
 #if TND_POST_PROCESSING_STACK_V2
-                if (_postProcessLayer != null && _postProcessLayer.upscaling != null && _postProcessLayer.enabled)
+                if (_postProcessLayer != null && _postProcessLayer.upscaling != null && _postProcessLayer.enabled && _postProcessLayer.antialiasingMode == PostProcessLayer.Antialiasing.AdvancedUpscaling)
                 {
                     return _postProcessLayer.upscaling.MaxRenderSize;
                 }
@@ -82,6 +82,7 @@ namespace TND.Upscaling.Framework.BIRP
             if (TryGetComponent(out _postProcessLayer) && _postProcessLayer.enabled)
             {
                 _postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.AdvancedUpscaling;
+                _postProcessLayer.ScreenScale = 1.0f;
             }
 #endif
             
@@ -96,6 +97,7 @@ namespace TND.Upscaling.Framework.BIRP
             if (_postProcessLayer != null && _postProcessLayer.enabled)
             {
                 _postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.None;
+                _postProcessLayer.ScreenScale = 1.0f;
             }
 #endif
 
@@ -116,6 +118,23 @@ namespace TND.Upscaling.Framework.BIRP
             if (_postProcessLayer == null && TryGetComponent(out _postProcessLayer) && _postProcessLayer.enabled)
             {
                 _postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.AdvancedUpscaling;
+                _postProcessLayer.ScreenScale = 1.0f;
+            }
+
+            // Switch between pre- and post-PP upscaling if necessary
+            if (_postProcessLayer != null)
+            {
+                switch (injectionPoint)
+                {
+                    case UpscalerInjectionPoint.BeforePostProcessing:
+                        _postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.AdvancedUpscaling;
+                        _postProcessLayer.ScreenScale = 1.0f;
+                        break;
+                    case UpscalerInjectionPoint.AfterPostProcessing:
+                        _postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.None;
+                        _postProcessLayer.ScreenScale = RenderScale;
+                        break;
+                }
             }
 #endif
             
@@ -155,7 +174,7 @@ namespace TND.Upscaling.Framework.BIRP
         private void CheckImageEffectUpscaler()
         {
 #if TND_POST_PROCESSING_STACK_V2
-            if (_postProcessLayer != null && _postProcessLayer.enabled)
+            if (_postProcessLayer != null && _postProcessLayer.enabled && injectionPoint < UpscalerInjectionPoint.AfterPostProcessing)
             {
                 RemoveImageEffectUpscaler();
                 return;

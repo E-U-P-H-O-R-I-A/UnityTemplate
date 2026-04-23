@@ -109,6 +109,8 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
 
         private Camera _camera;
         private bool _singlePassXR;
+
+        private MaterialPropertyBlock _propertyBlock = new();
         
         private static int s_prevFrameCount;
         private static int s_viewId;
@@ -143,8 +145,6 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
             return Initialize(cmd, initParams);
         }
 
-        private static readonly int TempOpaqueId = Shader.PropertyToID("_TempOpaque");
-
         internal void Execute(CommandBuffer cmd, in DLSSTextureTable textures)
         {
             // Camera might become invalid on scene change, either refresh it or abort
@@ -163,14 +163,64 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
                 s_viewId = 0;
                 s_prevFrameCount = Time.frameCount;
             }
+
+            bool singlePassXr = IsUsingSinglePassXR(_camera);
+            if (singlePassXr != _singlePassXR)
+            {
+                Destroy(cmd);
+                Initialize(cmd, _initData);
+            }
             
             Texture opaqueOnly = UpscalerController?.OpaqueOnlyTexture;
-            bool tempOpaqueCopy = _singlePassXR && opaqueOnly != null && opaqueOnly.dimension == TextureDimension.Tex2DArray;
-            if (tempOpaqueCopy)
+            RenderTexture tempOpaqueCopy = null;
+            if (_singlePassXR && opaqueOnly != null && opaqueOnly.dimension == TextureDimension.Tex2DArray)
             {
                 // Opaque-only copy is a texture array but in single-pass XR all input textures need to be a regular texture
-                cmd.GetTemporaryRT(TempOpaqueId, opaqueOnly.width, opaqueOnly.height, 0, opaqueOnly.filterMode, opaqueOnly.graphicsFormat, 1, false);
-                cmd.CopyTexture(opaqueOnly, s_viewId, TempOpaqueId, 0);
+                // This is because HDRP's DLSS implementation splits up textures per camera view and runs upscaling in multiple passes
+                tempOpaqueCopy = RenderTexture.GetTemporary(opaqueOnly.width, opaqueOnly.height, 0, opaqueOnly.graphicsFormat, 1);
+                cmd.CopyTexture(opaqueOnly, s_viewId, tempOpaqueCopy, 0);
+                opaqueOnly = tempOpaqueCopy;
+            }
+
+            Texture autoReactiveMask = UpscalerController?.AutoReactiveMask;
+            RenderTexture tempAutoReactiveCopy = null;
+            if (_singlePassXR && autoReactiveMask != null && autoReactiveMask.dimension == TextureDimension.Tex2DArray)
+            {
+                // Same as above, but for the auto-reactive mask texture
+                tempAutoReactiveCopy = RenderTexture.GetTemporary(autoReactiveMask.width, autoReactiveMask.height, 0, autoReactiveMask.graphicsFormat, 1);
+                cmd.CopyTexture(autoReactiveMask, s_viewId, tempAutoReactiveCopy, 0);
+                autoReactiveMask = tempAutoReactiveCopy;
+            }
+            
+            // Merge HDRP bias color mask and TND auto-reactive mask
+            Texture finalReactiveMask = textures.biasColorMask;
+            if (finalReactiveMask == null)
+                finalReactiveMask = autoReactiveMask;
+            
+            Material mergeReactiveMaterial = MergeReactiveMaterial;
+            RenderTexture mergedReactiveMask = null;
+            if (mergeReactiveMaterial != null && textures.biasColorMask != null && autoReactiveMask != null)
+            {
+                int numSlices = _singlePassXR ? 1 : TextureXR.slices;
+                RenderTextureDescriptor desc = new()
+                {
+                    width = autoReactiveMask.width,
+                    height = autoReactiveMask.height,
+                    dimension = autoReactiveMask.dimension,
+                    graphicsFormat = autoReactiveMask.graphicsFormat,
+                    volumeDepth = numSlices,
+                    msaaSamples = 1,
+                };
+                mergedReactiveMask = RenderTexture.GetTemporary(desc);
+                
+                cmd.BeginSample("Merge Reactive Masks");
+                CoreUtils.SetRenderTarget(cmd, mergedReactiveMask);
+                _propertyBlock.SetTexture(MergeInput1Id, textures.biasColorMask);
+                _propertyBlock.SetTexture(MergeInput2Id, autoReactiveMask);
+                cmd.DrawProcedural(Matrix4x4.identity, mergeReactiveMaterial, 0, MeshTopology.Triangles, 3, numSlices, _propertyBlock);
+                cmd.EndSample("Merge Reactive Masks");
+
+                finalReactiveMask = mergedReactiveMask;
             }
             
             UpscalerDispatchParams dispatchParams = new()
@@ -187,8 +237,8 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
                 inputDepth = new TextureRef(textures.depth),
                 inputMotionVectors = new TextureRef(textures.motionVectors),
                 inputExposure = new TextureRef(textures.exposureTexture),
-                inputReactiveMask = new TextureRef(textures.biasColorMask),
-                inputOpaqueOnly = tempOpaqueCopy ? new TextureRef(TempOpaqueId, new(), null) : new TextureRef(opaqueOnly), 
+                inputReactiveMask = new TextureRef(finalReactiveMask),
+                inputOpaqueOnly = new TextureRef(opaqueOnly), 
                 outputColor = new TextureRef(textures.colorOutput),
                 
                 renderSize = new Vector2Int((int)_executeData.subrectWidth, (int)_executeData.subrectHeight),
@@ -200,9 +250,19 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
 
             Execute(cmd, ref dispatchParams);
 
-            if (tempOpaqueCopy)
+            if (tempOpaqueCopy != null)
             {
-                cmd.ReleaseTemporaryRT(TempOpaqueId);
+                RenderTexture.ReleaseTemporary(tempOpaqueCopy);
+            }
+
+            if (tempAutoReactiveCopy != null)
+            {
+                RenderTexture.ReleaseTemporary(tempAutoReactiveCopy);
+            }
+
+            if (mergedReactiveMask != null)
+            {
+                RenderTexture.ReleaseTemporary(mergedReactiveMask);
             }
             
             // This is highly suspect, but assuming each camera draws its views in order, this should ensure we always use the correct view even when multiple cameras are active 
@@ -219,6 +279,7 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
             if (display == null)
                 return false;
             
+            // Note: this returns Tex2D on the first frame of starting single-pass instanced XR in-editor, triggering some errors
             display.GetRenderPass(0, out var renderPass);
             if (renderPass.renderTargetDesc.dimension != TextureDimension.Tex2DArray)
                 return false;
@@ -240,6 +301,9 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
             return false;
 #endif
         }
+
+        private static readonly int MergeInput1Id = Shader.PropertyToID("_Input1");
+        private static readonly int MergeInput2Id = Shader.PropertyToID("_Input2");
     }
 
     public struct DLSSCommandInitializationData
@@ -326,6 +390,8 @@ namespace UnityEngine.Rendering.HighDefinition.NVIDIA
         Preset_F,
         Preset_J,
         Preset_K,
+        Preset_L,
+        Preset_M,
     }
 
     public enum GraphicsDeviceFeature

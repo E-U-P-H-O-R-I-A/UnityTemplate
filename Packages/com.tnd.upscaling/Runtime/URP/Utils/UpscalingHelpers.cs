@@ -8,12 +8,12 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.Universal.Internal;
 using UnityEngine.XR;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 using UnityEngine.Rendering.RenderGraphModule;
 #pragma warning disable 0618    // Disable obsolete warnings
 #endif
 
-#if URP_COMPATIBILITY_MODE
+#if TND_URP_COMPATIBILITY && URP_COMPATIBILITY_MODE
 using UnityEngine.Rendering.Universal.CompatibilityMode;
 #endif
 
@@ -38,7 +38,7 @@ namespace TND.Upscaling.Framework.URP
 #endif
         }
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
         public static void SetCameraJitterMatrixRenderGraph(ref UniversalCameraData cameraData, in Matrix4x4 jitterMatrix, int viewIndex = 0)
         {
             cameraData.SetViewProjectionAndJitterMatrix(cameraData.GetViewMatrix(viewIndex), cameraData.GetProjectionMatrixNoJitter(viewIndex), jitterMatrix);
@@ -116,6 +116,7 @@ namespace TND.Upscaling.Framework.URP
         /// </summary>
         public static void InjectUpscalerOutput(CommandBuffer cmd, ScriptableRenderer renderer)
         {
+#if TND_URP_COMPATIBILITY
             if (!TryGetColorBufferSystem(renderer, out var colorBufferSystem))
             {
                 Debug.LogWarning("Could not obtain renderer's color buffer system. Upscaling is likely going to be broken.");
@@ -141,6 +142,7 @@ namespace TND.Upscaling.Framework.URP
                 UniversalRendererMembers.ActiveCameraDepthAttachment.SetValue(universalRenderer, cameraTarget);
             }
 #endif
+#endif
         }
         
         /// <summary>
@@ -150,7 +152,7 @@ namespace TND.Upscaling.Framework.URP
         /// </summary>
         public static void UpdatePostProcessDescriptors(ScriptableRenderer renderer, in RenderTextureDescriptor cameraTargetDescriptor)
         {
-#if !UNITY_6000_3_OR_NEWER || URP_COMPATIBILITY_MODE
+#if !UNITY_6000_3_OR_NEWER || (TND_URP_COMPATIBILITY && URP_COMPATIBILITY_MODE)
             if (PostProcessPassMembers.Descriptor == null || !TryGetPostProcessPasses(renderer, out var postProcessPass, out var finalPostProcessPass))
             {
                 Debug.LogWarning("Could not find any post-processing passes to update. Post-processing might be broken after upscaling.");
@@ -171,7 +173,7 @@ namespace TND.Upscaling.Framework.URP
 #endif
         }
 
-        public static ScriptableRenderPassInput GetRequiredPostProcessInputs(ScriptableRenderer renderer, bool postProcessEnabled)
+        public static ScriptableRenderPassInput GetRequiredPostProcessInputs(ScriptableRenderer renderer, bool postProcessEnabled, RenderPassEvent upscalingRenderPassEvent)
         {
             var inputs = ScriptableRenderPassInput.None;
 
@@ -196,10 +198,19 @@ namespace TND.Upscaling.Framework.URP
                 for (int i = 0; i < numPasses; ++i)
                 {
                     var pass = passes[i];
-                    if (pass.renderPassEvent < RenderPassEvent.BeforeRenderingPostProcessing)  // This will skip any pre-upscaling passes and upscaling itself
+                    
+                    // Skip any pre-upscaling passes and upscaling itself
+                    if (pass.renderPassEvent <= upscalingRenderPassEvent || pass.renderPassEvent > RenderPassEvent.AfterRendering)
                         continue;
 
-                    inputs |= pass.input;
+#if !UNITY_6000_3_OR_NEWER || (TND_URP_COMPATIBILITY && URP_COMPATIBILITY_MODE)
+                    // Skip URP built-in post-processing
+                    if (pass is PostProcessPass)
+                        continue;
+#endif
+                    
+                    // Some third-party assets do not accurately declare which inputs they require, so for safety assume they require depth
+                    inputs |= pass.input | ScriptableRenderPassInput.Depth;
                 }
             }
 
@@ -281,7 +292,7 @@ namespace TND.Upscaling.Framework.URP
         {
             switch (renderer)
             {
-#if !UNITY_6000_3_OR_NEWER || URP_COMPATIBILITY_MODE
+#if !UNITY_6000_3_OR_NEWER || (TND_URP_COMPATIBILITY && URP_COMPATIBILITY_MODE)
                 case UniversalRenderer universalRenderer:
                     colorBufferSystem = universalRenderer.m_ColorBufferSystem;
                     return true;
@@ -341,7 +352,7 @@ namespace TND.Upscaling.Framework.URP
             }
         }
 
-#if !UNITY_6000_3_OR_NEWER || URP_COMPATIBILITY_MODE
+#if !UNITY_6000_3_OR_NEWER || (TND_URP_COMPATIBILITY && URP_COMPATIBILITY_MODE)
         private static bool TryGetPostProcessPasses(ScriptableRenderer renderer, out PostProcessPass postProcessPass, out PostProcessPass finalPostProcessPass)
         {
             switch (renderer)
@@ -457,7 +468,7 @@ namespace TND.Upscaling.Framework.URP
             cmd.SetGlobalVector(ScreenSizeId, new Vector4(scaledCameraWidth, scaledCameraHeight, 1.0f / scaledCameraWidth, 1.0f / scaledCameraHeight));
         }
         
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
         // Pre-boxed value to avoid GC alloc at run-time
         private static readonly object BoxedTrue = true;
         

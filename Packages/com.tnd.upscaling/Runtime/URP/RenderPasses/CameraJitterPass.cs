@@ -2,7 +2,7 @@
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 using UnityEngine.Rendering.RenderGraphModule;
 #pragma warning disable 0672    // Disable obsolete warnings
 #endif
@@ -26,6 +26,7 @@ namespace TND.Upscaling.Framework.URP
             return true;
         }
         
+#if TND_URP_COMPATIBILITY
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
 #if UNITY_2022_2_OR_NEWER
@@ -34,8 +35,14 @@ namespace TND.Upscaling.Framework.URP
             UpscalingHelpers.SetCameraJitterMatrix(ref cameraData, jitterMatrix);
 #endif
         }
+        
+        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+        {
+            // Noop, this pass doesn't actually render anything
+        }
+#endif
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
         protected void OnCameraSetupRenderGraph(ref UniversalCameraData data)
         {
             ref UniversalCameraData cameraData = ref data;
@@ -80,11 +87,6 @@ namespace TND.Upscaling.Framework.URP
             return Matrix4x4.Translate(jitterVector);
         }
         
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {
-            // Noop, this pass doesn't actually render anything
-        }
-        
         private static int GetJitterPhaseCount(int renderWidth, int displayWidth)
         {
             const float basePhaseCount = 8.0f;
@@ -94,6 +96,7 @@ namespace TND.Upscaling.Framework.URP
 
         private static void GetJitterOffset(out float outX, out float outY, int index, int phaseCount)
         {
+            phaseCount = phaseCount > 0 ? phaseCount : 1;
             outX = HaltonSequence.Get((index % phaseCount) + 1, 2) - 0.5f;
             outY = HaltonSequence.Get((index % phaseCount) + 1, 3) - 0.5f;
         }

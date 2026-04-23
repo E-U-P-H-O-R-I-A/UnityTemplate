@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.RendererUtils;
 #pragma warning disable 0672    // Disable obsolete warnings
@@ -54,7 +54,7 @@ namespace TND.Upscaling.Framework.URP
             _renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
         }
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
         private class PassData
         {
             public RendererListHandle rendererListHandle;
@@ -103,6 +103,7 @@ namespace TND.Upscaling.Framework.URP
         }
 #endif
 
+#if TND_URP_COMPATIBILITY
         /// <summary>
         /// OnCameraSetup gets called very early on in the process of rendering a camera.
         /// This can be used to make significant changes to the camera's parameters that affect all render passes.
@@ -116,6 +117,7 @@ namespace TND.Upscaling.Framework.URP
         {
             ReleaseResources();
         }
+#endif
 
         /// <summary>
         /// Create output textures for the upscaler to write to
@@ -138,6 +140,7 @@ namespace TND.Upscaling.Framework.URP
             UpscalingHelpers.ReleaseRTHandle(ref _customReactiveMask);
         }
 
+#if TND_URP_COMPATIBILITY
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             CommandBuffer cmd = CommandBufferPool.Get(PassName);
@@ -175,5 +178,6 @@ namespace TND.Upscaling.Framework.URP
                 ref _renderStateBlock
             );
         }
+#endif
     }
 }

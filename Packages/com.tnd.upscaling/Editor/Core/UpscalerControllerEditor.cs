@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace TND.Upscaling.Framework
     {
         private const string ShowAdvancedKey = "TND.Upscaling.Framework.Editor_ShowAdvancedSettings";
         private const string FoldoutStateKey = "TND.Upscaling.Framework.Editor_FoldoutState_";
-        
+
         private class SettingsEditorState
         {
             public Editor editor;
@@ -26,6 +27,9 @@ namespace TND.Upscaling.Framework
         private SerializedProperty _upscalerQualityProperty;
         private SerializedProperty _upscalerSharpeningProperty;
         private SerializedProperty _upscalerSharpnessProperty;
+        private SerializedProperty _upscalerInjectionPointProperty;
+        private SerializedProperty _upscalerFrameGenerationProperty;
+        private SerializedProperty _upscalerAntiLagProperty;
         private SerializedProperty _upscalerSettingsProperty;
         private SerializedProperty _upscalerEnableAutoReactiveProperty;
         private SerializedProperty _upscalerAutoReactiveSettingsProperty;
@@ -40,13 +44,16 @@ namespace TND.Upscaling.Framework
             var upscalerScript = serializedObject.targetObject as UpscalerController;
             if (upscalerScript == null)
                 return;
-            
+
             serializedObject.Update();
 
             _upscalerChainProperty = serializedObject.FindProperty(nameof(UpscalerController.upscalerChain));
             _upscalerQualityProperty = serializedObject.FindProperty(nameof(UpscalerController.qualityMode));
             _upscalerSharpeningProperty = serializedObject.FindProperty(nameof(UpscalerController.enableSharpening));
             _upscalerSharpnessProperty = serializedObject.FindProperty(nameof(UpscalerController.sharpness));
+            _upscalerInjectionPointProperty = serializedObject.FindProperty(nameof(UpscalerController.injectionPoint));
+            //_upscalerFrameGenerationProperty = serializedObject.FindProperty(nameof(UpscalerController.enableFrameGeneration));
+            //_upscalerAntiLagProperty = serializedObject.FindProperty(nameof(UpscalerController.enableAntiLag));
             _upscalerSettingsProperty = serializedObject.FindProperty(nameof(UpscalerController.upscalerSettings));
             _upscalerEnableAutoReactiveProperty = serializedObject.FindProperty(nameof(UpscalerController.autoGenerateReactiveMask));
             _upscalerAutoReactiveSettingsProperty = serializedObject.FindProperty(nameof(UpscalerController.autoReactiveSettings));
@@ -70,10 +77,11 @@ namespace TND.Upscaling.Framework
                     // Ensure there is always a valid settings object
                     if (settingsProperty.objectReferenceValue == null)
                     {
-                        settingsProperty.objectReferenceValue = upscalerPlugin.CreateSettings();
+                        var settingsObject = upscalerPlugin.CreateSettings();
+                        settingsProperty.objectReferenceValue = settingsObject;
                         serializedObject.ApplyModifiedProperties();
                     }
-                    
+
                     _sortedUpscalerSettingsEditors.Add(new SettingsEditorState
                     {
                         editor = CreateEditor(settingsProperty.objectReferenceValue),
@@ -188,7 +196,7 @@ namespace TND.Upscaling.Framework
                 // Disable upscaler component when quality mode is set to Off, enable it otherwise
                 serializedObject.FindProperty("m_Enabled").boolValue = _upscalerQualityProperty.enumValueIndex > 0;
             }
-            
+
             EditorGUILayout.PropertyField(_upscalerSharpeningProperty);
             if (_upscalerSharpeningProperty.boolValue)
             {
@@ -196,6 +204,56 @@ namespace TND.Upscaling.Framework
                 EditorGUILayout.PropertyField(_upscalerSharpnessProperty);
                 EditorGUI.indentLevel--;
             }
+            
+            EditorGUILayout.PropertyField(_upscalerInjectionPointProperty);
+
+            DrawAdditionalSettings();
+
+            //EditorGUILayout.Space();
+            //EditorGUILayout.PropertyField(_upscalerFrameGenerationProperty);
+            //if (_upscalerFrameGenerationProperty.boolValue)
+            //{
+            //    EditorGUI.indentLevel++;
+            //    var style = new GUIStyle(EditorStyles.label)
+            //    {
+            //        wordWrap = false,
+            //        clipping = TextClipping.Ellipsis,
+            //        fixedHeight = 19
+            //    };
+            //    EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+            //    var icon = EditorGUIUtility.IconContent("console.erroricon").image;
+            //    GUILayout.Label(icon, GUILayout.Width(20), GUILayout.Height(20));
+            //    GUILayout.Label("Frame Generation package is missing.", style);
+            //    if (GUILayout.Button("Import Package", GUILayout.Width(100)))
+            //    {
+            //        Application.OpenURL("https://u3d.as/3nHx");
+            //    }
+            //    EditorGUILayout.EndHorizontal();
+            //    EditorGUI.indentLevel--;
+            //}
+
+            //EditorGUILayout.Space();
+            //EditorGUILayout.PropertyField(_upscalerAntiLagProperty);
+            //if (_upscalerAntiLagProperty.boolValue)
+            //{
+            //    EditorGUI.indentLevel++;
+            //    var style = new GUIStyle(EditorStyles.label)
+            //    {
+            //        wordWrap = false,
+            //        clipping = TextClipping.Ellipsis,
+            //        fixedHeight = 19
+            //    };
+            //    EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+            //    var icon = EditorGUIUtility.IconContent("console.erroricon").image;
+            //    GUILayout.Label(icon, GUILayout.Width(20), GUILayout.Height(20));
+            //    GUILayout.Label("Anti-Lag package is missing.", style);
+            //    if (GUILayout.Button("Import Package", GUILayout.Width(100)))
+            //    {
+            //        Application.OpenURL("https://u3d.as/3PqF");
+            //    }
+            //    EditorGUILayout.EndHorizontal();
+            //    EditorGUI.indentLevel--;
+            //}
 
             EditorGUILayout.Space();
             bool newAdvancedSettings = EditorGUILayout.BeginToggleGroup("Show Expert Settings", _showAdvancedSettings);
@@ -204,7 +262,7 @@ namespace TND.Upscaling.Framework
                 _showAdvancedSettings = newAdvancedSettings;
                 EditorPrefs.SetBool(ShowAdvancedKey, newAdvancedSettings);
             }
-            
+
             if (_showAdvancedSettings)
             {
                 EditorGUILayout.Space();
@@ -250,8 +308,8 @@ namespace TND.Upscaling.Framework
                             settingsEditorState.foldOut = newFoldoutState;
                             EditorPrefs.SetBool(FoldoutStateKey + settingsEditorState.identifier, newFoldoutState);
                         }
-                        
-                        if (settingsEditorState.foldOut)
+
+                        if (settingsEditorState.foldOut && settingsEditorState.editor != null)
                         {
                             settingsEditorState.editor.OnInspectorGUI();
                         }
@@ -266,6 +324,8 @@ namespace TND.Upscaling.Framework
 
             serializedObject.ApplyModifiedProperties();
         }
+
+        protected virtual void DrawAdditionalSettings() { }
 
         protected virtual void DrawAdditionalAdvancedSettings() { }
 
@@ -282,7 +342,7 @@ namespace TND.Upscaling.Framework
     public static class UpscalerControllerEditorExtensions
     {
         public static TEnum GetEnumValue<TEnum>(this SerializedProperty serializedProperty)
-            where TEnum: Enum
+            where TEnum : Enum
         {
             Array values = Enum.GetValues(typeof(TEnum));
             int index = serializedProperty.enumValueIndex;
@@ -291,9 +351,9 @@ namespace TND.Upscaling.Framework
 
             return (TEnum)values.GetValue(index);
         }
-        
+
         public static void SetEnumValue<TEnum>(this SerializedProperty serializedProperty, TEnum enumValue)
-            where TEnum: Enum
+            where TEnum : Enum
         {
             serializedProperty.enumValueIndex = Array.IndexOf(Enum.GetValues(typeof(TEnum)), enumValue);
         }

@@ -9,13 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 861622789, guid: 5226f37d1c510ea4f8a231d0d8c44f19, type: 3}
+  m_Script: {fileID: 861622789, guid: 87ee8e102c218af43a5c389ccb0e7752, type: 3}
   m_Name: UltimatePreview - Settings
   m_EditorClassIdentifier: 
-  "\u2002\u202C": 1
+  "\u2002\u2032": 1
   ultimateAnimationPreviewSettings:
     isEnable: 1
     disablePlayModeColorTint: 1
+    optimizePreviewInPlayMode: 1
     isLightsEnable: 1
     ambientColor: {r: 1, g: 1, b: 1, a: 1}
     cameraSettings:
@@ -67,6 +68,7 @@ MonoBehaviour:
   ultimateGameobjectPreviewSettings:
     isEnable: 1
     disablePlayModeColorTint: 1
+    optimizePreviewInPlayMode: 1
     isLightsEnable: 1
     ambientColor: {r: 0.5882353, g: 0.5882353, b: 0.5882353, a: 1}
     cameraSettings:

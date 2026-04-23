@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Assertions;
+using UnityEngine.Experimental.Rendering;
 
 namespace UnityEngine.Rendering.PostProcessing
 {
@@ -167,6 +168,7 @@ namespace UnityEngine.Rendering.PostProcessing
             /// <summary>
             /// A reference to the bundle itself.
             /// </summary>
+            [NonSerialized]
             public PostProcessBundle bundle; // Not serialized, is set/reset when deserialization kicks in
         }
 
@@ -202,6 +204,12 @@ namespace UnityEngine.Rendering.PostProcessing
         /// </summary>
         public bool haveBundlesBeenInited { get; private set; }
 
+        /// <summary>
+        /// Scale factor to apply for the entire post-processing stack, relative to the camera's pixel size.
+        /// This is used by after-PP upscaling, to allow post-processing at a lower render resolution. 
+        /// </summary>
+        public float ScreenScale { get; set; } = 1.0f;
+
         // Settings/Renderer bundles mapped to settings types
         Dictionary<Type, PostProcessBundle> m_Bundles;
 
@@ -209,12 +217,15 @@ namespace UnityEngine.Rendering.PostProcessing
         CommandBuffer m_LegacyCmdBufferBeforeReflections;
         CommandBuffer m_LegacyCmdBufferBeforeLighting;
         CommandBuffer m_LegacyCmdBufferOpaque;
+        CommandBuffer m_LegacyCmdBufferBeforeAlpha;
+        CommandBuffer m_LegacyCmdBufferAfterAlpha;
         CommandBuffer m_LegacyCmdBuffer;
         Camera m_Camera;
         PostProcessRenderContext m_CurrentContext;
         LogHistogram m_LogHistogram;
 
         RenderTexture m_opaqueOnly;
+        RenderTexture m_autoReactiveMask;
         RenderTexture m_upscaledOutput;
         RenderTexture m_originalTargetTexture;
 
@@ -254,6 +265,8 @@ namespace UnityEngine.Rendering.PostProcessing
             m_LegacyCmdBufferBeforeReflections = new CommandBuffer { name = "Deferred Ambient Occlusion" };
             m_LegacyCmdBufferBeforeLighting = new CommandBuffer { name = "Deferred Ambient Occlusion" };
             m_LegacyCmdBufferOpaque = new CommandBuffer { name = "Opaque Only Post-processing" };
+            m_LegacyCmdBufferBeforeAlpha = new CommandBuffer { name = "Before Transparent Rendering" };
+            m_LegacyCmdBufferAfterAlpha = new CommandBuffer { name = "After Transparent Rendering" };
             m_LegacyCmdBuffer = new CommandBuffer { name = "Post-processing" };
 
             m_Camera = GetComponent<Camera>();
@@ -265,6 +278,8 @@ namespace UnityEngine.Rendering.PostProcessing
             m_Camera.AddCommandBuffer(CameraEvent.BeforeReflections, m_LegacyCmdBufferBeforeReflections);
             m_Camera.AddCommandBuffer(CameraEvent.BeforeLighting, m_LegacyCmdBufferBeforeLighting);
             m_Camera.AddCommandBuffer(CameraEvent.BeforeImageEffectsOpaque, m_LegacyCmdBufferOpaque);
+            m_Camera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, m_LegacyCmdBufferBeforeAlpha);
+            m_Camera.AddCommandBuffer(CameraEvent.AfterForwardAlpha, m_LegacyCmdBufferAfterAlpha);
             m_Camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, m_LegacyCmdBuffer);
 
             // Internal context used if no SRP is set
@@ -291,6 +306,12 @@ namespace UnityEngine.Rendering.PostProcessing
             {
                 RenderTexture.ReleaseTemporary(m_opaqueOnly);
                 m_opaqueOnly = null;
+            }
+
+            if (m_autoReactiveMask != null)
+            {
+                RenderTexture.ReleaseTemporary(m_autoReactiveMask);
+                m_autoReactiveMask = null;
             }
 
             if (m_CurrentContext.IsUpscalingActive())
@@ -452,6 +473,10 @@ namespace UnityEngine.Rendering.PostProcessing
                     m_Camera.RemoveCommandBuffer(CameraEvent.BeforeLighting, m_LegacyCmdBufferBeforeLighting);
                 if (m_LegacyCmdBufferOpaque != null)
                     m_Camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffectsOpaque, m_LegacyCmdBufferOpaque);
+                if (m_LegacyCmdBufferBeforeAlpha != null)
+                    m_Camera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, m_LegacyCmdBufferBeforeAlpha);
+                if (m_LegacyCmdBufferAfterAlpha != null)
+                    m_Camera.RemoveCommandBuffer(CameraEvent.AfterForwardAlpha, m_LegacyCmdBufferAfterAlpha);
                 if (m_LegacyCmdBuffer != null)
                     m_Camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, m_LegacyCmdBuffer);
             }
@@ -644,6 +669,8 @@ namespace UnityEngine.Rendering.PostProcessing
             m_LegacyCmdBufferBeforeReflections.Clear();
             m_LegacyCmdBufferBeforeLighting.Clear();
             m_LegacyCmdBufferOpaque.Clear();
+            m_LegacyCmdBufferBeforeAlpha.Clear();
+            m_LegacyCmdBufferAfterAlpha.Clear();
             m_LegacyCmdBuffer.Clear();
 
             SetupContext(context);
@@ -664,6 +691,13 @@ namespace UnityEngine.Rendering.PostProcessing
                     m_Camera.targetTexture = m_originalTargetTexture;
                     m_originalTargetTexture = null;
                 }
+            }
+
+            float screenScale = ScreenScale;
+            if (!Mathf.Approximately(screenScale, 1.0f))
+            {
+                Vector2Int screenSize = new Vector2Int((int)(context.width * screenScale), (int)(context.height * screenScale));
+                context.SetScreenSize(screenSize);
             }
 
             context.command = m_LegacyCmdBufferOpaque;
@@ -759,7 +793,13 @@ namespace UnityEngine.Rendering.PostProcessing
             if (context.IsUpscalingActive() && upscaling.EnableOpaqueOnlyCopy)
             {
                 m_opaqueOnly = context.GetScreenSpaceTemporaryRT(colorFormat: sourceFormat);
-                m_LegacyCmdBufferOpaque.BuiltinBlit(cameraTarget, m_opaqueOnly);
+                m_LegacyCmdBufferBeforeAlpha.BuiltinBlit(cameraTarget, m_opaqueOnly);
+            }
+
+            if (context.IsUpscalingActive() && upscaling.EnableAutoReactiveMask)
+            {
+                m_autoReactiveMask = context.GetScreenSpaceTemporaryRT(colorFormat: GraphicsFormatUtility.GetRenderTextureFormat(upscaling.ReactiveMaskFormat), readWrite: RenderTextureReadWrite.Linear);
+                upscaling.GenerateAutoReactiveMask(context, m_LegacyCmdBufferAfterAlpha, cameraTarget, m_opaqueOnly, m_autoReactiveMask);
             }
 
             // Post-transparency stack
@@ -1220,6 +1260,7 @@ namespace UnityEngine.Rendering.PostProcessing
                     context.GetScreenSpaceTemporaryRT(cmd, upscaleTarget, 0, context.sourceFormat, isUpscaleOutput: true, upscaleRandomWrite: upscaling.RequiresRandomWriteOutput);
                     context.destination = upscaleTarget;
                     upscaling.ColorOpaqueOnly = m_opaqueOnly;
+                    upscaling.ReactiveMask = m_autoReactiveMask;
                     upscaling.Render(context);
                     context.source = upscaleTarget;
                     context.destination = finalDestination;

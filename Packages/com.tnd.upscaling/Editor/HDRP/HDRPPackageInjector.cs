@@ -22,6 +22,11 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
         { "GUID:295bcf0a3b5b6b1438fc61cb0489f285", "TND.Upscaling.Framework.Runtime.Injectors" }, 
         { "GUID:f65f98cd822cbe74aafbe7d5474b33ac", "TND.Upscaling.HDRP.NVModule" },
     };
+    private static readonly List<(string, string, string)> UpscalerDefines = new()
+    {
+        ("com.tnd.upscaling", "1.0.0", "ENABLE_NVIDIA"),
+        ("com.tnd.upscaling", "1.0.0", "ENABLE_NVIDIA_MODULE"),
+    };
     private static readonly string[] ExpectedPackagePaths =
     {
         "Library/PackageCache/",  // Standard packages from Unity
@@ -87,13 +92,11 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
     {
         switch (RuntimeValidations.ValidateInjection())
         {
-            case RuntimeValidations.InjectionStatus.NvidiaModuleNotInstalled:
-                // NVIDIA module and related scripting defines have to be installed first
-                return;
             case RuntimeValidations.InjectionStatus.DlssPassUsesTndPackage:
                 // DLSSPass is using injected TND Upscaler classes, all good
                 return;
-            case RuntimeValidations.InjectionStatus.DlssPassUsesNvidiaModule:
+            case RuntimeValidations.InjectionStatus.MissingNvidiaModuleDefines: // NVIDIA module scripting defines have to be set first
+            case RuntimeValidations.InjectionStatus.DlssPassUsesNvidiaModule:   // DLSSPass is still using classes from the NVIDIA module
             {
                 if (!TryFindRuntimePackage(out string asmDefPath) || !CheckReferencesInjected(asmDefPath))
                 {
@@ -101,7 +104,7 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
                     return;
                 }
 
-                // If DLSSPass is still using classes from the NVIDIA module, we know we need to give Unity one more gentle push to fully reimport and recompile the HDRP assembly definition.
+                // We need to give Unity one more gentle push to fully reimport and recompile the HDRP assembly definition.
                 EditorApplication.delayCall += () =>
                 {
                     Debug.Log($"Forcing reimport of HDRP assembly definition at path: {asmDefPath}");
@@ -167,7 +170,7 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
     /// </summary>
     private static bool CheckReferencesInjected(string asmDefPath)
     {
-        if (!ParseAssemblyDefinition(asmDefPath, out _, out JArray references))
+        if (!ParseAssemblyDefinition(asmDefPath, out _, out JArray references, out JArray versionDefines))
         {
             return false;
         }
@@ -175,6 +178,14 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
         foreach ((string asmDefGuid, string asmDefName) in UpscalerAsmDefs)
         {
             if (!ReferenceExists(references, asmDefGuid, asmDefName, out _))
+            {
+                return false;
+            }
+        }
+        
+        foreach ((string name, string _, string define) in UpscalerDefines)
+        {
+            if (!FindVersionDefine(versionDefines, name, define, out _))
             {
                 return false;
             }
@@ -190,7 +201,7 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
     {
         bool changed = false;
         
-        if (!ParseAssemblyDefinition(asmDefPath, out JObject jObject, out JArray references))
+        if (!ParseAssemblyDefinition(asmDefPath, out JObject jObject, out JArray references, out JArray versionDefines))
         {
             return false;
         }
@@ -198,6 +209,11 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
         foreach ((string asmDefGuid, string asmDefName) in UpscalerAsmDefs)
         {
             changed = EnsureReference(references, asmDefGuid, asmDefName) || changed;
+        }
+
+        foreach ((string name, string expression, string define) in UpscalerDefines)
+        {
+            changed = EnsureVersionDefine(versionDefines, name, expression, define) || changed;
         }
 
         if (changed)
@@ -208,16 +224,24 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
         return changed;
     }
     
-    private static bool ParseAssemblyDefinition(string asmDefPath, out JObject jObject, out JArray references)
+    private static bool ParseAssemblyDefinition(string asmDefPath, out JObject jObject, out JArray references, out JArray versionDefines)
     {
+        references = null;
+        versionDefines = null;
+        
         jObject = JObject.Parse(File.ReadAllText(asmDefPath));
-        if (!jObject.TryGetValue("references", out JToken jToken) || jToken is not JArray refs)
+        if (!jObject.TryGetValue("references", out JToken refsToken) || refsToken is not JArray refs)
         {
-            references = null;
+            return false;
+        }
+        
+        if (!jObject.TryGetValue("versionDefines", out JToken defsToken) || defsToken is not JArray defs)
+        {
             return false;
         }
 
         references = refs;
+        versionDefines = defs;
         return true;
     }
 
@@ -257,6 +281,49 @@ public class HDRPPackageInjector : AssetPostprocessor, IPreprocessBuildWithRepor
             }
         }
 
+        return false;
+    }
+
+    private static bool EnsureVersionDefine(JArray versionDefines, string name, string expression, string define)
+    {
+        if (FindVersionDefine(versionDefines, name, define, out JObject versionDefine))
+        {
+            if ((string)versionDefine["expression"] != expression)
+            {
+                versionDefine["expression"] = expression;
+                return true;
+            }
+
+            // Version define already exists with the correct version expression, no changes needed
+            return false;
+        }
+        
+        versionDefines.Add(new JObject
+        {
+            { "name", name },
+            { "expression", expression },
+            { "define", define },
+        });
+        return true;
+    }
+
+    private static bool FindVersionDefine(JArray versionDefines, string name, string define, out JObject versionDefine)
+    {
+        foreach (var versionDefineToken in versionDefines)
+        {
+            if (versionDefineToken.Type != JTokenType.Object)
+                continue;
+
+            string nameValue = (string)versionDefineToken["name"];
+            string defineValue = (string)versionDefineToken["define"];
+            if (nameValue == name && defineValue == define)
+            {
+                versionDefine = versionDefineToken as JObject;
+                return true;
+            }
+        }
+
+        versionDefine = null;
         return false;
     }
 }

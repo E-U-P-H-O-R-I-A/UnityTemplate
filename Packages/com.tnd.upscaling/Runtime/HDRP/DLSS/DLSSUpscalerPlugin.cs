@@ -8,7 +8,7 @@ namespace TND.Upscaling.HDRP.DLSS
     public class DLSSUpscalerPlugin: UpscalerPlugin<DLSSUpscaler, DLSSUpscalerSettings>
     {
         public override UpscalerName Name => UpscalerName.DLSS3;
-        public override string DisplayName => "DLSS 3.x";
+        public override string DisplayName => "Unity DLSS";
         public override int Priority => (int)UpscalerName.DLSS3 + 31;
 #if UNITY_STANDALONE_WIN && TND_NVIDIA_MODULE_INSTALLED
         public override bool IsSupported => UnityEngine.NVIDIA.NVUnityPlugin.IsLoaded() && UnityEngine.SystemInfo.graphicsDeviceVendor.ToLowerInvariant().Contains("nvidia");
@@ -39,7 +39,7 @@ namespace TND.Upscaling.HDRP.DLSS
 #endif
         private static void RegisterUpscalerPlugin()
         {
-            RegisterUpscalerPlugin(new DLSSUpscalerPlugin());
+            RegisterUpscalerPlugin<DLSSUpscalerPlugin>();
         }
     }
 }

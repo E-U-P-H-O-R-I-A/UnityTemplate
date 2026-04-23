@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 #pragma warning disable 0672    // Disable obsolete warnings
 #pragma warning disable 0618    // Disable obsolete warnings
 #endif
@@ -30,6 +30,7 @@ namespace TND.Upscaling.Framework.URP
 
         private UniversalRenderPipelineAsset _currentRenderPipeline;
         private OpaqueCopyPass _currentOpaqueOnlySource;
+        private AutoReactiveMaskPass _currentAutoReactiveSource;
         private IntPtr _currentCameraDataPtr;
 
         private Material _copyDepthMaterial;
@@ -47,7 +48,7 @@ namespace TND.Upscaling.Framework.URP
 
         public UpscalingRenderPass()
         {
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
             _executePassDelegate = ExecutePass;
 #endif
 
@@ -55,7 +56,6 @@ namespace TND.Upscaling.Framework.URP
             _inputDepthBlitter = BlitDepth;
             _inputMotionBlitter = BlitMotion;
             
-            renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing - 1;
             ConfigureInput(ScriptableRenderPassInput.Color | ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Motion);
         }
 
@@ -63,17 +63,30 @@ namespace TND.Upscaling.Framework.URP
         /// Collect all information required for a single execution of this pass and validate
         /// whether everything is set up correctly to allow the pass to execute.
         /// </summary>
-        public bool Setup(UniversalRenderPipelineAsset renderPipeline, UpscalerController_URP controller, 
+        public bool Setup(UniversalRenderPipelineAsset renderPipeline, UpscalerController_URP controller, bool usingRenderGraph,
             Material copyDepthMaterial, Material upsampleDepthMaterial, 
-            OpaqueCopyPass opaqueOnlySource)
+            OpaqueCopyPass opaqueOnlySource, AutoReactiveMaskPass autoReactiveMaskPass)
         {
             if (!base.Setup(controller))
                 return false;
+
+            switch (controller.injectionPoint)
+            {
+                case UpscalerInjectionPoint.BeforePostProcessing:
+                    // Ensure upscaling happens before all built-in and any custom post-processing passes
+                    renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing - 10;
+                    break;
+                case UpscalerInjectionPoint.AfterPostProcessing:
+                    // Ensure upscaling happens after any custom post-processing passes, but before the final blit pass
+                    renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing + (usingRenderGraph ? 100 : 0);
+                    break;
+            }
 
             _currentRenderPipeline = renderPipeline;
             _copyDepthMaterial = copyDepthMaterial;
             _upsampleDepthMaterial = upsampleDepthMaterial;
             _currentOpaqueOnlySource = opaqueOnlySource;
+            _currentAutoReactiveSource = autoReactiveMaskPass;
             return true;
         }
 
@@ -92,6 +105,25 @@ namespace TND.Upscaling.Framework.URP
             }
         }
         
+        private void GetOutputDescriptors(in RenderTextureDescriptor cameraTargetDescriptor, in Vector2Int displaySize, out RenderTextureDescriptor outColorDescriptor, out RenderTextureDescriptor outDepthDescriptor)
+        {
+            outColorDescriptor = cameraTargetDescriptor;
+            outColorDescriptor.width = displaySize.x;
+            outColorDescriptor.height = displaySize.y;
+            outColorDescriptor.depthStencilFormat = GraphicsFormat.None;
+            outColorDescriptor.useMipMap = false;
+            outColorDescriptor.autoGenerateMips = false;
+            outColorDescriptor.bindMS = false;
+            outColorDescriptor.enableRandomWrite = _currentController.ActiveUpscaler?.RequiresRandomWriteOutput ?? SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES3;
+            outColorDescriptor.msaaSamples = 1;
+            
+            outDepthDescriptor = outColorDescriptor;
+            outDepthDescriptor.graphicsFormat = GraphicsFormat.None;
+            outDepthDescriptor.depthStencilFormat = cameraTargetDescriptor.depthStencilFormat;
+            outDepthDescriptor.enableRandomWrite = false;
+        }
+        
+#if TND_URP_COMPATIBILITY
         /// <summary>
         /// OnCameraSetup gets called very early on in the process of rendering a camera.
         /// This can be used to make significant changes to the camera's parameters that affect all render passes.
@@ -132,26 +164,12 @@ namespace TND.Upscaling.Framework.URP
         /// <summary>
         /// Create output textures for the upscaler to write to
         /// </summary>
-        private RenderTextureDescriptor CreateResources(RenderTextureDescriptor cameraTargetDescriptor, in Vector2Int displaySize)
+        private void CreateResources(RenderTextureDescriptor cameraTargetDescriptor, in Vector2Int displaySize)
         {
-            var descriptor = cameraTargetDescriptor;
-            descriptor.width = displaySize.x;
-            descriptor.height = displaySize.y;
-            descriptor.depthStencilFormat = GraphicsFormat.None;
-            descriptor.useMipMap = false;
-            descriptor.autoGenerateMips = false;
-            descriptor.bindMS = false;
-            descriptor.enableRandomWrite = _currentController.ActiveUpscaler?.RequiresRandomWriteOutput ?? SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES3;
-            descriptor.msaaSamples = 1;
-            UpscalingHelpers.AllocateRTHandle(ref _upscalerOutput, descriptor, FilterMode.Point, TextureWrapMode.Clamp, "_CameraUpscaledColor");
-
-            var depthDescriptor = descriptor;
-            depthDescriptor.graphicsFormat = GraphicsFormat.None;
-            depthDescriptor.depthStencilFormat = cameraTargetDescriptor.depthStencilFormat;
-            depthDescriptor.enableRandomWrite = false;
+            GetOutputDescriptors(cameraTargetDescriptor, displaySize, out var colorDescriptor, out var depthDescriptor);
+            
+            UpscalingHelpers.AllocateRTHandle(ref _upscalerOutput, colorDescriptor, FilterMode.Point, TextureWrapMode.Clamp, "_CameraUpscaledColor");
             UpscalingHelpers.AllocateRTHandle(ref _upsampledDepth, depthDescriptor, FilterMode.Point, TextureWrapMode.Clamp, "_CameraUpsampledDepth");
-
-            return descriptor;
         }
 
         private void ReleaseResources()
@@ -191,6 +209,8 @@ namespace TND.Upscaling.Framework.URP
                     new TextureRef(cameraData.renderer.cameraColorTargetHandle),
                     new TextureRef(cameraData.renderer.cameraDepthTargetHandle),
                     new TextureRef(motionVectorTexture),
+                    new TextureRef(_currentOpaqueOnlySource?.Texture),
+                    new TextureRef(_currentAutoReactiveSource?.Texture),
                     new TextureRef(_upscalerOutput));
             }
 
@@ -236,6 +256,8 @@ namespace TND.Upscaling.Framework.URP
                     new TextureRef(cameraData.renderer.cameraColorTarget, colorDescriptor, _inputColorBlitter),
                     new TextureRef(cameraData.renderer.cameraDepthTarget, depthDescriptor, _inputDepthBlitter),
                     new TextureRef(MotionTexturePropertyID, motionDescriptor, _inputMotionBlitter),
+                    new TextureRef(_currentOpaqueOnlySource?.Texture),
+                    new TextureRef(_currentAutoReactiveSource?.Texture),
                     new TextureRef(_upscalerOutput.rt));
             }
 
@@ -263,25 +285,30 @@ namespace TND.Upscaling.Framework.URP
             UpscalingHelpers.UpdatePerCameraShaderVariables(cmd, ref cameraData);
 
             // Inform the post-processing passes of the new render resolution
-            if (renderingData.postProcessingEnabled)
+            bool postProcessingEnabled = _currentController.injectionPoint < UpscalerInjectionPoint.AfterPostProcessing && renderingData.postProcessingEnabled;
+            if (postProcessingEnabled)
             {
                 UpscalingHelpers.UpdatePostProcessDescriptors(cameraData.renderer, cameraData.cameraTargetDescriptor);
             }
             
             // Prepare the Depth output for the next render pass
-            UpsampleDepth(cmd, cameraData.renderer, displaySize, renderingData.postProcessingEnabled, inputDepth, viewCount);
+            UpsampleDepth(cmd, cameraData.renderer, displaySize, postProcessingEnabled, inputDepth, viewCount, _upsampledDepth);
 
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
+#endif
 
-        private void DispatchUpscaler(CommandBuffer cmd, in Matrix4x4 nonJitteredProjMatrix, int viewIndex, in TextureRef colorBuffer, in TextureRef depthBuffer, in TextureRef motionVectorBuffer, in TextureRef output)
+        private void DispatchUpscaler(CommandBuffer cmd, in Matrix4x4 nonJitteredProjMatrix, int viewIndex, 
+            in TextureRef colorBuffer, in TextureRef depthBuffer, in TextureRef motionVectorBuffer,
+            in TextureRef opaqueOnly, in TextureRef autoReactiveMask,
+            in TextureRef output)
         {
             var upscalerContext = _currentController.GetUpscalerContext(viewIndex);
             if (upscalerContext == null)
                 return;
 
-            RTHandle tempColor = null, tempDepth = null, tempMotion = null, tempOpaque = null, tempOutput = null;
+            RTHandle tempColor = null, tempDepth = null, tempMotion = null, tempOpaque = null, tempAutoReactive = null, tempOutput = null;
 
             bool copyView = _currentController.IsSinglePassXR && viewIndex > 0;
             if (copyView)
@@ -306,11 +333,19 @@ namespace TND.Upscaling.Framework.URP
                 cmd.CopyTexture(depthBuffer.GetRenderTargetIdentifier(), viewIndex, tempDepth, 0);
                 cmd.CopyTexture(motionVectorBuffer.GetRenderTargetIdentifier(), viewIndex, tempMotion, 0);
 
-                Texture inputOpaque = _currentOpaqueOnlySource?.Texture;
+                Texture inputOpaque = opaqueOnly.GetTexture(cmd);
                 if (inputOpaque != null)
                 {
                     tempOpaque = AllocateTempTexture(colorDesc, "_TempOpaque");
                     cmd.CopyTexture(inputOpaque, viewIndex, tempOpaque, 0);
+                }
+
+                Texture inputAutoReactive = autoReactiveMask.GetTexture(cmd);
+                if (inputAutoReactive != null)
+                {
+                    RenderTextureDescriptor reactiveDesc = new(autoReactiveMask.Width, autoReactiveMask.Height, autoReactiveMask.GraphicsFormat, GraphicsFormat.None);
+                    tempAutoReactive = AllocateTempTexture(reactiveDesc, "_TempAutoReactive");
+                    cmd.CopyTexture(inputAutoReactive, viewIndex, tempAutoReactive, 0);
                 }
             }
             
@@ -324,8 +359,8 @@ namespace TND.Upscaling.Framework.URP
                 inputDepth = copyView ? new TextureRef(tempDepth) : depthBuffer,
                 inputMotionVectors = copyView ? new TextureRef(tempMotion) : motionVectorBuffer,
                 inputExposure = TextureRef.Null,
-                inputReactiveMask = TextureRef.Null,    // URP doesn't provide a reactive mask of its own
-                inputOpaqueOnly = copyView ? new TextureRef(tempOpaque) : new TextureRef(_currentOpaqueOnlySource?.Texture),
+                inputReactiveMask = copyView ? new TextureRef(tempAutoReactive) : autoReactiveMask,
+                inputOpaqueOnly = copyView ? new TextureRef(tempOpaque) : opaqueOnly,
                 outputColor = copyView ? new TextureRef(tempOutput) : output,
                 renderSize = scaledRenderSize,
                 motionVectorScale = -scaledRenderSize,
@@ -345,16 +380,16 @@ namespace TND.Upscaling.Framework.URP
             }
         }
         
-        private void UpsampleDepth(CommandBuffer cmd, ScriptableRenderer renderer, in Vector2Int displaySize, bool postProcessingEnabled, RenderTargetIdentifier inputDepth, int viewCount)
+        private void UpsampleDepth(CommandBuffer cmd, ScriptableRenderer renderer, in Vector2Int displaySize, bool postProcessingEnabled, RenderTargetIdentifier inputDepth, int viewCount, Texture outputDepth)
         {
-            ScriptableRenderPassInput ppInputs = UpscalingHelpers.GetRequiredPostProcessInputs(renderer, postProcessingEnabled);
+            ScriptableRenderPassInput ppInputs = UpscalingHelpers.GetRequiredPostProcessInputs(renderer, postProcessingEnabled, renderPassEvent);
             if ((ppInputs & ScriptableRenderPassInput.Depth) != 0)
             {
-                UpsampleDepth(cmd, displaySize, inputDepth, viewCount);
+                UpsampleDepth(cmd, displaySize, inputDepth, viewCount, outputDepth);
             }
         }
 
-        private void UpsampleDepth(CommandBuffer cmd, in Vector2Int displaySize, RenderTargetIdentifier inputDepth, int viewCount)
+        private void UpsampleDepth(CommandBuffer cmd, in Vector2Int displaySize, RenderTargetIdentifier inputDepth, int viewCount, Texture outputDepth)
         {
             var renderSize = _currentController.ScaledRenderSize;
             float jitterBiasX = _currentJitterOffset.x / renderSize.x;
@@ -367,19 +402,20 @@ namespace TND.Upscaling.Framework.URP
             // Unity stereo instancing for this shader is weirdly broken in Android Vulkan VR on 2022.3, so we just run the shader separately for each eye.
             for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
             {
-                cmd.SetRenderTarget(new RenderTargetIdentifier(_upsampledDepth, 0, CubemapFace.Unknown, viewIndex), RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+                cmd.SetRenderTarget(new RenderTargetIdentifier(outputDepth, 0, CubemapFace.Unknown, viewIndex), RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
                 _upsampleDepthProperties.SetInteger(ViewIndexID, viewIndex);
                 cmd.DrawProcedural(Matrix4x4.identity, _upsampleDepthMaterial, 0, MeshTopology.Triangles, 3, 1, _upsampleDepthProperties);
             }
-
+            
             // Bind the upsampled depth buffer to the global camera depth texture
-            cmd.SetGlobalTexture(DepthTexturePropertyID, _upsampledDepth);
+            cmd.SetGlobalTexture(DepthTexturePropertyID, outputDepth);
         }
 
         private Texture BlitColor(CommandBuffer cmd, in RenderTextureDescriptor desc, in RenderTargetIdentifier source)
         {
             RTHandle tempColor = AllocateTempTexture(desc, "_TempColor");
             cmd.Blit(source, tempColor);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return tempColor;
         }
 
@@ -391,7 +427,8 @@ namespace TND.Upscaling.Framework.URP
             _copyDepthMaterial.EnableKeyword("_USE_DRAW_PROCEDURAL");
             _copyDepthProperties.SetVector(BlitScaleBiasID, new Vector4(1, 1, 0, 0));
             cmd.DrawProcedural(Matrix4x4.identity, _copyDepthMaterial, 0, MeshTopology.Quads, 4, 1, _copyDepthProperties);
-
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
+            
             return tempDepth;
         }
 
@@ -399,6 +436,7 @@ namespace TND.Upscaling.Framework.URP
         {
             RTHandle tempMotion = AllocateTempTexture(desc, "_TempMotion");
             cmd.Blit(source, tempMotion);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return tempMotion;
         }
 

@@ -29,6 +29,7 @@ namespace UnityEngine.NVIDIA
     public class GraphicsDeviceDebugView
     {
         public readonly List<DLSSDebugFeatureInfos> dlssFeatureInfos = new();
+        public Span<DLSSDebugFeatureInfos> dlssFeatureInfosSpan => default;
         public int deviceVersion = 0x04;
         public uint ngxVersion = (3u << 16) | (1u << 8);
     }
@@ -119,6 +120,8 @@ namespace UnityEngine.NVIDIA
         Preset_F,
         Preset_J,
         Preset_K,
+        Preset_L,
+        Preset_M,
     }
 }
 #endif

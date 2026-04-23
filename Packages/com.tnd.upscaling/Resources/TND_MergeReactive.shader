@@ -22,9 +22,11 @@ Shader "Hidden/TND/Upscaling/MergeReactive"
             uniform TEXTURE2D _Input1;
             uniform TEXTURE2D _Input2;
 
-            float4 main(float4 SvPosition : SV_POSITION) : SV_TARGET0
+            float4 main(VertexOut input) : SV_TARGET0
             {
-                uint2 uPixelCoord = uint2(SvPosition.xy);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                
+                uint2 uPixelCoord = uint2(input.position.xy);
                 float mask1 = _Input1[COORD(uPixelCoord)].r;
                 float mask2 = _Input2[COORD(uPixelCoord)].r;
                 return max(mask1, mask2).rrrr;
@@ -51,9 +53,11 @@ Shader "Hidden/TND/Upscaling/MergeReactive"
             uniform TEXTURE2D _Input2;
             uniform TEXTURE2D _Input3;
 
-            float4 main(float4 SvPosition : SV_POSITION) : SV_TARGET0
+            float4 main(VertexOut input) : SV_TARGET0
             {
-                uint2 uPixelCoord = uint2(SvPosition.xy);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                
+                uint2 uPixelCoord = uint2(input.position.xy);
                 float mask1 = _Input1[COORD(uPixelCoord)].r;
                 float mask2 = _Input2[COORD(uPixelCoord)].r;
                 float mask3 = _Input3[COORD(uPixelCoord)].r;
@@ -82,9 +86,11 @@ Shader "Hidden/TND/Upscaling/MergeReactive"
             uniform TEXTURE2D _Input3;
             uniform TEXTURE2D _Input4;
 
-            float4 main(float4 SvPosition : SV_POSITION) : SV_TARGET0
+            float4 main(VertexOut input) : SV_TARGET0
             {
-                uint2 uPixelCoord = uint2(SvPosition.xy);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                
+                uint2 uPixelCoord = uint2(input.position.xy);
                 float mask1 = _Input1[COORD(uPixelCoord)].r;
                 float mask2 = _Input2[COORD(uPixelCoord)].r;
                 float mask3 = _Input3[COORD(uPixelCoord)].r;

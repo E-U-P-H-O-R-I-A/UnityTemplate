@@ -50,7 +50,7 @@ namespace TND.Upscaling.Framework
         public virtual bool RequiresOpaqueOnlyInput => false;
         public virtual bool RequiresRandomWriteOutput => true;
 
-        private Shader _sharpenShader;
+        private ShaderRef _sharpenShader;
         private Material _sharpenMaterial;
         
         public abstract bool Initialize(CommandBuffer commandBuffer, in UpscalerInitParams initParams);
@@ -68,7 +68,7 @@ namespace TND.Upscaling.Framework
         {
             const float basePhaseCount = 8.0f;
             int phaseCount = (int)(basePhaseCount * Mathf.Pow((float)upscaleWidth / renderWidth, 2.0f));
-            int index = (frameIndex % phaseCount) + 1;
+            int index = phaseCount > 0 ? (frameIndex % phaseCount) + 1 : 1;
             return new Vector2(Halton(index, 2) - 0.5f, Halton(index, 3) - 0.5f);
         }
         

@@ -3,6 +3,11 @@ using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+#if UNITY_6000_4_OR_NEWER
+using ResourceId = System.UInt64;
+#else
+using ResourceId = System.Int32;
+#endif
 
 namespace TND.Upscaling.Framework.URP
 {
@@ -17,9 +22,9 @@ namespace TND.Upscaling.Framework.URP
         
         // Dictionary tracks resources by hash and stores resources with same hash in a List (list instead of a stack because we need to be able to remove stale allocations, potentially in the middle of the stack).
         // The list needs to be sorted otherwise you could get inconsistent resource usage from one frame to another.
-        private readonly Dictionary<int, SortedList<int, (RTHandle resource, int frameIndex)>> _resourcePool = new();
-        private readonly List<int> _removeList = new(32); // Used to remove stale resources as there is no RemoveAll on SortedLists
-
+        private readonly Dictionary<int, SortedList<ResourceId, (RTHandle resource, int frameIndex)>> _resourcePool = new();
+        private readonly List<ResourceId> _removeList = new(32); // Used to remove stale resources as there is no RemoveAll on SortedLists
+        
         /// <summary>
         /// Controls the resource pool's max stale resource capacity. 
         /// Increasing the capacity may have a negative impact on the memory usage.
@@ -57,11 +62,17 @@ namespace TND.Upscaling.Framework.URP
             if (!_resourcePool.TryGetValue(hashCode, out var list))
             {
                 // Init list with max capacity to avoid runtime GC.Alloc when calling list.Add(resize list)
-                list = new SortedList<int, (RTHandle resource, int frameIndex)>(s_staleResourceMaxCapacity);
+                list = new SortedList<ResourceId, (RTHandle resource, int frameIndex)>(s_staleResourceMaxCapacity);
                 _resourcePool.Add(hashCode, list);
             }
 
-            list.Add(resource.GetInstanceID(), (resource, currentFrameIndex));
+#if UNITY_6000_4_OR_NEWER
+            ResourceId resourceId = resource.GetUniqueID();
+#else
+            ResourceId resourceId = resource.GetInstanceID();
+#endif
+            
+            list.Add(resourceId, (resource, currentFrameIndex));
             s_currentStaleResourceCount++;
 
             return true;
@@ -72,7 +83,7 @@ namespace TND.Upscaling.Framework.URP
         public bool TryGetResource(in RenderTextureDescriptor texDesc, string name, out RTHandle resource, bool usepool = true)
         {
             int hashCode = GetHashCodeWithNameHash(texDesc, name);
-            if (usepool && _resourcePool.TryGetValue(hashCode, out SortedList<int, (RTHandle resource, int frameIndex)> list) && list.Count > 0)
+            if (usepool && _resourcePool.TryGetValue(hashCode, out SortedList<ResourceId, (RTHandle resource, int frameIndex)> list) && list.Count > 0)
             {
                 resource = list.Values[list.Count - 1].resource;
                 list.RemoveAt(list.Count - 1); // O(1) since it's the last element.

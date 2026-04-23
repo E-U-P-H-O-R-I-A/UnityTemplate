@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace TND.Upscaling.Framework
 {
@@ -19,6 +20,9 @@ namespace TND.Upscaling.Framework
 
         [SerializeField, Range(0f, 1f)]
         protected internal float sharpness = 0.5f;
+        
+        [SerializeField]
+        protected internal UpscalerInjectionPoint injectionPoint = UpscalerInjectionPoint.BeforePostProcessing;
 
         [Serializable]
         internal struct UpscalerSettingsPair
@@ -53,9 +57,14 @@ namespace TND.Upscaling.Framework
         
         protected internal virtual bool EnableOpaqueOnlyCopy { get; internal set; }
         protected internal virtual Texture OpaqueOnlyTexture => null;
+
+        protected internal virtual bool EnableAutoReactiveMask => autoGenerateReactiveMask && (UpscalerContext?.ActiveUpscalerPlugin?.AcceptsReactiveMask ?? false);
+        protected internal virtual Texture AutoReactiveMask => null;
         
         protected internal virtual bool EnableCustomReactiveMask => enableCustomReactiveMask;
         protected internal virtual Texture CustomReactiveMask => null;
+
+        protected internal GraphicsFormat ReactiveMaskFormat => UpscalerContext?.ActiveUpscalerPlugin?.ReactiveMaskFormat ?? GraphicsFormat.R8_UNorm;
         
         protected internal virtual bool ResetHistory => false;
         
@@ -266,7 +275,7 @@ namespace TND.Upscaling.Framework
             
             _guiBuilder.Clear();
             _guiBuilder.AppendFormat(" Active upscaler: {0}\n", upscalerPlugin?.DisplayName ?? "None");
-            _guiBuilder.AppendFormat(" Render pipeline: {0}\n", UnityEngine.Rendering.RenderPipelineManager.currentPipeline?.GetType().Name ?? "Built-in");
+            _guiBuilder.AppendFormat(" Render pipeline: {0}\n", UnityEngine.Rendering.RenderPipelineManager.currentPipeline?.GetType().Name ?? "Built-in Render Pipeline");
             _guiBuilder.AppendFormat(" Unity version: {0}\n", Application.unityVersion);
             _guiBuilder.AppendFormat(" Graphics API: {0}\n", SystemInfo.graphicsDeviceType);
             

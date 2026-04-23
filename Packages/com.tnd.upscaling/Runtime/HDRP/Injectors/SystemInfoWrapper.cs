@@ -1,5 +1,7 @@
 ﻿#pragma warning disable
 
+using System;
+using System.Reflection;
 using UnityEngine.Experimental.Rendering;
 using USI = UnityEngine.SystemInfo;
 
@@ -15,7 +17,9 @@ namespace UnityEngine.Rendering.HighDefinition
     /// </summary>
     public static class SystemInfo
     {
-        public static string graphicsDeviceVendor => USI.graphicsDeviceVendor + " nvidia";  // Trick HDRP into allowing DLSS to be enabled
+        private static Lazy<string> CachedGraphicsDeviceVendor = new(() => USI.graphicsDeviceVendor + " nvidia");
+        
+        public static string graphicsDeviceVendor => CachedGraphicsDeviceVendor.Value;  // Trick HDRP into allowing DLSS to be enabled
         public static int graphicsDeviceVendorID => USI.graphicsDeviceVendorID; // This is used for other purposes, we don't need to spoof Nvidia here
         public static string graphicsDeviceName => USI.graphicsDeviceName;
         public static GraphicsDeviceType graphicsDeviceType => USI.graphicsDeviceType;
@@ -36,6 +40,12 @@ namespace UnityEngine.Rendering.HighDefinition
 #endif
 #if UNITY_6000_3_OR_NEWER
         public static bool supportsDynamicResolution => USI.supportsDynamicResolution;
+#elif UNITY_6000_0_OR_NEWER
+        // `supportsDynamicResolution` only exists in Unity 6000.0.62+ and 6000.2.11+, which means we cannot assume this property can be accessed directly.
+        // So instead we use reflection to indirectly request access to this property and use a default fallback if it cannot be found.
+        private static readonly PropertyInfo SupportsDynamicResolutionProperty = typeof(USI).GetProperty(nameof(supportsDynamicResolution), BindingFlags.Public | BindingFlags.Static);
+        private static readonly object BoxedTrue = true;
+        public static bool supportsDynamicResolution => SupportsDynamicResolutionProperty?.GetValue(null).Equals(BoxedTrue) ?? false;
 #endif
     }
 }

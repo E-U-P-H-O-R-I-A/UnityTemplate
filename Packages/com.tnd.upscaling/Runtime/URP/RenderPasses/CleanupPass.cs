@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-#if UNITY_2023_3_OR_NEWER
+#if TND_URP_RENDERGRAPH
 using UnityEngine.Rendering.RenderGraphModule;
 #pragma warning disable 0672    // Disable obsolete warnings
 #endif
@@ -31,6 +31,7 @@ namespace TND.Upscaling.Framework.URP
             return true;
         }
         
+#if TND_URP_COMPATIBILITY
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
 #if UNITY_2022_2_OR_NEWER
@@ -51,13 +52,6 @@ namespace TND.Upscaling.Framework.URP
 #endif
         }
 
-#if UNITY_2023_3_OR_NEWER
-        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
-        { 
-            // Noop, this pass doesn't actually render anything
-        }
-#endif
-        
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             CommandBuffer cmd = CommandBufferPool.Get(PassName);
@@ -69,5 +63,13 @@ namespace TND.Upscaling.Framework.URP
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
+#endif
+
+#if TND_URP_RENDERGRAPH
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        { 
+            // Noop, this pass doesn't actually render anything
+        }
+#endif
     }
 }

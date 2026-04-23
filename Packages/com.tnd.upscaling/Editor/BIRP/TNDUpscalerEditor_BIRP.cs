@@ -81,7 +81,7 @@ namespace TND.Upscaling.Framework.BIRP
                 {
     #if TND_POST_PROCESSING_STACK_V2
                     // TND custom Post-Processing stack with integrated upscaling
-                    if (_postProcessLayer.antialiasingMode != PostProcessLayer.Antialiasing.AdvancedUpscaling)
+                    if (upscalerScript.injectionPoint < UpscalerInjectionPoint.AfterPostProcessing && _postProcessLayer.antialiasingMode != PostProcessLayer.Antialiasing.AdvancedUpscaling)
                     {
                         EditorGUILayout.HelpBox("Post-Processing Stack v2 currently has not selected 'TND Upscaling', TND Upscalers are now disabled.", MessageType.Warning);
                         if (GUILayout.Button("Set Anti-Aliasing mode to TND Upscaling"))

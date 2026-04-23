@@ -13,9 +13,19 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "TND_BIRP"
+        "!TND_SRP || TND_BIRP"
     ],
     "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "1.0.0",
+            "define": "TND_SRP"
+        },
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "1.0.0",
+            "define": "TND_SRP"
+        },
         {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",

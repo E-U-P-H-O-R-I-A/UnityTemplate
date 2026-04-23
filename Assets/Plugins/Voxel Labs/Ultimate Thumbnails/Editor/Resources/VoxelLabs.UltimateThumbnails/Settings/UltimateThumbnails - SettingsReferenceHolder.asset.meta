@@ -11,7 +11,7 @@ AssetOrigin:
   productId: 340970
   packageName: 'Ultimate Thumbnails: Preview Icon Generator for UI, Sprites, Particles
     & Models'
-  packageVersion: 1.2.3
-  assetPath: Assets/Voxel Labs/Ultimate Thumbnails/Editor/Resources/VoxelLabs.UltimateThumbnails/Settings/UltimateThumbnails
+  packageVersion: 1.3
+  assetPath: Assets/Plugins/Voxel Labs/Ultimate Thumbnails/Editor/Resources/VoxelLabs.UltimateThumbnails/Settings/UltimateThumbnails
     - SettingsReferenceHolder.asset
-  uploadId: 887510
+  uploadId: 900192

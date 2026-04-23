@@ -31,12 +31,15 @@ namespace TND.Upscaling.Framework.BIRP
         
         private CommandBuffer _dispatchCommandBuffer;
         private CommandBuffer _opaqueCopyCommandBuffer;
+        private CommandBuffer _autoReactiveCommandBuffer;
         private RenderTexture _colorOpaqueOnly;
+        private RenderTexture _autoReactiveMask;
         private RenderTexture _upscalerOutput;
 
-        private Shader _blitShader;
+        private ShaderRef _blitShader;
         private Material _blitMaterial;
         private MaterialPropertyBlock _blitProperties;
+        private MaterialPropertyBlock _autoReactiveProperties;
         
         private RenderTexture _tempColor;
         private RenderTexture _tempDepth;
@@ -62,6 +65,7 @@ namespace TND.Upscaling.Framework.BIRP
             _camera = GetComponent<Camera>();
             _upscalerController = GetComponent<UpscalerController>();
             _blitProperties = new MaterialPropertyBlock();
+            _autoReactiveProperties = new MaterialPropertyBlock();
         }
 
         private void OnEnable()
@@ -185,12 +189,50 @@ namespace TND.Upscaling.Framework.BIRP
                 _opaqueCopyCommandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, _colorOpaqueOnly);
             }
 
+            _autoReactiveCommandBuffer.Clear();
+            if (_upscalerController.EnableAutoReactiveMask)
+            {
+                var scaledRenderSize = GetScaledRenderSize();
+                _autoReactiveMask = RenderTexture.GetTemporary(scaledRenderSize.x, scaledRenderSize.y, 0, _upscalerController.ReactiveMaskFormat); // TODO: temporary array when SPI
+                _autoReactiveCommandBuffer.SetRenderTarget(_autoReactiveMask);
+                
+                Material autoReactiveMaterial = _upscalerController.UpscalerContext?.AutoReactiveMaterial;
+                if (autoReactiveMaterial != null && _colorOpaqueOnly != null)
+                {
+                    int instanceCount = 1;
+                    // if (false) // TODO: when using SPI
+                    // {
+                    //     instanceCount = 2;
+                    //     _autoReactiveCommandBuffer.EnableShaderKeyword(UpscalerContext.TexArraysKeyword);
+                    // }
+                    // else
+                    {
+                        _autoReactiveCommandBuffer.DisableShaderKeyword(UpscalerContext.TexArraysKeyword);
+                    }
+
+                    var autoReactiveSettings = _upscalerController.autoReactiveSettings;
+                    _autoReactiveProperties.SetTexture(OpaqueOnlyPropertyID, _colorOpaqueOnly);
+                    _autoReactiveProperties.SetVector(ReactiveParamsPropertyID, new Vector3(autoReactiveSettings.scale, autoReactiveSettings.cutoffThreshold, autoReactiveSettings.binaryValue));
+                    _autoReactiveProperties.SetInt(ReactiveFlagsPropertyID, (int)autoReactiveSettings.flags);
+
+                    _autoReactiveCommandBuffer.SetGlobalTexture(MainTexPropertyID, BuiltinRenderTextureType.CameraTarget);
+                    _autoReactiveCommandBuffer.DrawProcedural(Matrix4x4.identity, autoReactiveMaterial, 0, MeshTopology.Triangles, 3, instanceCount, _autoReactiveProperties);
+                }
+                else
+                {
+                    _autoReactiveCommandBuffer.ClearRenderTarget(false, true, Color.clear);
+                }
+            }
+
             ApplyJitter();
         }
 
         private static readonly int MainTexPropertyID = Shader.PropertyToID("_MainTex");
         private static readonly int DepthTexPropertyID = Shader.PropertyToID("_DepthTex");
         private static readonly int ScaleBiasPropertyID = Shader.PropertyToID("_BlitScaleBias");
+        private static readonly int OpaqueOnlyPropertyID = Shader.PropertyToID("_OpaqueOnly");
+        private static readonly int ReactiveParamsPropertyID = Shader.PropertyToID("_ReactiveParams");
+        private static readonly int ReactiveFlagsPropertyID = Shader.PropertyToID("_ReactiveFlags");
 
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
@@ -231,6 +273,7 @@ namespace TND.Upscaling.Framework.BIRP
             TextureRef inputOpaque = new TextureRef(_colorOpaqueOnly);
             TextureRef inputDepth = new TextureRef(GetDepthTexture(), inputDepthDesc, _inputDepthBlitter, RenderTextureSubElement.Depth);
             TextureRef inputMotion = new TextureRef(new RenderTargetIdentifier(BuiltinRenderTextureType.MotionVectors), inputMotionDesc, _inputMotionBlitter);
+            TextureRef inputReactive = new TextureRef(_autoReactiveMask);
             if (_camera.stereoEnabled)
             {
                 // Create properly sized copies of the input buffers, as BiRP refuses to render them at lower resolution when XR is active
@@ -238,6 +281,7 @@ namespace TND.Upscaling.Framework.BIRP
                 inputOpaque = new TextureRef(inputOpaque.GetTexture(_dispatchCommandBuffer));
                 inputDepth = new TextureRef(inputDepth.GetTexture(_dispatchCommandBuffer)); // TODO: we need a BlitDepth that allows texture array and depth slice input, BlitCopyWithDepth can't do that :(
                 inputMotion = new TextureRef(inputMotion.GetTexture(_dispatchCommandBuffer));
+                inputReactive = new TextureRef(inputReactive.GetTexture(_dispatchCommandBuffer));
             }
             
             var scaledRenderSize = GetScaledRenderSize();
@@ -249,7 +293,7 @@ namespace TND.Upscaling.Framework.BIRP
                 inputDepth = inputDepth,
                 inputMotionVectors = inputMotion,
                 inputExposure = TextureRef.Null,
-                inputReactiveMask = TextureRef.Null,
+                inputReactiveMask = inputReactive,
                 inputOpaqueOnly = inputOpaque,
                 outputColor = requireIntermediateOutput ? new TextureRef(_upscalerOutput) : new TextureRef(destination),
                 renderSize = scaledRenderSize,
@@ -263,6 +307,8 @@ namespace TND.Upscaling.Framework.BIRP
 
             upscalerContext.Execute(_dispatchCommandBuffer, ref dispatchParams);
 
+            Graphics.ExecuteCommandBuffer(_dispatchCommandBuffer);
+            
             // Output the upscaled image
             // if (_originalRenderTarget != null)   // TODO: render texture support
             // {
@@ -273,20 +319,15 @@ namespace TND.Upscaling.Framework.BIRP
             // else
             if (requireIntermediateOutput)
             {
-                bool isRenderToBackBufferTarget = _camera.cameraType != CameraType.SceneView && (destination == null || _camera.stereoEnabled);
-                bool yFlip = isRenderToBackBufferTarget && _camera.targetTexture == null && SystemInfo.graphicsUVStartsAtTop;
-                Vector4 scaleBias = yFlip ? new Vector4(1, -1, 0, 1) : new Vector4(1, 1, 0, 0);
-                
-                _blitProperties.SetTexture(MainTexPropertyID, _upscalerOutput);
-                _blitProperties.SetVector(ScaleBiasPropertyID, scaleBias);
-
-                // Output directly to the backbuffer
-                _dispatchCommandBuffer.SetRenderTarget(destination, destination, 0, CubemapFace.Unknown, 0);    // TODO: depth slice = view index
-                _dispatchCommandBuffer.DrawProcedural(Matrix4x4.identity, _blitMaterial, 0, MeshTopology.Triangles, 3, 1, _blitProperties);
+                Graphics.Blit(_upscalerOutput, destination);
             }
 
-            Graphics.ExecuteCommandBuffer(_dispatchCommandBuffer);
-
+            if (_autoReactiveMask != null)
+            {
+                RenderTexture.ReleaseTemporary(_autoReactiveMask);
+                _autoReactiveMask = null;
+            }
+            
             if (_colorOpaqueOnly != null)
             {
                 RenderTexture.ReleaseTemporary(_colorOpaqueOnly);
@@ -340,11 +381,20 @@ namespace TND.Upscaling.Framework.BIRP
         {
             _dispatchCommandBuffer = new CommandBuffer { name = "[Upscaler] Upscaling Pass" };
             _opaqueCopyCommandBuffer = new CommandBuffer { name = "[Upscaler] Opaque-Only Copy" };
+            _autoReactiveCommandBuffer = new CommandBuffer { name = "[Upscaler] Auto-Reactive Mask" };
             _camera.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, _opaqueCopyCommandBuffer);
+            _camera.AddCommandBuffer(CameraEvent.AfterForwardAlpha, _autoReactiveCommandBuffer);
         }
 
         private void DestroyCommandBuffers()
         {
+            if (_autoReactiveCommandBuffer != null)
+            {
+                _camera.RemoveCommandBuffer(CameraEvent.AfterForwardAlpha, _autoReactiveCommandBuffer);
+                _autoReactiveCommandBuffer.Release();
+                _autoReactiveCommandBuffer = null;
+            }
+            
             if (_opaqueCopyCommandBuffer != null)
             {
                 _camera.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, _opaqueCopyCommandBuffer);
@@ -427,6 +477,7 @@ namespace TND.Upscaling.Framework.BIRP
             }
             
             cmd.Blit(source, texture, sourceDepthSlice, 0);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return texture;
         }
         
@@ -442,6 +493,7 @@ namespace TND.Upscaling.Framework.BIRP
             
             cmd.SetGlobalTexture(DepthTexPropertyID, source, RenderTextureSubElement.Depth);
             cmd.Blit(source, _tempDepth, _copyDepthMaterial);
+            cmd.SetRenderTarget(BuiltinRenderTextureType.None);
             return _tempDepth;
         }
         

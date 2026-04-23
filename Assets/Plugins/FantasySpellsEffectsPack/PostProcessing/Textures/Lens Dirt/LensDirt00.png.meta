@@ -86,6 +86,7 @@ AssetOrigin:
   serializedVersion: 1
   productId: 328076
   packageName: TND Post Processing Stack V2
-  packageVersion: 3.5.5
-  assetPath: Assets/FantasySpellsEffectsPack/PostProcessing/Textures/Lens Dirt/LensDirt00.png
-  uploadId: 821844
+  packageVersion: 3.6.2
+  assetPath: Assets/Plugins/FantasySpellsEffectsPack/PostProcessing/Textures/Lens
+    Dirt/LensDirt00.png
+  uploadId: 903066

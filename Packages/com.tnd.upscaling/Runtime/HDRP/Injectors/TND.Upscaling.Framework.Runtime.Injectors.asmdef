@@ -16,6 +16,11 @@
     ],
     "versionDefines": [
         {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "1.0.0",
+            "define": "TND_HDRP"
+        },
+        {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
             "define": "ENABLE_XR_MODULE"

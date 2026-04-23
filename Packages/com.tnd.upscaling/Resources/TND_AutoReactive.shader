@@ -95,9 +95,11 @@ Shader "Hidden/TND/Upscaling/AutoReactive"
                 return fRgb / max(1.0f / 65504.0f, 1.f - max(fRgb.r, max(fRgb.g, fRgb.b))).xxx;
             }
 
-            float main(float4 SvPosition : SV_POSITION) : SV_TARGET0
+            float main(VertexOut input) : SV_TARGET0
             {
-                uint2 uPixelCoord = uint2(SvPosition.xy);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                
+                uint2 uPixelCoord = uint2(input.position.xy);
 
                 float3 ColorPreAlpha    = LoadOpaqueOnly(uPixelCoord);
                 float3 ColorPostAlpha   = LoadInputColor(uPixelCoord);

@@ -6,6 +6,6 @@ AssetOrigin:
   productId: 340970
   packageName: 'Ultimate Thumbnails: Preview Icon Generator for UI, Sprites, Particles
     & Models'
-  packageVersion: 1.2.3
-  assetPath: Assets/Voxel Labs/Ultimate Thumbnails/Editor/Scripts/Lib/Entities/IconSize.cs
-  uploadId: 887510
+  packageVersion: 1.3
+  assetPath: Assets/Plugins/Voxel Labs/Ultimate Thumbnails/Editor/Scripts/Lib/Entities/IconSize.cs
+  uploadId: 900192

@@ -13,7 +13,7 @@ namespace TND.Upscaling.Framework.HDRP
 
         public enum InjectionStatus
         {
-            NvidiaModuleNotInstalled,
+            MissingNvidiaModuleDefines,
             DlssPassUsesNvidiaModule,
             DlssPassUsesTndPackage,
         }
@@ -22,8 +22,8 @@ namespace TND.Upscaling.Framework.HDRP
         {
             if (DlssDeviceField == null)
             {
-                // Device field only gets included when the NVIDIA module is installed, so it's possible that it doesn't exist yet
-                return InjectionStatus.NvidiaModuleNotInstalled;
+                // Device field only gets included when the ENABLE_NVIDIA defines are set, so it's possible that it doesn't exist yet
+                return InjectionStatus.MissingNvidiaModuleDefines;
             }
 
             // After injecting references, HDRP's DLSSPass should be using classes from the TND Injectors assembly.
@@ -39,7 +39,17 @@ namespace TND.Upscaling.Framework.HDRP
         {
             // DLSS has enabled and needs top priority for the TND upscalers to be activated
             bool dlssEnabled = false;
-#if UNITY_2023_2_OR_NEWER
+
+#if UNITY_6000_3_OR_NEWER
+            var dynamicResolutionSettings = renderPipelineSettings.dynamicResolutionSettings;
+            if (dynamicResolutionSettings.advancedUpscalerNames != null && dynamicResolutionSettings.advancedUpscalerNames.Count > 0)
+            {
+                if (dynamicResolutionSettings.advancedUpscalerNames[0] == nameof(AdvancedUpscalers.DLSS))
+                {
+                    dlssEnabled = true;
+                }
+            }
+#elif UNITY_2023_2_OR_NEWER
             var dynamicResolutionSettings = renderPipelineSettings.dynamicResolutionSettings;
             if (dynamicResolutionSettings.advancedUpscalersByPriority != null && dynamicResolutionSettings.advancedUpscalersByPriority.Count > 0)
             {

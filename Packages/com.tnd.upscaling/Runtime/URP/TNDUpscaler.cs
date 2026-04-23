@@ -62,6 +62,14 @@ namespace TND.Upscaling.Framework
         }
 
         /// <summary>
+        /// Returns the render scale (e.g. 0.66x, 0.5x, 0.33x) for the currently selected upscaler quality level.
+        /// </summary>
+        public float GetRenderScale()
+        {
+            return RenderScale;
+        }
+
+        /// <summary>
         /// Use this method to enable or disable sharpening.
         /// </summary>
         public void SetSharpening(bool value)
@@ -109,6 +117,22 @@ namespace TND.Upscaling.Framework
             return autoGenerateReactiveMask;
         }
 
+        /// <summary>
+        /// Sets where in the render pipeline upscaling should occur relative to post-processing.
+        /// </summary>
+        public void SetInjectionPoint(UpscalerInjectionPoint upscalerInjectionPoint)
+        {
+            injectionPoint = upscalerInjectionPoint;
+        }
+
+        /// <summary>
+        /// Returns where in the render pipeline upscaling occurs relative to post-processing.
+        /// </summary>
+        public UpscalerInjectionPoint GetInjectionPoint()
+        {
+            return injectionPoint;
+        }
+        
         /// <summary>
         /// Retrieve the upscaler-specific settings for the given upscaler.
         /// Returns null if the settings could not be found.

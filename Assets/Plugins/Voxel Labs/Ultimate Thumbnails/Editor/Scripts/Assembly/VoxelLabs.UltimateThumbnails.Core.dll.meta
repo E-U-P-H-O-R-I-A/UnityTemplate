@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 397a0ed758a6192478ca04428e7a6426
+guid: 7dd24eabd2f8e1f4b9b26e720984641b
 AssetOrigin:
   serializedVersion: 1
   productId: 340970
   packageName: 'Ultimate Thumbnails: Preview Icon Generator for UI, Sprites, Particles
     & Models'
-  packageVersion: 1.2.3
-  assetPath: Assets/Voxel Labs/Ultimate Thumbnails/Editor/Scripts/Assembly/VoxelLabs.UltimateThumbnails.Core.dll
-  uploadId: 887510
+  packageVersion: 1.3
+  assetPath: Assets/Plugins/Voxel Labs/Ultimate Thumbnails/Editor/Scripts/Assembly/VoxelLabs.UltimateThumbnails.Core.dll
+  uploadId: 900192

@@ -1,4 +1,4 @@
-﻿#if UNITY_2023_3_OR_NEWER
+﻿#if TND_URP_RENDERGRAPH
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
@@ -20,9 +20,14 @@ namespace TND.Upscaling.Framework.URP
             public TextureHandle colorBuffer;
             public TextureHandle depthBuffer;
             public TextureHandle motionVectorBuffer;
-            public TextureHandle output;
-            public RendererListHandle rendererListHandle;
+            public TextureHandle opaqueOnly;
+            public TextureHandle autoReactiveMask;
+            public TextureHandle outputColor;
+            public TextureHandle outputDepth;
+
+            public Vector2Int displaySize;
             public int viewCount;
+            public bool upsampleDepth;
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -32,46 +37,70 @@ namespace TND.Upscaling.Framework.URP
 
             OnCameraSetupRenderGraph(ref cameraData);
 
-            RenderTextureDescriptor upscaledDesc = CreateResources(cameraData.cameraTargetDescriptor, _currentController.DisplaySize);
-            UpscalingHelpers.SetupUpscaledColorHandles(cameraData.renderer, upscaledDesc);
+            GetOutputDescriptors(cameraData.cameraTargetDescriptor, _currentController.DisplaySize, out var colorDescriptor, out var depthDescriptor);
+            UpscalingHelpers.SetupUpscaledColorHandles(cameraData.renderer, colorDescriptor);
+            
+            bool postProcessingEnabled = _currentController.injectionPoint < UpscalerInjectionPoint.AfterPostProcessing && cameraData.postProcessEnabled;
+            ScriptableRenderPassInput ppInputs = UpscalingHelpers.GetRequiredPostProcessInputs(cameraData.renderer, postProcessingEnabled, renderPassEvent);
+            bool upsampleDepth = (ppInputs & ScriptableRenderPassInput.Depth) != 0;
 
+            TextureHandle outputColor = UniversalRenderer.CreateRenderGraphTexture(renderGraph, colorDescriptor, "_CameraUpscaledColor", false);
+            TextureHandle outputDepth = upsampleDepth ? UniversalRenderer.CreateRenderGraphTexture(renderGraph, depthDescriptor, "_CameraUpsampledDepth", false) : TextureHandle.nullHandle;
+            
             using (var builder = renderGraph.AddUnsafePass<PassData>(PassName, out var passData))
             {
-                // TODO: isn't this creating a duplicate upscaled output texture?
-                TextureHandle rtHandle = UniversalRenderer.CreateRenderGraphTexture(
-                     renderGraph,
-                     upscaledDesc,
-                     "_CameraUpscaledColor",
-                     false
-                 );
-
                 passData.cameraData = cameraData;
                 passData.activeColorTexture = resourceData.activeColorTexture;
                 
                 passData.colorBuffer = resourceData.cameraColor;
                 passData.depthBuffer = resourceData.cameraDepth;
                 passData.motionVectorBuffer = resourceData.motionVectorColor;
-                passData.output = rtHandle;
-                passData.viewCount = cameraData.xr.enabled ? cameraData.xr.viewCount : 1;
+                passData.opaqueOnly = _currentOpaqueOnlySource?.TextureHandle ?? TextureHandle.nullHandle;
+                passData.autoReactiveMask = _currentAutoReactiveSource?.TextureHandle ?? TextureHandle.nullHandle;
+                passData.outputColor = outputColor;
+                passData.outputDepth = outputDepth;
                 
-                builder.UseTexture(resourceData.cameraColor, AccessFlags.Read);
-                builder.UseTexture(resourceData.cameraDepth, AccessFlags.Read);
-                builder.UseTexture(resourceData.motionVectorColor, AccessFlags.Read);
-                builder.UseTexture(rtHandle, AccessFlags.ReadWrite);
-                builder.UseTexture(resourceData.cameraDepthTexture, AccessFlags.Write);
+                passData.displaySize = _currentController.DisplaySize;
+                passData.viewCount = cameraData.xr.enabled ? cameraData.xr.viewCount : 1;
+                passData.upsampleDepth = upsampleDepth;
+                
+                builder.UseTexture(passData.activeColorTexture);
+                builder.UseTexture(passData.colorBuffer);
+                builder.UseTexture(passData.depthBuffer);
+                builder.UseTexture(passData.motionVectorBuffer);
+                if (passData.opaqueOnly.IsValid())
+                {
+                    builder.UseTexture(passData.opaqueOnly);
+                }
+                if (passData.autoReactiveMask.IsValid())
+                {
+                    builder.UseTexture(passData.autoReactiveMask);
+                }
+
+                builder.UseTexture(outputColor, AccessFlags.Write);
+                resourceData.cameraColor = outputColor;
+
+                if (upsampleDepth)
+                {
+                    builder.UseTexture(outputDepth, AccessFlags.Write);
+                    resourceData.cameraDepth = outputDepth;
+                }
+
                 builder.AllowPassCulling(false);
-
-                resourceData.cameraColor = rtHandle;
-
                 builder.SetRenderFunc(_executePassDelegate);
             }
 
-            if (cameraData.postProcessEnabled)
+            if (postProcessingEnabled)
             {
                 // Inform the post-processing passes of the new render resolution
-                UpscalingHelpers.UpdatePostProcessDescriptors(cameraData.renderer, upscaledDesc);
-                UpdateCameraResolution(renderGraph, cameraData, upscaledDesc);
-                UpscalingHelpers.SetCameraDepthTexture(resourceData, renderGraph.ImportTexture(_upsampledDepth));
+                UpscalingHelpers.UpdatePostProcessDescriptors(cameraData.renderer, colorDescriptor);
+            }
+            
+            UpdateCameraResolution(renderGraph, cameraData, colorDescriptor);
+            
+            if (upsampleDepth)
+            {
+                UpscalingHelpers.SetCameraDepthTexture(resourceData, outputDepth);
             }
         }
 
@@ -87,11 +116,16 @@ namespace TND.Upscaling.Framework.URP
                     new TextureRef(passData.colorBuffer),
                     new TextureRef(passData.depthBuffer),
                     new TextureRef(passData.motionVectorBuffer),
-                    new TextureRef(passData.output));
+                    new TextureRef(passData.opaqueOnly),
+                    new TextureRef(passData.autoReactiveMask),
+                    new TextureRef(passData.outputColor));
             }
 
             // Prepare the Depth output for the next render pass
-            UpsampleDepth(cmd, passData.cameraData.renderer, _currentController.DisplaySize, passData.cameraData.postProcessEnabled, passData.depthBuffer, passData.viewCount);
+            if (passData.upsampleDepth)
+            {
+                UpsampleDepth(cmd, passData.cameraData.renderer, passData.displaySize, passData.cameraData.postProcessEnabled, passData.depthBuffer, passData.viewCount, passData.outputDepth);
+            }
         }
         
         private class UpdateCameraResolutionPassData
@@ -130,5 +164,4 @@ namespace TND.Upscaling.Framework.URP
         }
     }
 }
-
-#endif
+#endif  // TND_URP_RENDERGRAPH

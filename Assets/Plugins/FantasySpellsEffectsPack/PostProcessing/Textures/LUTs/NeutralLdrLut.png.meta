@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 30e6475a247b6f54a94e6142650570e0
+guid: 9dbb16e056c328548853463761e15c7b
 timeCreated: 1494512026
 licenseType: Store
 TextureImporter:
@@ -78,6 +78,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 328076
   packageName: TND Post Processing Stack V2
-  packageVersion: 3.5.5
-  assetPath: Assets/FantasySpellsEffectsPack/PostProcessing/Textures/LUTs/NeutralLdrLut.png
-  uploadId: 821844
+  packageVersion: 3.6.2
+  assetPath: Assets/Plugins/FantasySpellsEffectsPack/PostProcessing/Textures/LUTs/NeutralLdrLut.png
+  uploadId: 903066

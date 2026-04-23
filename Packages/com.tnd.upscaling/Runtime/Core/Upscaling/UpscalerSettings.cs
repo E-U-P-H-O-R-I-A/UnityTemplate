@@ -15,6 +15,12 @@ namespace TND.Upscaling.Framework
         [InspectorName("Ultra Performance (3x)")] UltraPerformance,
     }
     
+    public enum UpscalerInjectionPoint
+    {
+        BeforePostProcessing,
+        AfterPostProcessing,
+    }
+    
     [Serializable]
     public abstract class UpscalerSettingsBase: ScriptableObject
     {

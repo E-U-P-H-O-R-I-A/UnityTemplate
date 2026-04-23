@@ -92,6 +92,11 @@ namespace TND.Upscaling.Framework
         public virtual bool IncludesAlphaUpscale => false;
         public virtual bool AcceptsReactiveMask => false;
         public virtual GraphicsFormat ReactiveMaskFormat => GraphicsFormat.R8_UNorm;
+        
+#if TND_SRP_CORE && ENABLE_UPSCALER_FRAMEWORK
+        private string _upscalerRegistryName;
+        public string UpscalerRegistryName => _upscalerRegistryName ??= "[TND] " + DisplayName;
+#endif
 
         public UpscalerSettingsBase CreateSettings() => ScriptableObject.CreateInstance<TSettings>();
 
@@ -113,6 +118,7 @@ namespace TND.Upscaling.Framework
         {
         }
         
+        [Obsolete("Use the generic version of this method")]
         protected static void RegisterUpscalerPlugin(IUpscalerPlugin upscalerPlugin)
         {
             UpscalerPluginRegistry.RegisterUpscalerPlugin(upscalerPlugin);
@@ -121,7 +127,14 @@ namespace TND.Upscaling.Framework
         protected static void RegisterUpscalerPlugin<TUpscalerPlugin>()
             where TUpscalerPlugin : UpscalerPlugin<TUpscaler, TSettings>, new()
         {
-            UpscalerPluginRegistry.RegisterUpscalerPlugin(new TUpscalerPlugin());
+            var upscalerPlugin = new TUpscalerPlugin();
+            UpscalerPluginRegistry.RegisterUpscalerPlugin(upscalerPlugin);
+#if TND_SRP_CORE && ENABLE_UPSCALER_FRAMEWORK
+            // TODO: IUpscaler framework using the display name as an identifier here really sucks, because it means if we change the name
+            // (e.g. because of a version update, or if the branding changes), then we break all of the references and settings.
+            // There a *reason* why identifiers and display names are usually separate things, Unity... sigh
+            UpscalerRegistry.Register<UpscalerAdapter<TUpscalerPlugin, TUpscaler, TSettings>, UpscalerAdapterOptions>(upscalerPlugin.UpscalerRegistryName);
+#endif
         }
 
         public int CompareTo(object obj)

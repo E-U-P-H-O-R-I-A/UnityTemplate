@@ -15,7 +15,7 @@ namespace TND.Upscaling.Framework.HDRP
         protected override void Setup(ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
             name = "Opaque-Only Copy Pass";
-            targetColorBuffer = TargetBuffer.Camera;
+            targetColorBuffer = TargetBuffer.None;
             targetDepthBuffer = TargetBuffer.None;
 
             CreateOpaqueOnlyTexture();
@@ -25,7 +25,7 @@ namespace TND.Upscaling.Framework.HDRP
         {
             if (_opaqueCopy?.rt != null && GetColorBufferFormat() != _opaqueCopy.rt.graphicsFormat)
                 CreateOpaqueOnlyTexture();
-
+            
             Blitter.BlitCameraTexture(ctx.cmd, ctx.cameraColorBuffer, _opaqueCopy);
         }
 

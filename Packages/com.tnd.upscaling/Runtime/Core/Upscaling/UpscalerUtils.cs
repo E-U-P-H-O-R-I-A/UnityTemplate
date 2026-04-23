@@ -9,6 +9,43 @@ namespace TND.Upscaling.Framework
 {
     public static class UpscalerUtils
     {
+        private static readonly Dictionary<string, ShaderRef> ShaderRefs = new();
+        
+        public static bool TryLoadMaterial(string shaderResourceName, ref Material material, ref ShaderRef shaderRef)
+        {
+            if (material != null)
+                return true;
+
+            if (!ShaderRefs.TryGetValue(shaderResourceName, out shaderRef))
+            {
+                shaderRef = new ShaderRef(shaderResourceName);
+                ShaderRefs.Add(shaderResourceName, shaderRef);
+            }
+
+            Shader shader = shaderRef.Acquire();
+            if (shader == null)
+                return false;
+
+            material = new Material(shader);
+            return true;
+        }
+
+        public static void UnloadMaterial(ref Material material, ref ShaderRef shaderRef)
+        {
+            if (material != null)
+            {
+                DestroyObject(material);
+                material = null;
+            }
+
+            if (shaderRef != null)
+            {
+                shaderRef.Release();
+                shaderRef = null;
+            }
+        }
+        
+        [Obsolete]
         public static bool TryLoadMaterial(string shaderResourceName, ref Material material, ref Shader shader)
         {
             if (material != null)
@@ -22,6 +59,7 @@ namespace TND.Upscaling.Framework
             return true;
         }
 
+        [Obsolete]
         public static void UnloadMaterial(ref Material material, ref Shader shader)
         {
             if (material != null)
@@ -282,11 +320,13 @@ namespace TND.Upscaling.Framework
         };
 
         /// <summary>
-        /// Reimplementation of GraphicsFormatUtility.IsSRGBFormat, which is otherwise only be available in Unity 2022.2+
+        /// Reimplementation of GraphicsFormatUtility.IsSRGBFormat, which is otherwise only available in Unity 2022.2+
         /// </summary>
         public static bool IsSRGBFormat(GraphicsFormat graphicsFormat)
         {
-            return SRGBFormats.Contains(graphicsFormat);
+            // Metal appears to already perform color space conversions automatically in compute shaders,
+            // meaning we don't need this sRGB check and the accompanying shader keywords. 
+            return SystemInfo.graphicsDeviceType != GraphicsDeviceType.Metal && SRGBFormats.Contains(graphicsFormat);
         }
     }
 }

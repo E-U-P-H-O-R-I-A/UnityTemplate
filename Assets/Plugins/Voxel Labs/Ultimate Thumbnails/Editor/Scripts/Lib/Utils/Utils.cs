@@ -26,6 +26,7 @@
         
         public static int GetIconSize(IconSize iconSize)
         {
+            // Texture size should be multiple of 4 else the generated icon can be blurry
             switch (iconSize)
             {
                 case IconSize.X64:

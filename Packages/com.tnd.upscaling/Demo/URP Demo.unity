@@ -119,23 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &48780092
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2ded8f2f681cf94ba781534e564e8ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  variant: 1
-  invertMotionVectorX: 0
-  invertMotionVectorY: 0
-  motionVectorScaleX: 2
-  motionVectorScaleY: 2
 --- !u!114 &89551709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,7 +147,7 @@ MonoBehaviour:
     dlaa: 0
     ultraQuality: 0
     quality: 0
-    balanced: 0
+    balanced: 11
     performance: 0
     ultraPerformance: 0
   transparencyMask: {fileID: 0}
@@ -217,6 +200,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   transparencyMask: {fileID: 0}
+  enableDebugView: 0
 --- !u!1 &504228737
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,22 +1026,22 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 546162361}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38b0ea747f6a4af4a822ef8bc850135d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   upscalerChain:
+  - TND.Upscaling.DLSS4.DLSS4UpscalerPlugin
+  - TND.Upscaling.XeSS3.XeSS3UpscalerPlugin
   - TND.Upscaling.FSR4.FSR4UpscalerPlugin
   - TND.Upscaling.FSR3.FSR3UpscalerPlugin
-  - TND.Upscaling.XeSS2.XeSS2UpscalerPlugin
-  - TND.Upscaling.PSSR.PSSRUpscalerPlugin
-  - TND.Upscaling.DLSS4.DLSS4UpscalerPlugin
   - TND.Upscaling.SGSR2.SGSR2UpscalerPlugin
   - TND.Upscaling.SGSR1.SGSR1UpscalerPlugin
   qualityMode: 5
   enableSharpening: 1
   sharpness: 0.5
+  injectionPoint: 0
   upscalerSettings:
   - identifier: TND.Upscaling.FSR3.FSR3UpscalerPlugin
     settings: {fileID: 1495437377}
@@ -1078,7 +1062,11 @@ MonoBehaviour:
   - identifier: TND.Upscaling.DLSS4.DLSS4UpscalerPlugin
     settings: {fileID: 194446743}
   - identifier: TND.Upscaling.MLSR.MLSRUpscalerPlugin
-    settings: {fileID: 48780092}
+    settings: {fileID: 1058015056}
+  - identifier: TND.Upscaling.XeSS3.XeSS3UpscalerPlugin
+    settings: {fileID: 846424598}
+  - identifier: TND.Upscaling.NSS.NSSUpscalerPlugin
+    settings: {fileID: 1367488603}
   autoGenerateReactiveMask: 1
   autoReactiveSettings:
     scale: 0.9
@@ -1239,7 +1227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 3
+  m_Version: 4
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
   m_LightLayerMask: 1
@@ -1425,6 +1413,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &846424598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ba5c6263b4fa954ca0e86d097d2dafc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1058015056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ded8f2f681cf94ba781534e564e8ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  variant: 1
+  invertMotionVectorX: 0
+  invertMotionVectorY: 0
+  motionVectorScaleX: 2
+  motionVectorScaleY: 2
 --- !u!1 &1222130237
 GameObject:
   m_ObjectHideFlags: 0
@@ -2193,6 +2210,21 @@ LightProbeGroup:
   - {x: 3.895953, y: 0.53947866, z: -5.857826}
   - {x: 3.895953, y: 0.53947866, z: -7.397458}
   m_Dering: 1
+--- !u!114 &1367488603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57ef501d92540b47b1ef563880d6006, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  neuralModel: {fileID: 0}
+  shaderQualityMode: 1
+  drawDebugView: 0
 --- !u!1 &1397183099
 GameObject:
   m_ObjectHideFlags: 0
@@ -2688,12 +2720,12 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 546162368}
-  - {fileID: 560299483}
-  - {fileID: 1222130241}
   - {fileID: 674180329}
-  - {fileID: 1494193578}
   - {fileID: 1397183100}
-  - {fileID: 1857148124}
-  - {fileID: 231710827}
   - {fileID: 746768697}
+  - {fileID: 1222130241}
+  - {fileID: 231710827}
+  - {fileID: 546162368}
+  - {fileID: 1857148124}
+  - {fileID: 560299483}
+  - {fileID: 1494193578}

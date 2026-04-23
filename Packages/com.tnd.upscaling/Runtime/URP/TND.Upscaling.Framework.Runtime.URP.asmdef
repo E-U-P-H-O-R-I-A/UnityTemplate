@@ -18,6 +18,21 @@
     ],
     "versionDefines": [
         {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "1.0.0",
+            "define": "TND_URP"
+        },
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "17.0.0",
+            "define": "TND_URP_RENDERGRAPH"
+        },
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "[1.0,17.4)",
+            "define": "TND_URP_COMPATIBILITY"
+        },
+        {
             "name": "com.unity.modules.xr",
             "expression": "1.0.0",
             "define": "ENABLE_XR_MODULE"
