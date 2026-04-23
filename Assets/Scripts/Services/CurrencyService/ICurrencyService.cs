@@ -7,11 +7,8 @@ namespace Services.CurrencyService
         void Initialize();
         
         int GetAmountCurrency(CurrencyType currencyType);
-
-        bool IsEnoughCurrency(CurrencyType currencyType, int amount);
-
-        void IncreaseCurrency(CurrencyType currencyType, int amount);
-
-        void DecreaseCurrency(CurrencyType currencyType, int amount);
+        void IncreaseCurrency(CurrencyTransaction transaction);
+        bool IsEnoughCurrency(CurrencyTransaction transaction);
+        bool DecreaseCurrency(CurrencyTransaction transaction);
     }
 }

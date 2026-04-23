@@ -1,5 +1,6 @@
 using System;
 using Data.Scheme.Public;
+using Services.CurrencyService;
 using Sirenix.OdinInspector;
 
 namespace Services.RewardService
@@ -10,15 +11,8 @@ namespace Services.RewardService
         [HorizontalGroup("Header")] 
         public TypeReward type;
 
-        [HorizontalGroup("Info")]
-        [ShowIf("@type == TypeReward.Currency")]
-        public CurrencyType currencyType;
-        
         [HorizontalGroup("Info")] 
-        [ShowIf(nameof(InNeedAmount))]
-        public int amount;
-        
-        private bool InNeedAmount() => 
-            type is TypeReward.Currency;
+        [ShowIf("@type == TypeReward.Currency")]
+        public CurrencyTransaction currencyTransaction;
     }
 }

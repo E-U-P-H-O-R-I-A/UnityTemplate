@@ -26,12 +26,12 @@ namespace Services.RewardService
             switch (reward.type)
             {
                 case TypeReward.Currency:
-                    GiveOutCurrency(reward.currencyType, reward.amount);
+                    GiveOutCurrency(reward.currencyTransaction);
                     break;
             }
         }
 
-        private void GiveOutCurrency(CurrencyType currencyType, int amount) => 
-            currencyService.IncreaseCurrency(currencyType, amount);
+        private void GiveOutCurrency(CurrencyTransaction transaction) => 
+            currencyService.IncreaseCurrency(transaction);
     }
 }

@@ -22,19 +22,24 @@ namespace Services.CurrencyService
         public int GetAmountCurrency(CurrencyType currencyType) => 
             GetScheme(currencyType).Value;
 
-        public bool IsEnoughCurrency(CurrencyType currencyType, int amount) => 
-            GetScheme(currencyType).IsEnoughCurrency(amount);
+        public bool IsEnoughCurrency(CurrencyTransaction transaction) => 
+            GetScheme(transaction.type).IsEnoughCurrency(transaction.amount);
 
-        public void IncreaseCurrency(CurrencyType currencyType, int amount)
+        public void IncreaseCurrency(CurrencyTransaction transaction)
         {
-            GetScheme(currencyType).IncreaseCurrency(amount);
+            GetScheme(transaction.type).IncreaseCurrency(transaction.amount);
             Save();
         }
 
-        public void DecreaseCurrency(CurrencyType currencyType, int amount)
+        public bool DecreaseCurrency(CurrencyTransaction transaction)
         {
-            GetScheme(currencyType).DecreaseCurrency(amount);
+            if (!IsEnoughCurrency(transaction))
+                return false;
+            
+            GetScheme(transaction.type).DecreaseCurrency(transaction.amount);
             Save();
+
+            return true;
         }
 
         private void Save() => 
