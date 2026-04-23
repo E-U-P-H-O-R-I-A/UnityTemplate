@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Data.Scheme.Public;
 using Services.CurrencyService;
 using Services.LogService;
+using Services.NotificationService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
@@ -16,6 +17,7 @@ namespace Infrastructure.States
     public class GameLoadingState : IState
     {
         private readonly IPrivateModelProvider privateModelProvider;
+        private readonly INotificationService notificationService;
         private readonly IPublicModelProvider publicModelProvider;
         private readonly GameStateMachine gameStateMachine;
         private readonly ITutorialService tutorialService;
@@ -26,9 +28,10 @@ namespace Infrastructure.States
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
             IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
-            IWindowService windowService, ITutorialService tutorialService)
+            IWindowService windowService, ITutorialService tutorialService, INotificationService notificationService)
         {
             this.privateModelProvider = privateModelProvider;
+            this.notificationService = notificationService;
             this.publicModelProvider = publicModelProvider;
             this.gameStateMachine = gameStateMachine;
             this.currencyService = currencyService;
@@ -50,6 +53,7 @@ namespace Infrastructure.States
             var privateDataTask = privateModelProvider.Init();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
+            notificationService.Initialize();
             tutorialService.Initialize();
             currencyService.Initialize();
             windowService.Initialize();

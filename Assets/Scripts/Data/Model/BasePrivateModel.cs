@@ -10,6 +10,11 @@ namespace Data.Model
     {
         private readonly List<TScheme> schemes = new();
         
+        public bool IsHaveScheme(string id)
+        {
+            return schemes.Any(s => s.ID == id);
+        }
+
         public TScheme GetScheme(string id)
         {
             var scheme = schemes.FirstOrDefault(s => s.ID == id);
@@ -23,6 +28,14 @@ namespace Data.Model
                 schemes.Add(scheme);
 
             return scheme;
+        }
+
+        public bool DeleteSchemeById(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return false;
+
+            return schemes.RemoveAll(s => s.ID == id) > 0;
         }
         
         public string ExportToJson()

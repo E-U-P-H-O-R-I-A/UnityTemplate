@@ -2,6 +2,7 @@ using Infrastructure.States;
 using Services.AssetProvider;
 using Services.CurrencyService;
 using Services.LogService;
+using Services.NotificationService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using Services.SceneProvider;
@@ -34,6 +35,11 @@ namespace Infrastructure
             builder.RegisterComponentInNewPrefab(coroutineRunner, Lifetime.Singleton).As<ICoroutineRunner>();
 
             // --- Services ---
+#if UNITY_ANDROID
+            builder.Register<INotificationService>(Lifetime.Singleton).As<NotificationAndroidService>();
+#elif UNITY_IOS
+            builder.Register<INotificationService>(Lifetime.Singleton).As<NotificationIOSService>();
+#endif
             builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
             builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
             builder.Register<TutorialService>(Lifetime.Singleton).As<ITutorialService>();
@@ -42,7 +48,7 @@ namespace Infrastructure
             builder.Register<SceneProvider>(Lifetime.Singleton).As<ISceneProvider>();
             builder.Register<LogService>(Lifetime.Singleton).As<ILogService>();
             builder.Register<Factory>(Lifetime.Singleton).As<IFactory>();
-
+            
             // --- Game states ---
             builder.Register<GameBootstrapState>(Lifetime.Singleton);
             builder.Register<GameLoadingState>(Lifetime.Singleton);

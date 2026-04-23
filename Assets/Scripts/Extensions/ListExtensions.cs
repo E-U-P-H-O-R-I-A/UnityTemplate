@@ -1,0 +1,23 @@
+using System;
+using System.Collections.Generic;
+
+namespace Extensions.List
+{
+    public static class ListExtensions
+    {
+        public static T Random<T>(this IList<T> list)
+        {
+            if (list.Count == 0)
+            {
+                throw new IndexOutOfRangeException("List needs at least one entry to call Random()");
+            }
+
+            if (list.Count == 1)
+            {
+                return list[0];
+            }
+
+            return list[UnityEngine.Random.Range(0, list.Count)];
+        }
+    }
+}
