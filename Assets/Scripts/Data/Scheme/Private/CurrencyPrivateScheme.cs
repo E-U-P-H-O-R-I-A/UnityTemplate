@@ -1,6 +1,7 @@
 using System;
 using Data.Scheme.Public;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Data.Scheme.Private
 {

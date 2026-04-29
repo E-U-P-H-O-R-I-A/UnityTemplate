@@ -22,14 +22,14 @@ namespace Services.NotificationService
         [Inject] private IPublicModelProvider publicModelProvider;
         [Inject] private ILogService logService;
 
-        private NotificationPrivateModel privateModel;
+        private NotificationPrivateModel collectionPrivateModel;
         private NotificationPublicModel publicModel;
 
         public void Initialize()
         {
 #if UNITY_ANDROID
             publicModel = publicModelProvider.GetModel<NotificationPublicModel>();
-            privateModel = privateModelProvider.GetModel<NotificationPrivateModel>();
+            collectionPrivateModel = privateModelProvider.GetModel<NotificationPrivateModel>();
 
             AndroidNotificationChannel channel = CreateChannel();
             AndroidNotificationCenter.RegisterNotificationChannel(channel);
@@ -40,7 +40,7 @@ namespace Services.NotificationService
         {
 #if UNITY_ANDROID
             NotificationPublicScheme publicScheme = publicModel.GetScheme(type.ToString());
-            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
+            NotificationPrivateScheme privateScheme = collectionPrivateModel.GetScheme(type.ToString());
             
             AndroidNotification  androidNotification = CreateNotification(publicScheme);
             int id = AndroidNotificationCenter.SendNotification(androidNotification, CHANNEL_ID);
@@ -57,15 +57,15 @@ namespace Services.NotificationService
         public void CancelNotification(NotificationType type)
         {
 #if UNITY_ANDROID
-            if (!privateModel.IsHaveScheme(type.ToString()))
+            if (!collectionPrivateModel.IsHaveScheme(type.ToString()))
                 return;
             
-            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
+            NotificationPrivateScheme privateScheme = collectionPrivateModel.GetScheme(type.ToString());
             AndroidNotificationCenter.CancelNotification(privateScheme.AndroidNotificationId);
 
             logService.Log($"Cancelled notification id: {privateScheme.AndroidNotificationId}, {type}", LogCategory.Service);
             
-            privateModel.DeleteSchemeById(privateScheme.ID);
+            collectionPrivateModel.DeleteSchemeById(privateScheme.ID);
             privateModelProvider.SaveModel<NotificationPrivateModel>();
 #endif
         }

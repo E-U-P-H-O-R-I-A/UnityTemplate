@@ -7,7 +7,7 @@ namespace Services.AssetProvider
 {
     public interface IAssetsProvider : IService
     {
-        UniTask InitializeAsync();
+        UniTask Initialize();
         UniTask<TAsset> Load<TAsset>(AssetReference assetReference) where TAsset : class;
         UniTask<TAsset> Load<TAsset>(string key) where TAsset : class;
         UniTask<TAsset> LoadPrefab<TAsset>(string key) where TAsset : class;

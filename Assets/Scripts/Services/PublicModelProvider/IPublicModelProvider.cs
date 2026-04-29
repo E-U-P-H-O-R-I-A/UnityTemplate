@@ -6,7 +6,7 @@ namespace Services.PublicModelProvider
 {
     public interface IPublicModelProvider : IService
     {
-        public UniTask Init(CancellationToken ct = default);
+        public UniTask Initialize(CancellationToken ct = default);
         public TModel GetModel<TModel>() where TModel : IPublicModel;
     }
 }

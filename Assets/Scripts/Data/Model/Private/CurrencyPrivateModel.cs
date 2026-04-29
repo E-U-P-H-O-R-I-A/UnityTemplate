@@ -4,7 +4,7 @@ using Data.Scheme.Public;
 
 namespace Data.Model.Private
 {
-    public class CurrencyPrivateModel : BasePrivateModel<CurrencyPrivateScheme>
+    public class CurrencyPrivateModel : BaseCollectionPrivateModel<CurrencyPrivateScheme>
     {
         protected override CurrencyPrivateScheme CreateSchemeById(string id)
         {

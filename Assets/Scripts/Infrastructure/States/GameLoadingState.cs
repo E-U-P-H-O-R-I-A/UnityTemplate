@@ -1,7 +1,9 @@
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
 using Data.Scheme.Public;
+using Services.AssetProvider;
 using Services.CurrencyService;
+using Services.HapticService;
 using Services.LogService;
 using Services.NotificationService;
 using Services.PrivateModelProvider;
@@ -22,13 +24,16 @@ namespace Infrastructure.States
         private readonly GameStateMachine gameStateMachine;
         private readonly ITutorialService tutorialService;
         private readonly ICurrencyService currencyService;
+        private readonly IAssetsProvider assetsProvider;
         private readonly ILoadingCurtain loadingCurtain;
         private readonly IWindowService windowService;
+        private readonly IHapticService hapticService;
         private readonly ILogService logService;
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
             IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
-            IWindowService windowService, ITutorialService tutorialService, INotificationService notificationService)
+            IWindowService windowService, ITutorialService tutorialService, INotificationService notificationService,
+            IHapticService hapticService, IAssetsProvider assetsProvider)
         {
             this.privateModelProvider = privateModelProvider;
             this.notificationService = notificationService;
@@ -36,8 +41,10 @@ namespace Infrastructure.States
             this.gameStateMachine = gameStateMachine;
             this.currencyService = currencyService;
             this.tutorialService = tutorialService;
+            this.assetsProvider = assetsProvider;
             this.loadingCurtain = loadingCurtain;
             this.windowService = windowService;
+            this.hapticService = hapticService;
             this.logService = logService;
         }
         
@@ -47,15 +54,19 @@ namespace Infrastructure.States
             
             loadingCurtain.Show();
             
-            var publicDataTask = publicModelProvider.Init();
-            await loadingCurtain.AnimatePhase(publicDataTask, 0.20f);
+            var assetProviderTask = assetsProvider.Initialize();
+            await loadingCurtain.AnimatePhase(assetProviderTask, 0.20f);
             
-            var privateDataTask = privateModelProvider.Init();
+            var publicDataTask = publicModelProvider.Initialize();
+            await loadingCurtain.AnimatePhase(publicDataTask, 0.50f);
+            
+            var privateDataTask = privateModelProvider.Initizele();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
             notificationService.Initialize();
             tutorialService.Initialize();
             currencyService.Initialize();
+            hapticService.Initialize();
             windowService.Initialize();
 
             gameStateMachine.Enter<GameLobbyState>();

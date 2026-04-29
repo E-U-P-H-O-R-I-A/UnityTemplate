@@ -19,7 +19,7 @@ namespace Services.PublicModelProvider
             this.assetsProvider = assetsProvider;
         }
         
-        public async UniTask Init(CancellationToken ct = default)
+        public async UniTask Initialize(CancellationToken ct = default)
         {
             var keys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
             ct.ThrowIfCancellationRequested();

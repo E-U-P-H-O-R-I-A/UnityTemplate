@@ -22,7 +22,7 @@ namespace Services.PrivateModelProvider
             this.logService = logService;
         }
         
-        public async UniTask Init(CancellationToken ct = default)
+        public async UniTask Initizele(CancellationToken ct = default)
         {
             models.Clear();
 
@@ -56,6 +56,14 @@ namespace Services.PrivateModelProvider
                 
                 await UniTask.Yield(PlayerLoopTiming.Update, ct);
             }
+        }
+
+        public TModel GetModel<TModel>() where TModel : IPrivateModel
+        {
+            if (models.TryGetValue(typeof(TModel), out var temp) && temp is TModel typed)
+                return typed;
+
+            return default;
         }
 
         public async UniTask SaveAll(CancellationToken ct = default)
@@ -113,14 +121,6 @@ namespace Services.PrivateModelProvider
             {
                 logService.LogError($"[PrivateModelProvider] Failed to save model {typeof(TModel).FullName}: {e}", LogCategory.PrivateModel);
             }
-        }
-
-        public TModel GetModel<TModel>() where TModel : IPrivateModel
-        {
-            if (models.TryGetValue(typeof(TModel), out var temp) && temp is TModel typed)
-                return typed;
-
-            return default;
         }
 
         #region Helpers

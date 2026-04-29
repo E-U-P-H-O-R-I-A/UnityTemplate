@@ -4,7 +4,7 @@ using Data.Scheme.Public;
 
 namespace Data.Model.Private
 {
-    public class TutorialPrivateModel : BasePrivateModel<TutorialPrivateScheme>
+    public class TutorialPrivateModel : BaseCollectionPrivateModel<TutorialPrivateScheme>
     {
         protected override TutorialPrivateScheme CreateSchemeById(string id)
         {

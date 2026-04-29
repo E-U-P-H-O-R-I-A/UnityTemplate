@@ -19,7 +19,7 @@ namespace Services.AssetProvider
             this.logService = logService;
         }
 
-        public async UniTask InitializeAsync() => 
+        public async UniTask Initialize() => 
             await Addressables.InitializeAsync().ToUniTask();
 
         public async UniTask<TAsset> Load<TAsset>(string key) where TAsset : class

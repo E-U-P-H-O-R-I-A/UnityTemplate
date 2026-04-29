@@ -4,7 +4,7 @@ using Data.Scheme.Public;
 
 namespace Data.Model.Private
 {
-    public class NotificationPrivateModel : BasePrivateModel<NotificationPrivateScheme>
+    public class NotificationPrivateModel : BaseCollectionPrivateModel<NotificationPrivateScheme>
     {
         protected override NotificationPrivateScheme CreateSchemeById(string id)
         {

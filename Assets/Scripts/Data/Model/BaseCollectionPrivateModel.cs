@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Data.Model
 {
-    public abstract class BasePrivateModel<TScheme> : IPrivateModel where TScheme : BasePrivateScheme
+    public abstract class BaseCollectionPrivateModel<TScheme> : IPrivateModel where TScheme : BasePrivateScheme
     {
         private readonly List<TScheme> schemes = new();
         
