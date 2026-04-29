@@ -23,11 +23,8 @@ namespace Services.HapticService
         public HapticService(IPrivateModelProvider privateModelProvider) => 
             this.privateModelProvider = privateModelProvider;
 
-        public void Initialize()
-        {
+        public void Initialize() => 
             HapticController.Init();
-            ToggleHaptic();
-        }
 
         public void ToggleHaptic()
         {
