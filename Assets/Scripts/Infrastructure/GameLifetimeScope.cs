@@ -36,9 +36,9 @@ namespace Infrastructure
 
             // --- Services ---
 #if UNITY_ANDROID
-            builder.Register<INotificationService>(Lifetime.Singleton).As<NotificationAndroidService>();
+            builder.Register<NotificationAndroidService>(Lifetime.Singleton).As<INotificationService>();
 #elif UNITY_IOS
-            builder.Register<INotificationService>(Lifetime.Singleton).As<NotificationIOSService>();
+            builder.Register<NotificationIOSService>(Lifetime.Singleton).As<INotificationService>();
 #endif
             builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
             builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
