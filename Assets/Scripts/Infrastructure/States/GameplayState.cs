@@ -25,14 +25,13 @@ namespace Infrastructure.States
         {
             logService.Log("GamePlayState Enter", LogCategory.Infrastructure);
             
-            var loadSceneTask = sceneProvider.Load(AssetsPath.MAIN_SCENE);
+            var loadSceneTask = sceneProvider.Load(AssetsPath.GAMEPLAY_SCENE);
             
             await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
             
             await loadingCurtain.Finish();
 
             loadingCurtain.Hide();
-            
         }
         
         public async UniTask Exit()
