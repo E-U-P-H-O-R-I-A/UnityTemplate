@@ -2,6 +2,7 @@ using Infrastructure.States;
 using Services.AssetProvider;
 using Services.CurrencyService;
 using Services.HapticService;
+using Services.InputService;
 using Services.LogService;
 using Services.NotificationService;
 using Services.PrivateModelProvider;
@@ -51,6 +52,12 @@ namespace Infrastructure
             builder.Register<HapticService>(Lifetime.Singleton).As<IHapticService>();
             builder.Register<LogService>(Lifetime.Singleton).As<ILogService>();
             builder.Register<Factory>(Lifetime.Singleton).As<IFactory>();
+            
+#if UNITY_EDITOR
+            builder.Register<StandaloneInputService>(Lifetime.Singleton).As<IInputService>().As<ITickable>(); 
+#elif UNITY_ANDROID || UNITY_IOS
+            builder.Register<MobileInputService>(Lifetime.Singleton).As<IInputService>().As<ITickable>();
+#endif
             
 #if UNITY_ANDROID
             builder.Register<NotificationAndroidService>(Lifetime.Singleton).As<INotificationService>();
