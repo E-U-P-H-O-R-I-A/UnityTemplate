@@ -18,7 +18,7 @@ MonoBehaviour:
     disablePlayModeColorTint: 1
     optimizePreviewInPlayMode: 1
     isLightsEnable: 1
-    ambientColor: {r: 1, g: 1, b: 1, a: 1}
+    ambientColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
     cameraSettings:
       defaultZoom: 1
       defaultCameraDirection: {x: 180, y: -16.5}
@@ -43,7 +43,7 @@ MonoBehaviour:
       hideFloor: 0
       floorTexture: {fileID: 0}
       floorTiling: {x: 50, y: 50}
-      floorColor: {r: 1, g: 1, b: 1, a: 0.7}
+      floorColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
     defaultAvatarGameobject: {fileID: 0}
     autoPlayAnimations: 1
     resetPlaybackSpeed: 0
@@ -70,14 +70,14 @@ MonoBehaviour:
     disablePlayModeColorTint: 1
     optimizePreviewInPlayMode: 1
     isLightsEnable: 1
-    ambientColor: {r: 0.5882353, g: 0.5882353, b: 0.5882353, a: 1}
+    ambientColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
     cameraSettings:
       defaultZoom: 1
       defaultCameraDirection: {x: 120, y: -20}
       cameraFieldOfView: 30
       clearFlags: 2
       skyboxMaterial: {fileID: 0}
-      backgroundColor: {r: 0.827451, g: 0.99607843, b: 1, a: 1}
+      backgroundColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
     additionalLights:
     - enabled: 1
       intensity: 0.5
