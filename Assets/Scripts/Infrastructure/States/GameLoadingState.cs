@@ -4,6 +4,7 @@ using Data.Scheme.Public;
 using Services.AssetProvider;
 using Services.CurrencyService;
 using Services.HapticService;
+using Services.InputService;
 using Services.LogService;
 using Services.NotificationService;
 using Services.PrivateModelProvider;
@@ -28,13 +29,15 @@ namespace Infrastructure.States
         private readonly ILoadingCurtain loadingCurtain;
         private readonly IWindowService windowService;
         private readonly IHapticService hapticService;
+        private readonly IInputService inputService;
         private readonly ILogService logService;
 
         public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
             IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
             IWindowService windowService, ITutorialService tutorialService, INotificationService notificationService,
-            IHapticService hapticService, IAssetsProvider assetsProvider)
+            IHapticService hapticService, IAssetsProvider assetsProvider, IInputService inputService)
         {
+            this.inputService = inputService;
             this.privateModelProvider = privateModelProvider;
             this.notificationService = notificationService;
             this.publicModelProvider = publicModelProvider;
@@ -68,6 +71,7 @@ namespace Infrastructure.States
             currencyService.Initialize();
             hapticService.Initialize();
             windowService.Initialize();
+            inputService.Initialize();
 
             gameStateMachine.Enter<GameLobbyState>();
         }

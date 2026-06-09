@@ -25,7 +25,7 @@ namespace Services.InputService
         public event Action<InputDragEventData> DragEnded;
         public event Action<InputDragEventData> Dragged;
 
-        protected States State { get; private set; } = States.Idle;
+        protected States State { get; set; } = States.Disabled;
 
         private float duration;
         private float pointerDownTime;
@@ -35,8 +35,13 @@ namespace Services.InputService
         private Vector2 pointerDownPosition;
 
         public virtual void Tick() { }
-        public virtual void Initialize() { }
+
         protected virtual void OnInputDisabled() { }
+
+        public virtual void Initialize()
+        {
+            State = States.Idle; 
+        }
 
         public void SetInputStatus(bool isEnabled)
         {

@@ -9,6 +9,7 @@ namespace Services.InputService
 
         public override void Initialize()
         {
+            base.Initialize();
             mouse = Mouse.current;
         }
 
