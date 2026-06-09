@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3f4bc44818ebff94d8a0377154e664f7
+guid: d73a8e763a9288d4da2464352db734a5
 DefaultImporter:
   externalObjects: {}
   userData: 
@@ -9,6 +9,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 322974
   packageName: "Ultimate Preview Window \u2013 Pro Edition"
-  packageVersion: 1.3.4
+  packageVersion: 1.4.0
   assetPath: Assets/Plugins/Voxel Labs/Ultimate Preview/Packages/PRO_UltimatePreview_HDRP.unitypackage
-  uploadId: 899716
+  uploadId: 906350

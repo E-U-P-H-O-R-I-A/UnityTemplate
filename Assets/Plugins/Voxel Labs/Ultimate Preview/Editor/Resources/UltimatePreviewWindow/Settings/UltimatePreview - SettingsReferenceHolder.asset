@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1156077403, guid: 87ee8e102c218af43a5c389ccb0e7752, type: 3}
+  m_Script: {fileID: -1156077403, guid: 6c6b3bfeb2456184fb649f95a8daa710, type: 3}
   m_Name: UltimatePreview - SettingsReferenceHolder
-  m_EditorClassIdentifier: 
-  ultimatePreviewSettings: {fileID: 11400000, guid: 3550a585f7d453444a85657fbd660840, type: 2}
+  m_EditorClassIdentifier: VoxelLabs.UltimatePreview.Core.dll::VoxelLabs.UltimatePreview.Core.UltimatePreviewSettingsReferenceHolder
+  ultimatePreviewSettings: {fileID: 11400000, guid: 7b9576c980907994ba9f221b44766dd0, type: 2}
