@@ -7,6 +7,7 @@ using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 #if UNITY_ANDROID
+using Cysharp.Threading.Tasks;
 using Unity.Notifications.Android;
 #endif
 using UnityEngine;
@@ -22,25 +23,35 @@ namespace Services.NotificationService
         [Inject] private IPublicModelProvider publicModelProvider;
         [Inject] private ILogService logService;
 
-        private NotificationPrivateModel collectionPrivateModel;
+        private NotificationPrivateModel privateModel;
         private NotificationPublicModel publicModel;
 
         public void Initialize()
         {
 #if UNITY_ANDROID
             publicModel = publicModelProvider.GetModel<NotificationPublicModel>();
-            collectionPrivateModel = privateModelProvider.GetModel<NotificationPrivateModel>();
+            privateModel = privateModelProvider.GetModel<NotificationPrivateModel>();
 
             AndroidNotificationChannel channel = CreateChannel();
             AndroidNotificationCenter.RegisterNotificationChannel(channel);
+
+            RequestPermissionAsync().Forget();
 #endif
         }
 
         public void SendNotification(NotificationType type)
         {
 #if UNITY_ANDROID
+            if (AndroidNotificationCenter.UserPermissionToPost != PermissionStatus.Allowed)
+            {
+                logService.LogWarning(
+                    $"Notification '{type}' was not scheduled because notification permission is not granted.",
+                    LogCategory.Service);
+                return;
+            }
+
             NotificationPublicScheme publicScheme = publicModel.GetScheme(type.ToString());
-            NotificationPrivateScheme privateScheme = collectionPrivateModel.GetScheme(type.ToString());
+            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
             
             AndroidNotification  androidNotification = CreateNotification(publicScheme);
             int id = AndroidNotificationCenter.SendNotification(androidNotification, CHANNEL_ID);
@@ -57,20 +68,35 @@ namespace Services.NotificationService
         public void CancelNotification(NotificationType type)
         {
 #if UNITY_ANDROID
-            if (!collectionPrivateModel.IsHaveScheme(type.ToString()))
+            if (!privateModel.IsHaveScheme(type.ToString()))
                 return;
             
-            NotificationPrivateScheme privateScheme = collectionPrivateModel.GetScheme(type.ToString());
+            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
             AndroidNotificationCenter.CancelNotification(privateScheme.AndroidNotificationId);
 
             logService.Log($"Cancelled notification id: {privateScheme.AndroidNotificationId}, {type}", LogCategory.Service);
             
-            collectionPrivateModel.DeleteSchemeById(privateScheme.ID);
+            privateModel.DeleteSchemeById(privateScheme.ID);
             privateModelProvider.SaveModel<NotificationPrivateModel>();
 #endif
         }
         
 #if UNITY_ANDROID
+        private async UniTask RequestPermissionAsync()
+        {
+            var request = new PermissionRequest();
+
+            while (request.Status == PermissionStatus.RequestPending)
+                await UniTask.Yield();
+
+            if (request.Status != PermissionStatus.Allowed)
+            {
+                logService.LogWarning(
+                    $"Notification permission was not granted. Status: {request.Status}.",
+                    LogCategory.Service);
+            }
+        }
+
         private AndroidNotificationChannel CreateChannel() => new()
         {
             Id = CHANNEL_ID,

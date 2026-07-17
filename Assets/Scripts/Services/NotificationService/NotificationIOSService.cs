@@ -20,7 +20,7 @@ namespace Services.NotificationService
         [Inject] private IPublicModelProvider publicModelProvider;
         [Inject] private ILogService logService;
 
-        private NotificationPrivateModel collectionPrivateModel;
+        private NotificationPrivateModel privateModel;
         private NotificationPublicModel publicModel;
 
         public void Initialize()
