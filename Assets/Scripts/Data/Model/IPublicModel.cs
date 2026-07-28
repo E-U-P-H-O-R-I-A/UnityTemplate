@@ -1,4 +1,4 @@
-namespace Data.Model
+namespace Data
 {
     public interface IPublicModel
     {

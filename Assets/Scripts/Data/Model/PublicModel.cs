@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using Data.Scheme;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Data.Model
+namespace Data
 {
-    public abstract class BasePublicModel<TScheme> : ScriptableObject, IPublicModel where TScheme : BasePublicScheme
+    public abstract class PublicModel<TScheme> : ScriptableObject, IPublicModel where TScheme : PublicScheme
     {
         [Searchable, ListDrawerSettings(Expanded = true, ListElementLabelName = "ID")] 
         [SerializeField] protected List<TScheme> schemes;
@@ -17,6 +16,5 @@ namespace Data.Model
         {
             return schemes.FirstOrDefault(scheme => scheme != null && scheme.ID == id);
         }
-
     }
 }

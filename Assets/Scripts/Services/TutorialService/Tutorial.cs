@@ -1,4 +1,4 @@
-using Data.Scheme.Private;
+using Data;
 using Data.Scheme.Public;
 
 namespace Services.TutorialService

@@ -1,4 +1,4 @@
-namespace Data.Scheme
+namespace Data
 {
     public interface IScheme
     {

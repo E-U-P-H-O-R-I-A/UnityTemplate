@@ -1,10 +1,8 @@
 using System;
-using Data.Scheme.Private;
-using Data.Scheme.Public;
 
-namespace Data.Model.Private
+namespace Data
 {
-    public class TutorialPrivateModel : BaseCollectionPrivateModel<TutorialPrivateScheme>
+    public class TutorialPrivateModel : PrivateModel.Collection<TutorialPrivateScheme>
     {
         protected override TutorialPrivateScheme CreateSchemeById(string id)
         {

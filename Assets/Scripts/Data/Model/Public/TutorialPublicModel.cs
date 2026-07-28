@@ -1,10 +1,9 @@
-using Data.Scheme.Public;
 using UnityEngine;
 
-namespace Data.Model.Public
+namespace Data
 {
     [CreateAssetMenu(menuName = "Models/Tutorial")]
-    public class TutorialPublicModel : BasePublicModel<TutorialPublicScheme>
+    public class TutorialPublicModel : PublicModel<TutorialPublicScheme>
     {
     }
 }

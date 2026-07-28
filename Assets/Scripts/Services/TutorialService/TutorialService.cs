@@ -1,7 +1,5 @@
 using System;
-using Data.Model.Private;
-using Data.Model.Public;
-using Data.Scheme.Private;
+using Data;
 using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;

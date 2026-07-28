@@ -1,5 +1,4 @@
-using Data.Model.Private;
-using Data.Scheme.Private;
+using Data;
 using Data.Scheme.Public;
 using Services.PrivateModelProvider;
 

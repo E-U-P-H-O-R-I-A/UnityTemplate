@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum NotificationType
     {
@@ -9,7 +9,7 @@ namespace Data.Scheme.Public
     }
     
     [Serializable]
-    public class NotificationPublicScheme : BasePublicScheme
+    public class NotificationPublicScheme : PublicScheme
     {
         [SerializeField] private NotificationType type;
         [Space]

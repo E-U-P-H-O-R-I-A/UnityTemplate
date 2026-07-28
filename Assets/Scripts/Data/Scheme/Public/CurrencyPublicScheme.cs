@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum CurrencyType
     {
@@ -10,7 +10,7 @@ namespace Data.Scheme.Public
     }
     
     [Serializable]
-    public class CurrencyPublicScheme : BasePublicScheme
+    public class CurrencyPublicScheme : PublicScheme
     {
         [SerializeField] private CurrencyType type;
         [SerializeField] private Sprite sprite;

@@ -1,5 +1,4 @@
-using Data.Model.Private;
-using Data.Model.Public;
+using Data;
 using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;
@@ -58,10 +57,8 @@ namespace Services.NotificationService
         public void CancelNotification(NotificationType type)
         {
 #if UNITY_IOS
-            if (!privateModel.IsHaveScheme(type.ToString()))
+            if (!privateModel.TryGetScheme(type.ToString(), out NotificationPrivateScheme privateScheme))
                 return;
-            
-            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
 
             iOSNotificationCenter.RemoveScheduledNotification(privateScheme.IosNotificationId);
             iOSNotificationCenter.RemoveDeliveredNotification(privateScheme.IosNotificationId);

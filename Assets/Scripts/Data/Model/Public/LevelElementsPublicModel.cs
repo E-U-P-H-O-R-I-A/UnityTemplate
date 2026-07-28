@@ -1,10 +1,9 @@
-using Data.Scheme.Public;
 using UnityEngine;
 
-namespace Data.Model.Public
+namespace Data
 {
     [CreateAssetMenu(menuName = "Models/LevelElements")]
-    public class LevelElementsPublicModel : BasePublicModel<LevelElementPublicScheme>
+    public class LevelElementsPublicModel : PublicModel<LevelElementPublicScheme>
     {
     }
 }

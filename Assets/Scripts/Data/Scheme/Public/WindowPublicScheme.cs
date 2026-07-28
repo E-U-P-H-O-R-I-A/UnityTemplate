@@ -2,7 +2,7 @@ using System;
 using Services.WindowsService.Windows;
 using UnityEngine;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum WindowType
     {
@@ -19,7 +19,7 @@ namespace Data.Scheme.Public
     }
 
     [Serializable]
-    public class WindowPublicScheme : BasePublicScheme
+    public class WindowPublicScheme : PublicScheme
     {
         [SerializeField] private WindowType type;
         [SerializeField] private WindowPriority priority;

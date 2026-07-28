@@ -1,6 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Data.Model;
+using Data;
 
 namespace Services.PublicModelProvider
 {

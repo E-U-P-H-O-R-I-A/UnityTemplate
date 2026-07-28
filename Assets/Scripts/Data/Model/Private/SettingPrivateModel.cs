@@ -1,8 +1,6 @@
-using Data.Scheme.Private;
-
-namespace Data.Model.Private
+namespace Data
 {
-    public class SettingPrivateModel : BaseSinglePrivateModel<SettingPrivateScheme>
+    public class SettingPrivateModel : PrivateModel.Single<SettingPrivateScheme>
     {
         protected override SettingPrivateScheme CreateScheme() => new();
     }

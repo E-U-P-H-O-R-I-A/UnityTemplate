@@ -1,7 +1,5 @@
 using System;
-using Data.Model.Private;
-using Data.Model.Public;
-using Data.Scheme.Private;
+using Data;
 using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;
@@ -68,10 +66,9 @@ namespace Services.NotificationService
         public void CancelNotification(NotificationType type)
         {
 #if UNITY_ANDROID
-            if (!privateModel.IsHaveScheme(type.ToString()))
+            if (!privateModel.TryGetScheme(type.ToString(), out NotificationPrivateScheme privateScheme))
                 return;
-            
-            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
+
             AndroidNotificationCenter.CancelNotification(privateScheme.AndroidNotificationId);
 
             logService.Log($"Cancelled notification id: {privateScheme.AndroidNotificationId}, {type}", LogCategory.Service);

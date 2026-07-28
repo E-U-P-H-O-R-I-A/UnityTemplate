@@ -1,10 +1,9 @@
-using Data.Scheme.Public;
 using UnityEngine;
 
-namespace Data.Model.Public
+namespace Data
 {
     [CreateAssetMenu(menuName = "Models/Windows")]
-    public class WindowsPublicModel : BasePublicModel<WindowPublicScheme>
+    public class WindowsPublicModel : PublicModel<WindowPublicScheme>
     {
     }
 }

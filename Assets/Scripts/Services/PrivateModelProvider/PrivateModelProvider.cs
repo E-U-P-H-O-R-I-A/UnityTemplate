@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Data.Model;
+using Data;
 using Services.LogService;
 using UnityEngine;
 

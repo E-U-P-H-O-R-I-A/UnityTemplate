@@ -1,6 +1,6 @@
 using System;
 
-namespace Data.SaveLoad
+namespace Data
 {
     [Serializable]
     public class SchemeRecord

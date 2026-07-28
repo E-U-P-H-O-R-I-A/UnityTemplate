@@ -1,12 +1,10 @@
 using System;
-using Data.Scheme.Public;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Data.Scheme.Private
+namespace Data
 {
     [Serializable]
-    public class CurrencyPrivateScheme : BasePrivateScheme
+    public class CurrencyPrivateScheme : PrivateScheme
     {
         [SerializeField] private CurrencyType type;
         [SerializeField] private int value;

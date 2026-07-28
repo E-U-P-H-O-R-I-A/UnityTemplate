@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Services.HapticService;
 using UnityEngine;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum HapticType
     {
@@ -19,7 +18,7 @@ namespace Data.Scheme.Public
     }
 
     [Serializable]
-    public class HapticPublicScheme : BasePublicScheme
+    public class HapticPublicScheme : PublicScheme
     {
         [SerializeField] private HapticType type;
         [SerializeField] private HapticSequence sequence;

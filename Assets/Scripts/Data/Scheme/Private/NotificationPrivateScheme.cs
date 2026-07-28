@@ -1,12 +1,10 @@
 using System;
-using Data.Scheme.Public;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Data.Scheme.Private
+namespace Data
 {
     [Serializable]
-    public class NotificationPrivateScheme : BasePrivateScheme
+    public class NotificationPrivateScheme : PrivateScheme
     {
         [SerializeField] private NotificationType type;
         [SerializeField] private int androidNotificationId;

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeBase.Infrastructure.AssetManagement;
-using Data.Model;
-using Data.Model.Public;
+using Data;
 using Data.Scheme.Public;
 using Sirenix.OdinInspector;
 using UnityEngine;

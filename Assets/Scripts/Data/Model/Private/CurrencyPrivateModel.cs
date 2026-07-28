@@ -1,10 +1,8 @@
 using System;
-using Data.Scheme.Private;
-using Data.Scheme.Public;
 
-namespace Data.Model.Private
+namespace Data
 {
-    public class CurrencyPrivateModel : BaseCollectionPrivateModel<CurrencyPrivateScheme>
+    public class CurrencyPrivateModel : PrivateModel.Collection<CurrencyPrivateScheme>
     {
         protected override CurrencyPrivateScheme CreateSchemeById(string id)
         {

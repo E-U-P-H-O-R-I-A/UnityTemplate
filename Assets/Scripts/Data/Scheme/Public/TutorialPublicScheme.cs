@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Data.Scheme.Public;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum TutorialType
     {
@@ -11,7 +12,7 @@ namespace Data.Scheme.Public
     }
 
     [Serializable]
-    public class TutorialPublicScheme : BasePublicScheme
+    public class TutorialPublicScheme : PublicScheme
     {
         [SerializeField] private TutorialType type;
         

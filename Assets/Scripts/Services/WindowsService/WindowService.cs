@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
-using Data.Model.Public;
+using Data;
 using Data.Scheme.Public;
 using Services.LogService;
 using Services.PublicModelProvider;

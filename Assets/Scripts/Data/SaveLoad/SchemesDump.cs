@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Data.Model;
 
-namespace Data.SaveLoad
+namespace Data
 {
     [Serializable]
     public class SchemesDump

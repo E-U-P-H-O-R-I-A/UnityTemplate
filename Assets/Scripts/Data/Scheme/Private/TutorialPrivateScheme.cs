@@ -1,11 +1,10 @@
 using System;
-using Data.Scheme.Public;
 using UnityEngine;
 
-namespace Data.Scheme.Private
+namespace Data
 {
     [Serializable]
-    public class TutorialPrivateScheme : BasePrivateScheme
+    public class TutorialPrivateScheme : PrivateScheme
     {
         [SerializeField] private TutorialType type;
         [SerializeField] private bool isComplete;

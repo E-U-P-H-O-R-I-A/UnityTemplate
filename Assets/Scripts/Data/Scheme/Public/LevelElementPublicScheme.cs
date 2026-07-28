@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Utility.LevelEditor;
 
-namespace Data.Scheme.Public
+namespace Data
 {
     public enum LevelElementType
     {
@@ -12,7 +12,7 @@ namespace Data.Scheme.Public
     }
     
     [Serializable]
-    public class LevelElementPublicScheme : BasePublicScheme
+    public class LevelElementPublicScheme : PublicScheme
     {
         [SerializeField] private string id;
         [SerializeField] private LevelElement prefab;

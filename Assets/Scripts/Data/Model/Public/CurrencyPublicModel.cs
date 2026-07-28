@@ -1,10 +1,9 @@
-using Data.Scheme.Public;
 using UnityEngine;
 
-namespace Data.Model.Public
+namespace Data
 {
     [CreateAssetMenu(menuName = "Models/Currency")]
-    public class CurrencyPublicModel : BasePublicModel<CurrencyPublicScheme>
+    public class CurrencyPublicModel : PublicModel<CurrencyPublicScheme>
     {
     }
 }

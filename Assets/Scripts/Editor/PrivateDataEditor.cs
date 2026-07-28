@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Data.Model;
+using Data;
 using Data.Scheme;
 using UnityEditor;
 using UnityEngine;
@@ -399,14 +399,14 @@ namespace Editor
             EditorGUI.indentLevel--;
         }
 
-        private static IEnumerable<BasePrivateScheme> GetSchemes(IPrivateModel model)
+        private static IEnumerable<PrivateScheme> GetSchemes(IPrivateModel model)
         {
             var collectionField = FindField(model.GetType(), "schemes");
             if (collectionField?.GetValue(model) is IEnumerable collection)
             {
                 foreach (var item in collection)
                 {
-                    if (item is BasePrivateScheme scheme)
+                    if (item is PrivateScheme scheme)
                         yield return scheme;
                 }
 
@@ -417,11 +417,14 @@ namespace Editor
             if (singleField == null)
                 yield break;
 
-            var singleScheme = singleField.GetValue(model) as BasePrivateScheme;
+            var singleScheme = singleField.GetValue(model) as PrivateScheme;
             if (singleScheme == null)
             {
-                var getScheme = model.GetType().GetMethod(nameof(BaseSinglePrivateModel<BasePrivateScheme>.GetScheme), Type.EmptyTypes);
-                singleScheme = getScheme?.Invoke(model, null) as BasePrivateScheme;
+                var getScheme = model.GetType().GetMethod(
+                    nameof(PrivateModel.Single<PrivateScheme>.GetScheme),
+                    Type.EmptyTypes);
+
+                singleScheme = getScheme?.Invoke(model, null) as PrivateScheme;
             }
 
             if (singleScheme != null)

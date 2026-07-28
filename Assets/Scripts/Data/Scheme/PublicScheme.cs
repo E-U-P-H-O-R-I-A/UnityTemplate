@@ -1,9 +1,9 @@
 using System;
 
-namespace Data.Scheme
+namespace Data
 {
     [Serializable]
-    public abstract class BasePublicScheme : IScheme
+    public abstract class PublicScheme : IScheme
     {
         public abstract string ID { get; }
     }

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
-using Data.Model;
+using Data;
 using Services.AssetProvider;
 
 namespace Services.PublicModelProvider
