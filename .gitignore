@@ -17,3 +17,4 @@
 *.swp
 # Кэш Addressables
 [Aa]ssets/**/AddressableAssetsData/*/*.bin*
+Assets/Resources/FR2_Cache.asset
