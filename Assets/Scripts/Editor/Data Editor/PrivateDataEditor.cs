@@ -27,14 +27,10 @@ namespace Editor.DataEditor
         [MenuItem("Tools/Data Utility")]
         public static void Open()
         {
-            foreach (var opened in Resources.FindObjectsOfTypeAll<PrivateDataEditor>())
-                opened.Close();
-
-            var window = CreateInstance<PrivateDataEditor>();
-            window.titleContent = new GUIContent("Data Utility", GetWindowIcon());
+            var window = GetWindow<PrivateDataEditor>(true, "Data Utility", true);
+            window.titleContent = new GUIContent("Data Utility");
             window.minSize = new Vector2(780f, 520f);
             window.service.Refresh();
-            window.ShowUtility();
         }
 
         private void OnEnable()
@@ -397,8 +393,5 @@ namespace Editor.DataEditor
             if (skin == null || !skin.IsValid)
                 skin = new PrivateDataSkin();
         }
-
-        private static Texture GetWindowIcon() =>
-            EditorGUIUtility.ObjectContent(null, typeof(TextAsset)).image;
     }
 }
