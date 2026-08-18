@@ -21,6 +21,7 @@ namespace Services.LogService
         Infrastructure = 6,
         Windows = 7,
         LevelEditor = 8,
+        PublicModel = 9,
     }
     
     public static class LogSettings
@@ -42,6 +43,7 @@ namespace Services.LogService
             { LogCategory.Tutorial , true},
             { LogCategory.LevelEditor , true},
             { LogCategory.PrivateModel , true},
+            { LogCategory.PublicModel , true},
             { LogCategory.Infrastructure , true},
         };
         
@@ -55,6 +57,7 @@ namespace Services.LogService
             { LogCategory.Tutorial , new Color(0.56f, 0.89f, 0.45f)},
             { LogCategory.LevelEditor , new Color(0.98f, 0.92f, 0.55f)},
             { LogCategory.PrivateModel , new Color(0.71f, 0.90f, 0.90f)},
+            { LogCategory.PublicModel , new Color(0.62f, 0.84f, 0.98f)},
             { LogCategory.Infrastructure , new Color(0.36f, 0.73f, 0.94f)},
         };
 

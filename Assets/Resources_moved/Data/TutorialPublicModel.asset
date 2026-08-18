@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e6acd847472439f9bfef5f478918e48, type: 3}
-  m_Name: Tutorial Public Model
-  m_EditorClassIdentifier: Assembly-CSharp::Data.Model.Public.TutorialPublicModel
+  m_Name: TutorialPublicModel
+  m_EditorClassIdentifier: 
   schemes: []
   references:
     version: 2

@@ -1,6 +1,5 @@
 using System;
 using Data;
-using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
@@ -10,6 +9,7 @@ using Unity.Notifications.Android;
 #endif
 using UnityEngine;
 using VContainer;
+using NotificationType = Data.NotificationPublicModel.Type;
 
 namespace Services.NotificationService
 {
@@ -48,13 +48,13 @@ namespace Services.NotificationService
                 return;
             }
 
-            NotificationPublicScheme publicScheme = publicModel.GetScheme(type.ToString());
+            NotificationPublicScheme publicScheme = publicModel.GetScheme(type);
             NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
             
             AndroidNotification  androidNotification = CreateNotification(publicScheme);
             int id = AndroidNotificationCenter.SendNotification(androidNotification, CHANNEL_ID);
             
-            logService.Log($"Send notification id: {id}, {publicScheme.Type}, title: {publicScheme.Title}, " +
+            logService.Log($"Send notification id: {id}, {publicScheme.ID}, title: {publicScheme.Title}, " +
                            $"message: {publicScheme.Message}; {publicScheme.FireAfterSeconds} seconds to shoot", LogCategory.Service);
 
             privateScheme.SaveNotificationAndroidID(id);

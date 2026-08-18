@@ -1,4 +1,5 @@
 using System;
+using NotificationType = Data.NotificationPublicModel.Type;
 
 namespace Data
 {

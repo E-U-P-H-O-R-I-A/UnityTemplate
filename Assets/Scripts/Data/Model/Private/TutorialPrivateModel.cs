@@ -1,4 +1,5 @@
 using System;
+using TutorialType = Data.TutorialPublicModel.Type;
 
 namespace Data
 {

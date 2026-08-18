@@ -1,13 +1,20 @@
 using System.Linq;
-using Extensions.List;
-using UnityEngine;
+using Extensions;
 
 namespace Data
 {
-    [CreateAssetMenu(menuName = "Models/Notification")]
-    public class NotificationPublicModel : PublicModel<NotificationPublicScheme>
+    public class NotificationPublicModel : PublicModel.Collection<NotificationPublicScheme>
     {
-        public override NotificationPublicScheme GetScheme(string id) => 
-            schemes.Where(scheme => scheme.ID == id).ToList().Random();
+        protected override NotificationPublicScheme GetScheme(string id) =>
+            schemes.Where(scheme => scheme != null && scheme.ID == id).ToList().Random();
+
+        #region Generated
+
+        public enum Type
+        {
+            General = 0,
+        }
+
+        #endregion
     }
 }

@@ -1,5 +1,4 @@
 using Data;
-using Data.Scheme.Public;
 using UnityEngine;
 
 namespace Utility.LevelEditor

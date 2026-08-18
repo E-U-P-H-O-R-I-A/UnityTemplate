@@ -1,6 +1,6 @@
 
 using Data;
-using Data.Scheme.Public;
+using NotificationType = Data.NotificationPublicModel.Type;
 
 namespace Services.NotificationService
 {

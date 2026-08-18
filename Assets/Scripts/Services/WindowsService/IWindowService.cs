@@ -1,6 +1,6 @@
 using Data;
-using Data.Scheme.Public;
 using Services.WindowsService.Windows;
+using WindowType = Data.WindowsPublicModel.Type;
 
 namespace Services.WindowsService
 {

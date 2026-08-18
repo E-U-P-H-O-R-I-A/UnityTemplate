@@ -1,9 +1,15 @@
-using UnityEngine;
-
 namespace Data
 {
-    [CreateAssetMenu(menuName = "Models/Windows")]
-    public class WindowsPublicModel : PublicModel<WindowPublicScheme>
+    public class WindowsPublicModel : PublicModel.Collection<WindowPublicScheme>
     {
+        #region Generated
+
+        public enum Type
+        {
+            Shop = 0,
+            NoAds = 1,
+        }
+
+        #endregion
     }
 }

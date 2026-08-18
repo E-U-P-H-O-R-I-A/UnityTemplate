@@ -1,5 +1,5 @@
 using Data;
-using Data.Scheme.Public;
+using TutorialType = Data.TutorialPublicModel.Type;
 
 namespace Services.TutorialService
 {

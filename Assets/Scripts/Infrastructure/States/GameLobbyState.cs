@@ -1,7 +1,6 @@
-using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
-using Data.Scheme.Public;
 using Game.UI.Lobby;
+using Services.AssetProvider;
 using Services.LogService;
 using Services.SceneProvider;
 using Utility.LoadingCurtain;

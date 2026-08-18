@@ -1,10 +1,9 @@
 using Cysharp.Threading.Tasks;
 using Data;
-using Data.Scheme.Public;
-using Infrastructure;
 using Lofelt.NiceVibrations;
 using Services.PrivateModelProvider;
 using UnityEngine;
+using HapticType = Data.HapticPublicModel.Type;
 
 namespace Services.HapticService
 {

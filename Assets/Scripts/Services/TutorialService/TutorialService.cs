@@ -1,10 +1,10 @@
 using System;
 using Data;
-using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using VContainer;
+using TutorialType = Data.TutorialPublicModel.Type;
 
 namespace Services.TutorialService
 {
@@ -116,7 +116,7 @@ namespace Services.TutorialService
             currentTutorial.Clear();
 
         private TutorialPublicScheme GetPublicScheme(TutorialType type) => 
-            publicModel.GetScheme(type.ToString());
+            publicModel.GetScheme(type);
 
         private TutorialPrivateScheme GetPrivateScheme(TutorialType type) => 
             privateModel.GetScheme(type.ToString());

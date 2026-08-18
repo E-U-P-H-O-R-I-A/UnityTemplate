@@ -9,8 +9,7 @@ namespace Data
         [SerializeField] private string id;
         [SerializeField] private Material material;
 
-        public Material Material => material;
-
         public override string ID => id;
+        public Material Material => material;
     }
 }

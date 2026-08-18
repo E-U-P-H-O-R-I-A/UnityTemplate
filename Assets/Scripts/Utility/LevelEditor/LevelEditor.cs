@@ -1,5 +1,6 @@
 using Services.AssetProvider;
 using Services.LogService;
+using Services.PublicModelProvider;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,17 +20,23 @@ namespace Utility.LevelEditor
         [HideLabel, ShowInInspector, PropertyOrder(-998)]
         private string SaveLoadTabOrderAnchor => "SaveLoad";
 
-        private readonly ILogService logService = new LogService();
-        private readonly IAssetsProvider assetsProvider = new AssetsProvider(new LogService());
+        private ILogService logService;
+        private IAssetsProvider assetsProvider;
 
         private Level level;
 
         private void Start()
         {
+            InitServices();
+            LoadAssets();
             CreateRootLevel();
-            
-            InitializeAssetProvider();
             InitializeInstruments();
+        }
+        
+        private void InitServices()
+        {
+            logService = new LogService();
+            assetsProvider = new AssetsProvider(logService);
         }
 
         private void CreateRootLevel()

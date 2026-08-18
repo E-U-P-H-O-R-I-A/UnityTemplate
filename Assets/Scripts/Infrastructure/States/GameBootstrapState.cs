@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using Data.Scheme.Public;
 using Services.LogService;
 using Utility.StateMachine;
 

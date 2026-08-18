@@ -1,6 +1,6 @@
 using System;
 
-namespace Data.Scheme.Public
+namespace Services.TutorialService
 {
     [Serializable]
     public abstract class TutorialStep

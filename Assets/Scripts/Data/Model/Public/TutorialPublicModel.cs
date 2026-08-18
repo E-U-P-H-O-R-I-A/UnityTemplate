@@ -1,9 +1,14 @@
-using UnityEngine;
-
 namespace Data
 {
-    [CreateAssetMenu(menuName = "Models/Tutorial")]
-    public class TutorialPublicModel : PublicModel<TutorialPublicScheme>
+    public class TutorialPublicModel : PublicModel.Collection<TutorialPublicScheme>
     {
+        #region Generated
+
+        public enum Type
+        {
+            None = 0,
+        }
+
+        #endregion
     }
 }

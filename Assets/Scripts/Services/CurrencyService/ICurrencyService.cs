@@ -1,5 +1,5 @@
 using Data;
-using Data.Scheme.Public;
+using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Services.CurrencyService
 {

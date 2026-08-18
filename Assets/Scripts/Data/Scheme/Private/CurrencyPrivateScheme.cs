@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Data
 {

@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Data
 {
-    public enum WindowType
-    {
-        Shop = 0,
-        NoAds = 1,
-    }
-
     public enum WindowPriority
     {
         Low = 0,
@@ -21,14 +15,12 @@ namespace Data
     [Serializable]
     public class WindowPublicScheme : PublicScheme
     {
-        [SerializeField] private WindowType type;
+        [SerializeField] private string id;
         [SerializeField] private WindowPriority priority;
         [SerializeField] private BaseWindow prefab;
 
-        public WindowType Type => type;
+        public override string ID => id;
         public BaseWindow Prefab => prefab;
         public int Priority => (int)priority;
-
-        public override string ID => type.ToString();
     }
 }

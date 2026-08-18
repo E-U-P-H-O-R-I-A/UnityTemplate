@@ -2,35 +2,45 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Window layout only: everything it shows comes from PrivateDataService,
-    /// everything it draws inside the inspector comes from SchemeInspectorDrawer.
-    /// </summary>
-    public class PrivateDataEditor : EditorWindow
+    public class DataUtilityWindow : EditorWindow
     {
         private const float SIDEBAR_WIDTH = 250f;
         private const float ROW_HEIGHT = 36f;
         private const float HEADER_HEIGHT = 34f;
         private const float SPACING = 8f;
+        private const float TAB_WIDTH = 84f;
+        private const float TAB_LEFT = 10f;
+        private const float TAB_TOP = 5f;
+        private const float TAB_SPACING = 2f;
+        private const float SEARCH_WIDTH = 200f;
 
-        private readonly PrivateDataService service = new();
+        private readonly DataModelService[] services =
+        {
+            new PublicDataService(),
+            new PrivateDataService()
+        };
+
         private readonly SchemeInspectorDrawer inspector = new();
+        private readonly SchemePropertyInspector propertyInspector = new();
 
         private string searchQuery = string.Empty;
         private Vector2 fileScroll;
         private Vector2 inspectorScroll;
         private Action pendingAction;
-        private PrivateDataSkin skin;
+        private DataEditorSkin skin;
+        private int modeIndex;
+
+        private DataModelService Service => services[modeIndex];
 
         [MenuItem("Tools/Data Utility")]
         public static void Open()
         {
-            var window = GetWindow<PrivateDataEditor>(true, "Data Utility", true);
+            var window = GetWindow<DataUtilityWindow>(true, "Data Utility", true);
             window.titleContent = new GUIContent("Data Utility");
             window.minSize = new Vector2(780f, 520f);
-            window.service.Refresh();
+            window.Service.Refresh();
         }
 
         private void OnEnable()
@@ -46,8 +56,8 @@ namespace Editor.DataEditor
 
         private void OnFocus()
         {
-            if (!service.HasPendingChanges)
-                service.Refresh();
+            if (!Service.HasPendingChanges)
+                Service.Refresh();
         }
 
         private void OnGUI()
@@ -76,37 +86,76 @@ namespace Editor.DataEditor
 
         private void DrawToolbar()
         {
-            using (new EditorGUILayout.HorizontalScope(skin.Toolbar))
+            var toolbar = GUILayoutUtility.GetRect(0f, DataEditorSkin.TOOLBAR_HEIGHT, GUILayout.ExpandWidth(true));
+
+            if (Event.current.type == EventType.Repaint)
+                EditorGUI.DrawRect(toolbar, skin.ToolbarBackground);
+
+            DrawTabs(toolbar);
+
+            var searchRect = new Rect(toolbar.xMax - SEARCH_WIDTH - TAB_LEFT, toolbar.y + 6f, SEARCH_WIDTH, 20f);
+            searchQuery = EditorGUI.TextField(searchRect, searchQuery, EditorStyles.toolbarSearchField);
+        }
+
+        private void DrawTabs(Rect toolbar)
+        {
+            float x = toolbar.x + TAB_LEFT;
+            var active = Rect.zero;
+
+            for (int index = 0; index < services.Length; index++)
             {
-                if (Event.current.type == EventType.Repaint)
-                {
-                    EditorGUI.DrawRect(
-                        new Rect(0f, 0f, position.width, PrivateDataSkin.TOOLBAR_HEIGHT),
-                        skin.ToolbarBackground);
+                var tab = new Rect(x, toolbar.y + TAB_TOP, TAB_WIDTH, toolbar.height - TAB_TOP);
+                bool isActive = index == modeIndex;
 
-                    EditorGUI.DrawRect(
-                        new Rect(0f, PrivateDataSkin.TOOLBAR_HEIGHT - 1f, position.width, 1f),
-                        skin.Border);
-                }
+                if (isActive)
+                    active = tab;
 
-                GUILayout.Label("Private Models", skin.ToolbarTitle, GUILayout.Height(22f));
+                DrawTab(tab, services[index].ShortTitle, isActive);
+                HandleTabClick(tab, index, isActive);
 
-                GUILayout.FlexibleSpace();
-
-                using (new EditorGUILayout.VerticalScope(GUILayout.Height(22f)))
-                {
-                    GUILayout.Space(2f);
-                    searchQuery = EditorGUILayout.TextField(
-                        searchQuery,
-                        EditorStyles.toolbarSearchField,
-                        GUILayout.Width(200f));
-                }
+                x += TAB_WIDTH + TAB_SPACING;
             }
+
+            if (Event.current.type != EventType.Repaint)
+                return;
+
+            float borderY = toolbar.yMax - 1f;
+
+            EditorGUI.DrawRect(new Rect(toolbar.x, borderY, active.x - toolbar.x, 1f), skin.Border);
+            EditorGUI.DrawRect(new Rect(active.xMax, borderY, toolbar.xMax - active.xMax, 1f), skin.Border);
+            EditorGUI.DrawRect(new Rect(active.x + 1f, borderY, active.width - 2f, 1f), skin.PanelFill);
+        }
+
+        private void DrawTab(Rect tab, string title, bool isActive)
+        {
+            if (Event.current.type != EventType.Repaint)
+                return;
+
+            var style = isActive
+                ? skin.TabActive
+                : tab.Contains(Event.current.mousePosition)
+                    ? skin.TabHover
+                    : skin.Tab;
+
+            style.Draw(tab, title, false, false, false, false);
+        }
+
+        private void HandleTabClick(Rect tab, int index, bool isActive)
+        {
+            if (isActive || Event.current.type != EventType.MouseDown || Event.current.button != 0)
+                return;
+
+            if (!tab.Contains(Event.current.mousePosition))
+                return;
+
+            GUI.FocusControl(null);
+            pendingAction = () => SwitchMode(index);
+            Event.current.Use();
         }
 
         private void DrawModelList()
         {
-            var files = service.Filter(searchQuery);
+            var files = Service.Filter(searchQuery);
 
             using (new EditorGUILayout.VerticalScope(skin.Panel, GUILayout.Width(SIDEBAR_WIDTH),
                        GUILayout.ExpandHeight(true)))
@@ -119,7 +168,7 @@ namespace Editor.DataEditor
                 {
                     if (files.Length == 0)
                     {
-                        PrivateDataGUI.DrawEmptyState(skin, service.FileCount == 0
+                        DataEditorGUI.DrawEmptyState(skin, Service.FileCount == 0
                             ? "No models yet"
                             : "Nothing matches the search");
                     }
@@ -134,7 +183,7 @@ namespace Editor.DataEditor
 
         private void DrawModelRow(string file)
         {
-            bool isSelected = file == service.SelectedPath;
+            bool isSelected = file == Service.SelectedPath;
             var rect = GUILayoutUtility.GetRect(0f, ROW_HEIGHT, GUILayout.ExpandWidth(true));
             bool isHovered = rect.Contains(Event.current.mousePosition);
 
@@ -153,10 +202,10 @@ namespace Editor.DataEditor
                     isSelected ? skin.RowTitleActive : skin.RowTitle);
 
                 GUI.Label(new Rect(textX, rect.y + 19f, textWidth, 13f),
-                    service.GetFileMeta(file),
+                    Service.GetFileMeta(file),
                     skin.RowSubtitle);
 
-                if (isSelected && service.HasPendingChanges)
+                if (isSelected && Service.HasPendingChanges)
                 {
                     GUI.DrawTexture(
                         new Rect(rect.xMax - 15f, rect.y + rect.height * 0.5f - 3.5f, 7f, 7f),
@@ -176,17 +225,17 @@ namespace Editor.DataEditor
         {
             using (new EditorGUILayout.VerticalScope(skin.Panel, GUILayout.ExpandHeight(true)))
             {
-                DrawPanelHeader(GetInspectorTitle(), service.GetFileMeta(service.SelectedPath), DrawModelActions);
+                DrawPanelHeader(GetInspectorTitle(), Service.GetFileMeta(Service.SelectedPath), DrawModelActions);
 
                 inspectorScroll = EditorGUILayout.BeginScrollView(
                     inspectorScroll, GUIStyle.none, GUI.skin.verticalScrollbar);
 
                 using (new EditorGUILayout.VerticalScope(skin.ScrollContent))
                 {
-                    if (!string.IsNullOrEmpty(service.LoadError))
-                        EditorGUILayout.HelpBox(service.LoadError, MessageType.Error);
-                    else if (service.SelectedModel == null)
-                        PrivateDataGUI.DrawEmptyState(skin, "Select a model");
+                    if (!string.IsNullOrEmpty(Service.LoadError))
+                        EditorGUILayout.HelpBox(Service.LoadError, MessageType.Error);
+                    else if (Service.SelectedModel == null)
+                        DataEditorGUI.DrawEmptyState(skin, "Select a model");
                     else
                         DrawSelectedModel();
                 }
@@ -198,6 +247,18 @@ namespace Editor.DataEditor
         private void DrawSelectedModel()
         {
             float labelWidth = Mathf.Clamp(position.width * 0.24f, 140f, 260f);
+            var service = Service;
+
+            if (service.SerializedModel != null)
+            {
+                if (propertyInspector.Draw(service.SerializedModel, skin, labelWidth))
+                    service.HasPendingChanges = true;
+
+                if (propertyInspector.TryTakePendingAction(out var action))
+                    pendingAction = () => RunSchemeAction(service, action);
+
+                return;
+            }
 
             if (inspector.Draw(service.SelectedModel, service.SelectedPath, skin, labelWidth))
                 service.HasPendingChanges = true;
@@ -206,12 +267,15 @@ namespace Editor.DataEditor
         private void DrawListActions()
         {
             if (GUILayout.Button(skin.RefreshIcon, skin.IconButton))
-                pendingAction = service.Refresh;
+                pendingAction = Service.Refresh;
 
             if (GUILayout.Button(skin.FolderIcon, skin.IconButton))
-                pendingAction = () => EditorUtility.RevealInFinder(PrivateDataService.FolderPath);
+            {
+                string folder = Service.FolderPath;
+                pendingAction = () => EditorUtility.RevealInFinder(folder);
+            }
 
-            using (new EditorGUI.DisabledScope(service.FileCount == 0))
+            using (new EditorGUI.DisabledScope(Service.FileCount == 0))
             {
                 if (GUILayout.Button(skin.DeleteAllIcon, skin.DangerIconButton))
                     pendingAction = DeleteAllModels;
@@ -220,24 +284,30 @@ namespace Editor.DataEditor
 
         private void DrawModelActions()
         {
-            using (new EditorGUI.DisabledScope(service.SelectedModelType == null))
+            using (new EditorGUI.DisabledScope(Service.SelectedModelType == null))
             {
                 if (GUILayout.Button(skin.ImportIcon, skin.IconButton))
                     pendingAction = ImportFromClipboard;
             }
 
-            using (new EditorGUI.DisabledScope(service.SelectedModel == null))
+            using (new EditorGUI.DisabledScope(Service.SelectedModel == null))
             {
                 if (GUILayout.Button(skin.ExportIcon, skin.IconButton))
                     pendingAction = ExportToClipboard;
             }
 
-            using (new EditorGUI.DisabledScope(!service.HasSelection))
+            using (new EditorGUI.DisabledScope(!Service.HasPendingChanges))
             {
-                var saveStyle = service.HasPendingChanges ? skin.PrimaryIconButton : skin.IconButton;
+                if (GUILayout.Button(skin.RevertIcon, skin.IconButton))
+                    pendingAction = RevertModel;
+            }
+
+            using (new EditorGUI.DisabledScope(!Service.HasSelection))
+            {
+                var saveStyle = Service.HasPendingChanges ? skin.PrimaryIconButton : skin.IconButton;
 
                 if (GUILayout.Button(skin.SaveIcon, saveStyle))
-                    pendingAction = service.Save;
+                    pendingAction = Service.Save;
 
                 if (GUILayout.Button(skin.DeleteIcon, skin.DangerIconButton))
                     pendingAction = DeleteSelectedModel;
@@ -272,7 +342,7 @@ namespace Editor.DataEditor
                 }
             }
 
-            PrivateDataGUI.DrawSeparator(skin);
+            DataEditorGUI.DrawSeparator(skin);
         }
 
         private void DrawFooter()
@@ -281,68 +351,109 @@ namespace Editor.DataEditor
             {
                 if (Event.current.type == EventType.Repaint)
                 {
-                    var background = new Rect(0f, position.height - PrivateDataSkin.FOOTER_HEIGHT,
-                        position.width, PrivateDataSkin.FOOTER_HEIGHT);
+                    var background = new Rect(0f, position.height - DataEditorSkin.FOOTER_HEIGHT,
+                        position.width, DataEditorSkin.FOOTER_HEIGHT);
 
                     EditorGUI.DrawRect(background, skin.ToolbarBackground);
                     EditorGUI.DrawRect(new Rect(background.x, background.y, background.width, 1f), skin.Border);
                 }
 
-                GUILayout.Label(PrivateDataService.FolderPath, skin.FooterLabel);
+                GUILayout.Label(Service.FolderPath, skin.FooterLabel);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(
-                    service.HasPendingChanges ? "Unsaved changes" : $"{service.FileCount} file(s)",
-                    service.HasPendingChanges ? skin.FooterAccentLabel : skin.FooterLabel);
+                    Service.HasPendingChanges ? "Unsaved changes" : $"{Service.FileCount} file(s)",
+                    Service.HasPendingChanges ? skin.FooterAccentLabel : skin.FooterLabel);
             }
         }
 
         private string GetInspectorTitle()
         {
-            if (service.SelectedModelType != null)
-                return ModelNaming.FormatTypeName(service.SelectedModelType.Name);
+            if (Service.SelectedModelType != null)
+                return ModelNaming.FormatTypeName(Service.SelectedModelType.Name);
 
-            return service.HasSelection
-                ? ModelNaming.GetDisplayName(service.SelectedPath)
+            return Service.HasSelection
+                ? ModelNaming.GetDisplayName(Service.SelectedPath)
                 : "Inspector";
+        }
+
+        private void SwitchMode(int index)
+        {
+            Service.DiscardPendingChanges();
+
+            modeIndex = index;
+            inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
+            inspectorScroll = Vector2.zero;
+            fileScroll = Vector2.zero;
+
+            Service.Refresh();
         }
 
         private void SelectModel(string path)
         {
-            service.Select(path);
+            Service.Select(path);
             inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
             inspectorScroll = Vector2.zero;
+        }
+
+        private static void RunSchemeAction(DataModelService service, Action action)
+        {
+            action.Invoke();
+            service.HasPendingChanges = true;
+        }
+
+        private void RevertModel()
+        {
+            string fileName = ModelNaming.GetDisplayName(Service.SelectedPath);
+
+            bool confirmed = EditorUtility.DisplayDialog(
+                "Revert Changes",
+                $"Discard unsaved changes of \"{fileName}\"?",
+                "Revert",
+                "Cancel");
+
+            if (!confirmed)
+                return;
+
+            Service.Revert();
+
+            inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
         }
 
         private void DeleteSelectedModel()
         {
-            string fileName = ModelNaming.GetDisplayName(service.SelectedPath);
+            string fileName = ModelNaming.GetDisplayName(Service.SelectedPath);
 
             bool confirmed = EditorUtility.DisplayDialog(
-                "Delete Save",
-                $"Delete save file of \"{fileName}\"?",
+                "Delete Data File",
+                $"Delete the data file of \"{fileName}\"?",
                 "Delete",
                 "Cancel");
 
             if (!confirmed)
                 return;
 
-            service.DeleteSelected();
+            Service.DeleteSelected();
             inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
         }
 
         private void DeleteAllModels()
         {
             bool confirmed = EditorUtility.DisplayDialog(
-                "Delete All Saves",
-                "Delete all private save files?",
+                "Delete All Data Files",
+                $"Delete all data files of the {Service.Title.ToLowerInvariant()}?",
                 "Delete All",
                 "Cancel");
 
             if (!confirmed)
                 return;
 
-            service.DeleteAll();
+            Service.DeleteAll();
             inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
         }
 
         private void ImportFromClipboard()
@@ -355,19 +466,20 @@ namespace Editor.DataEditor
                 return;
             }
 
-            if (!service.TryImport(json, out string error))
+            if (!Service.TryImport(json, out string error))
             {
                 EditorUtility.DisplayDialog("Import failed", error, "OK");
                 return;
             }
 
             inspector.ResetFoldouts();
+            propertyInspector.ResetFoldouts();
             ShowNotification(new GUIContent("JSON imported"));
         }
 
         private void ExportToClipboard()
         {
-            string json = service.Export();
+            string json = Service.Export();
 
             if (string.IsNullOrEmpty(json))
                 return;
@@ -391,7 +503,7 @@ namespace Editor.DataEditor
         private void EnsureSkin()
         {
             if (skin == null || !skin.IsValid)
-                skin = new PrivateDataSkin();
+                skin = new DataEditorSkin();
         }
     }
 }

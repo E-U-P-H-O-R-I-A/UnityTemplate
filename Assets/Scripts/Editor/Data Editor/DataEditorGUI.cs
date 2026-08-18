@@ -1,14 +1,11 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Small drawing primitives shared by the window and the scheme inspector.
-    /// </summary>
-    public static class PrivateDataGUI
+    public static class DataEditorGUI
     {
-        public static void DrawSeparator(PrivateDataSkin skin)
+        public static void DrawSeparator(DataEditorSkin skin)
         {
             var rect = GUILayoutUtility.GetRect(1f, 1f, GUILayout.ExpandWidth(true));
 
@@ -16,7 +13,7 @@ namespace Editor.DataEditor
                 EditorGUI.DrawRect(rect, skin.Separator);
         }
 
-        public static void DrawEmptyState(PrivateDataSkin skin, string message)
+        public static void DrawEmptyState(DataEditorSkin skin, string message)
         {
             GUILayout.Space(16f);
             GUILayout.Label(message, skin.EmptyLabel);

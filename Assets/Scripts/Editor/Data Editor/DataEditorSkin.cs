@@ -1,12 +1,9 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Colors, styles and icons of the window. Textures are generated in PrivateDataSkin.Textures.cs.
-    /// </summary>
-    public sealed partial class PrivateDataSkin
+    public sealed partial class DataEditorSkin
     {
         public const float TOOLBAR_HEIGHT = 32f;
         public const float FOOTER_HEIGHT = 22f;
@@ -18,10 +15,14 @@ namespace Editor.DataEditor
         public readonly Color Accent;
         public readonly Color RowHover;
         public readonly Color RowSelected;
+        public readonly Color PanelFill;
 
         public readonly GUIStyle Body;
         public readonly GUIStyle Toolbar;
         public readonly GUIStyle ToolbarTitle;
+        public readonly GUIStyle Tab;
+        public readonly GUIStyle TabHover;
+        public readonly GUIStyle TabActive;
         public readonly GUIStyle Panel;
         public readonly GUIStyle PanelHeader;
         public readonly GUIStyle PanelTitle;
@@ -36,6 +37,8 @@ namespace Editor.DataEditor
         public readonly GUIStyle RowHoverCard;
         public readonly Texture2D Dot;
         public readonly GUIStyle Section;
+        public readonly GUIStyle SectionContent;
+        public readonly GUIStyle ListHeader;
         public readonly GUIStyle SectionFoldout;
         public readonly GUIStyle NestedFoldout;
         public readonly GUIStyle Button;
@@ -44,20 +47,24 @@ namespace Editor.DataEditor
         public readonly GUIStyle IconButton;
         public readonly GUIStyle PrimaryIconButton;
         public readonly GUIStyle DangerIconButton;
+        public readonly GUIStyle SmallButton;
         public readonly GUIContent ImportIcon;
         public readonly GUIContent ExportIcon;
+        public readonly GUIContent RevertIcon;
         public readonly GUIContent SaveIcon;
         public readonly GUIContent DeleteIcon;
         public readonly GUIContent DeleteAllIcon;
         public readonly GUIContent RefreshIcon;
         public readonly GUIContent FolderIcon;
+        public readonly GUIContent AddIcon;
+        public readonly GUIContent RemoveIcon;
         public readonly GUIStyle Footer;
         public readonly GUIStyle FooterLabel;
         public readonly GUIStyle FooterAccentLabel;
         public readonly GUIStyle EmptyLabel;
         public readonly GUIStyle InlineHint;
 
-        public PrivateDataSkin()
+        public DataEditorSkin()
         {
             bool dark = EditorGUIUtility.isProSkin;
 
@@ -69,7 +76,8 @@ namespace Editor.DataEditor
             RowHover = new Color(1f, 1f, 1f, dark ? 0.05f : 0.28f);
             RowSelected = new Color(Accent.r, Accent.g, Accent.b, dark ? 0.20f : 0.24f);
 
-            var panelFill = Rgb(dark ? 0x2B2D33 : 0xE0E0E2);
+            PanelFill = Rgb(dark ? 0x2B2D33 : 0xE0E0E2);
+            var panelFill = PanelFill;
             var sectionFill = Rgb(dark ? 0x32353B : 0xD5D5D8);
             var buttonFill = Rgb(dark ? 0x3A3D44 : 0xECECEE);
             var buttonHover = Rgb(dark ? 0x454951 : 0xF6F6F8);
@@ -82,7 +90,7 @@ namespace Editor.DataEditor
             var textStrong = Rgb(dark ? 0xF0F0F2 : 0x141416);
             var textDim = Rgb(dark ? 0x868990 : 0x606064);
 
-            Body = new GUIStyle { padding = new RectOffset(8, 8, 8, 6) };
+            Body = new GUIStyle { padding = new RectOffset(8, 8, 0, 6) };
 
             Toolbar = new GUIStyle
             {
@@ -93,7 +101,24 @@ namespace Editor.DataEditor
             ToolbarTitle = Label(textStrong, 13, FontStyle.Bold);
             ToolbarTitle.alignment = TextAnchor.MiddleLeft;
 
+            Tab = Card(Color.clear, Color.clear, 6, new RectOffset(10, 10, 0, 0));
+            Tab.alignment = TextAnchor.MiddleCenter;
+            Tab.fontSize = 12;
+            Tint(Tab, textDim);
+
+            TabHover = Card(RowHover, Color.clear, 6, new RectOffset(10, 10, 0, 0));
+            TabHover.alignment = TextAnchor.MiddleCenter;
+            TabHover.fontSize = 12;
+            Tint(TabHover, text);
+
+            TabActive = Card(panelFill, Border, 6, new RectOffset(10, 10, 0, 0));
+            TabActive.alignment = TextAnchor.MiddleCenter;
+            TabActive.fontSize = 12;
+            TabActive.fontStyle = FontStyle.Bold;
+            Tint(TabActive, textStrong);
+
             Panel = Card(panelFill, Border, 6, new RectOffset(0, 0, 2, 2));
+            Panel.margin = new RectOffset(0, 0, 0, 0);
             PanelHeader = new GUIStyle { padding = new RectOffset(10, 8, 6, 6) };
             PanelTitle = Label(textStrong, 12, FontStyle.Bold);
             PanelTitle.alignment = TextAnchor.MiddleLeft;
@@ -122,6 +147,11 @@ namespace Editor.DataEditor
             Section = Card(sectionFill, Border, 6, new RectOffset(6, 6, 4, 6));
             Section.margin = new RectOffset(0, 0, 0, 6);
 
+            SectionContent = new GUIStyle { padding = new RectOffset(4, 6, 0, 2) };
+
+            ListHeader = Label(textStrong, 12, FontStyle.Normal);
+            ListHeader.alignment = TextAnchor.MiddleLeft;
+
             SectionFoldout = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold, fontSize = 12 };
             Tint(SectionFoldout, textStrong);
 
@@ -140,13 +170,24 @@ namespace Editor.DataEditor
             PrimaryIconButton = IconVariant(PrimaryButton);
             DangerIconButton = IconVariant(DangerButton);
 
+            SmallButton = new GUIStyle(Button)
+            {
+                fontSize = 10,
+                fixedHeight = 18f,
+                padding = new RectOffset(6, 6, 0, 0),
+                margin = new RectOffset(2, 2, 1, 1)
+            };
+
             ImportIcon = new GUIContent(TrayArrowIcon(false, text), "Import JSON from clipboard");
             ExportIcon = new GUIContent(TrayArrowIcon(true, text), "Copy JSON to clipboard");
+            RevertIcon = Icon("UndoHistory", "R", "Discard unsaved changes");
             SaveIcon = Icon("SaveAs", "S", "Save selected file");
             DeleteIcon = Icon("TreeEditor.Trash", "D", "Delete selected file");
             DeleteAllIcon = Icon("CrossIcon", "X", "Delete all save files");
             RefreshIcon = Icon("Refresh", "R", "Refresh file list");
             FolderIcon = Icon("FolderOpened Icon", "F", "Reveal folder in explorer");
+            AddIcon = Icon("Toolbar Plus", "+", "Add");
+            RemoveIcon = Icon("Toolbar Minus", "-", "Remove");
 
             Footer = new GUIStyle
             {

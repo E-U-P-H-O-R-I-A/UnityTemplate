@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using TutorialType = Data.TutorialPublicModel.Type;
 
 namespace Data
 {

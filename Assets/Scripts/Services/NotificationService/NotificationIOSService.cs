@@ -1,13 +1,12 @@
 using Data;
-using Data.Scheme.Public;
 using Services.LogService;
 using Services.PrivateModelProvider;
 using Services.PublicModelProvider;
 using VContainer;
+using NotificationType = Data.NotificationPublicModel.Type;
 #if UNITY_IOS
 using System;
 using UnityEngine;
-using Data.Scheme.Private;
 using Unity.Notifications.iOS;
 #endif
 
@@ -39,14 +38,14 @@ namespace Services.NotificationService
         {
 #if UNITY_IOS
 
-            NotificationPublicScheme publicScheme = publicModel.GetScheme(type.ToString());
+            NotificationPublicScheme publicScheme = publicModel.GetScheme(type);
             NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
             
             string id = CreateIdentifier(publicScheme);
             iOSNotification notification = CreateNotification(publicScheme, id);
             iOSNotificationCenter.ScheduleNotification(notification);
 
-            logService.Log($"Send notification id: {id}, {publicScheme.Type}, title: {publicScheme.Title}, " +
+            logService.Log($"Send notification id: {id}, {publicScheme.ID}, title: {publicScheme.Title}, " +
                            $"message: {publicScheme.Message}; {publicScheme.FireAfterSeconds} seconds to shoot", LogCategory.Service);
 
             privateScheme.SaveNotificationIosId(id);
@@ -72,14 +71,14 @@ namespace Services.NotificationService
 
 #if UNITY_IOS
         private string CreateIdentifier(NotificationPublicScheme settings) =>
-            $"notification_{settings.Type}_{DateTime.UtcNow.Ticks}";
+            $"notification_{settings.ID}_{DateTime.UtcNow.Ticks}";
 
         private static iOSNotification CreateNotification(NotificationPublicScheme settings, string id) => new()
         {
             Identifier = id,
             Title = settings.Title,
             Body = settings.Message,
-            ThreadIdentifier = settings.Type.ToString(),
+            ThreadIdentifier = settings.ID,
             Trigger = new iOSNotificationTimeIntervalTrigger
             {
                 TimeInterval = TimeSpan.FromSeconds(Mathf.Max(1, settings.FireAfterSeconds)),

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Data.Scheme.Public;
 using Services.CurrencyService;
 
 namespace Services.RewardService

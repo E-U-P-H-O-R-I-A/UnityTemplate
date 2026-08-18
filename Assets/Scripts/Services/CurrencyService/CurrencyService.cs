@@ -1,6 +1,6 @@
 using Data;
-using Data.Scheme.Public;
 using Services.PrivateModelProvider;
+using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Services.CurrencyService
 {
@@ -45,6 +45,6 @@ namespace Services.CurrencyService
             privateModelProvider.SaveModel<CurrencyPrivateModel>();
 
         private CurrencyPrivateScheme GetScheme(CurrencyType currencyType) => 
-            currencyPrivateModel.GetScheme(((int)currencyType).ToString());
+            currencyPrivateModel.GetScheme(currencyType.ToString());
     }
 }

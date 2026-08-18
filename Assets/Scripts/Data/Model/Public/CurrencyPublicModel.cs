@@ -1,9 +1,15 @@
-using UnityEngine;
-
 namespace Data
 {
-    [CreateAssetMenu(menuName = "Models/Currency")]
-    public class CurrencyPublicModel : PublicModel<CurrencyPublicScheme>
+    public class CurrencyPublicModel : PublicModel.Collection<CurrencyPublicScheme>
     {
+        #region Generated
+
+        public enum Type
+        {
+            Soft = 0,
+            Hard = 1,
+        }
+
+        #endregion
     }
 }

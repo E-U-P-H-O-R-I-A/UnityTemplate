@@ -1,5 +1,4 @@
 using System;
-using Data.Scheme.Public;
 using Services.CurrencyService;
 using Sirenix.OdinInspector;
 

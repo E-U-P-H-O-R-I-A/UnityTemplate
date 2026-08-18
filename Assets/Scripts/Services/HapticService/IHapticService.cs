@@ -1,8 +1,6 @@
-using Data;
-using Data.Scheme.Public;
-using Services.HapticService;
+using HapticType = Data.HapticPublicModel.Type;
 
-namespace Infrastructure
+namespace Services.HapticService
 {
     public interface IHapticService
     {

@@ -1,6 +1,4 @@
-using CodeBase.Infrastructure.AssetManagement;
 using Cysharp.Threading.Tasks;
-using Data.Scheme.Public;
 using Services.AssetProvider;
 using Services.CurrencyService;
 using Services.HapticService;

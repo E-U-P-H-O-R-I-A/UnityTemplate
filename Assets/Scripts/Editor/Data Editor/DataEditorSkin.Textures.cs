@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Procedural textures of the skin: rounded cards, the dirty dot and the import/export glyphs.
-    /// </summary>
-    public sealed partial class PrivateDataSkin
+    public sealed partial class DataEditorSkin
     {
         private readonly List<Texture2D> textures = new();
 

@@ -2,15 +2,16 @@
 using System.IO;
 using System.Text;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Converts model type names and file paths into labels shown in the window.
-    /// </summary>
     public static class ModelNaming
     {
         private const string NAMESPACE_PREFIX = "Data.";
-        private const string MODEL_SUFFIX = "PrivateModel";
+
+        private static readonly string[] MODEL_SUFFIXES = { "PrivateModel", "PublicModel" };
+
+        public static string NormalizePath(string path) =>
+            string.IsNullOrEmpty(path) ? path : path.Replace('\\', '/');
 
         public static string GetDisplayName(string path)
         {
@@ -26,8 +27,14 @@ namespace Editor.DataEditor
             if (string.IsNullOrEmpty(name))
                 return name;
 
-            if (name.Length > MODEL_SUFFIX.Length && name.EndsWith(MODEL_SUFFIX, StringComparison.Ordinal))
-                name = name.Substring(0, name.Length - MODEL_SUFFIX.Length);
+            foreach (var suffix in MODEL_SUFFIXES)
+            {
+                if (name.Length <= suffix.Length || !name.EndsWith(suffix, StringComparison.Ordinal))
+                    continue;
+
+                name = name.Substring(0, name.Length - suffix.Length);
+                break;
+            }
 
             var builder = new StringBuilder(name.Length + 4);
             builder.Append(name[0]);

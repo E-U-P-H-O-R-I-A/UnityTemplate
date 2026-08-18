@@ -1,4 +1,5 @@
 using System;
+using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Data
 {

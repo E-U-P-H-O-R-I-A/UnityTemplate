@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Data;
-using Data.Scheme.Public;
 using Services.LogService;
 using Services.PublicModelProvider;
 using Services.WindowsService.Windows;
 using UnityEngine;
 using Utility.Factory;
 using VContainer;
+using WindowType = Data.WindowsPublicModel.Type;
 
 namespace Services.WindowsService
 {
@@ -73,7 +73,7 @@ namespace Services.WindowsService
             windows.TryGetValue(type, out BaseWindow window) ? window : CreateWindow(type);
 
         private WindowPublicScheme GetWindowScheme(WindowType type) => 
-            publicModel.GetScheme(type.ToString());
+            publicModel.GetScheme(type);
 
         private WindowRequest CreateRequest(WindowType type, BaseWindowParams @params)
         {

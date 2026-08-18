@@ -1,9 +1,15 @@
-using UnityEngine;
-
 namespace Data
 {
-    [CreateAssetMenu(menuName = "Models/LevelElements")]
-    public class LevelElementsPublicModel : PublicModel<LevelElementPublicScheme>
+    public class LevelElementsPublicModel : PublicModel.Collection<LevelElementPublicScheme>
     {
+        #region Generated
+
+        public enum Type
+        {
+            Base_floor = 0,
+            Base_wall = 1,
+        }
+
+        #endregion
     }
 }

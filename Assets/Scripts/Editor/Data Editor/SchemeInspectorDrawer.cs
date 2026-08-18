@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,16 +7,15 @@ using Data;
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor.DataEditor
+namespace Editor.Data_Editor
 {
-    /// <summary>
-    /// Draws the schemes of a private model through reflection and reports value changes.
-    /// </summary>
     public class SchemeInspectorDrawer
     {
+        private const float SECTION_HEADER_HEIGHT = 20f;
+
         private readonly Dictionary<string, bool> foldouts = new();
 
-        private PrivateDataSkin skin;
+        private DataEditorSkin skin;
         private int rowIndex;
         private bool changed;
 
@@ -25,29 +24,39 @@ namespace Editor.DataEditor
             foldouts.Clear();
         }
 
-        /// <summary>
-        /// Returns true when the user edited any value during this frame.
-        /// </summary>
-        public bool Draw(IPrivateModel model, string ownerKey, PrivateDataSkin currentSkin, float labelWidth)
+        public bool Draw(object model, string ownerKey, DataEditorSkin currentSkin, float labelWidth)
         {
             skin = currentSkin;
             changed = false;
             rowIndex = 0;
 
             var schemes = SchemeReflection.GetSchemes(model).ToList();
+
             if (schemes.Count == 0)
             {
-                PrivateDataGUI.DrawEmptyState(skin, "This save has no serialized schemes");
+                DataEditorGUI.DrawEmptyState(skin, "This save has no serialized schemes");
                 return false;
             }
 
             float previousLabelWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = labelWidth;
 
+            if (SchemeReflection.IsCollection(model))
+                DrawCollection(schemes, ownerKey);
+            else
+                DrawSingle(schemes[0], ownerKey);
+
+            EditorGUIUtility.labelWidth = previousLabelWidth;
+
+            return changed;
+        }
+
+        private void DrawCollection(List<IScheme> schemes, string ownerKey)
+        {
             for (int i = 0; i < schemes.Count; i++)
             {
                 var scheme = schemes[i];
-                string key = $"{ownerKey}:{i}:{scheme.ID}";
+                string key = $"{ownerKey}:{i}";
 
                 using (new EditorGUILayout.VerticalScope(skin.Section))
                 {
@@ -58,28 +67,33 @@ namespace Editor.DataEditor
                     DrawSerializableFields(scheme, key);
                 }
             }
+        }
 
-            EditorGUIUtility.labelWidth = previousLabelWidth;
-            return changed;
+        private void DrawSingle(IScheme scheme, string ownerKey)
+        {
+            using (new EditorGUILayout.VerticalScope(skin.Section))
+            using (new EditorGUILayout.VerticalScope(skin.SectionContent))
+                DrawSerializableFields(scheme, ownerKey);
         }
 
         private bool DrawSectionHeader(string label, string key)
         {
             foldouts.TryGetValue(key, out bool isExpanded);
 
-            var rect = GUILayoutUtility.GetRect(0f, 20f, GUILayout.ExpandWidth(true));
+            var rect = GUILayoutUtility.GetRect(0f, SECTION_HEADER_HEIGHT, GUILayout.ExpandWidth(true));
 
             if (Event.current.type == EventType.Repaint && rect.Contains(Event.current.mousePosition))
                 EditorGUI.DrawRect(rect, skin.RowHover);
 
             isExpanded = EditorGUI.Foldout(
-                new Rect(rect.x + 2f, rect.y + 2f, rect.width - 4f, 16f),
+                new Rect(rect.x + 2f, rect.y + 2f, Mathf.Max(rect.width - 4f, 20f), 16f),
                 isExpanded,
-                label,
+                string.IsNullOrEmpty(label) ? "(no id)" : label,
                 true,
                 skin.SectionFoldout);
 
             foldouts[key] = isExpanded;
+
             return isExpanded;
         }
 
@@ -98,22 +112,30 @@ namespace Editor.DataEditor
 
             EditorGUI.BeginChangeCheck();
 
-            object nextValue;
-            if (IsInlineType(field.FieldType))
-            {
-                using (new EditorGUILayout.VerticalScope(NextRowStyle()))
-                    nextValue = DrawValue(label, field.FieldType, currentValue, path);
-            }
-            else
-            {
-                nextValue = DrawValue(label, field.FieldType, currentValue, path);
-            }
+            object nextValue = DrawTypedValue(field, label, currentValue, path);
 
             if (!EditorGUI.EndChangeCheck())
                 return;
 
             field.SetValue(target, nextValue);
             changed = true;
+        }
+
+        private object DrawTypedValue(FieldInfo field, string label, object currentValue, string path)
+        {
+            if (IsInlineType(field.FieldType))
+            {
+                using (new EditorGUILayout.VerticalScope(NextRowStyle()))
+                    return DrawValue(label, field.FieldType, currentValue, path);
+            }
+
+            if (typeof(IList).IsAssignableFrom(field.FieldType))
+            {
+                DrawList(label, currentValue as IList, path);
+                return currentValue;
+            }
+
+            return DrawValue(label, field.FieldType, currentValue, path);
         }
 
         private object DrawValue(string label, Type type, object value, string path)
@@ -151,12 +173,6 @@ namespace Editor.DataEditor
             if (type == typeof(Color))
                 return EditorGUILayout.ColorField(label, value is Color color ? color : Color.white);
 
-            if (typeof(IList).IsAssignableFrom(type))
-            {
-                DrawList(label, value as IList, path);
-                return value;
-            }
-
             if (value == null)
             {
                 using (new EditorGUILayout.VerticalScope(NextRowStyle()))
@@ -183,30 +199,28 @@ namespace Editor.DataEditor
             EditorGUI.indentLevel++;
 
             if (list.Count == 0)
-            {
                 EditorGUILayout.LabelField(" ", "Empty", skin.InlineHint);
-            }
 
             for (int i = 0; i < list.Count; i++)
             {
                 object element = list[i];
                 string elementPath = $"{path}[{i}]";
-                Type elementType = element?.GetType();
+                var type = element?.GetType();
 
-                if (elementType == null)
+                if (type == null)
                 {
                     EditorGUILayout.LabelField($"Element {i}", "null");
                     continue;
                 }
 
                 EditorGUI.BeginChangeCheck();
-                object nextValue = DrawValue($"Element {i}", elementType, element, elementPath);
+                object nextValue = DrawValue($"Element {i}", type, element, elementPath);
 
-                if (EditorGUI.EndChangeCheck())
-                {
-                    list[i] = nextValue;
-                    changed = true;
-                }
+                if (!EditorGUI.EndChangeCheck())
+                    continue;
+
+                list[i] = nextValue;
+                changed = true;
             }
 
             EditorGUI.indentLevel--;

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using CodeBase.Infrastructure.AssetManagement;
 using Data;
-using Data.Scheme.Public;
+using Services.AssetProvider;
+using Services.PublicModelProvider;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -16,7 +16,7 @@ namespace Utility.LevelEditor
         private LevelElementsPublicModel elementsPublicModel;
         private LevelMaterialPublicModel materialsPublicModel;
 
-        private async void InitializeAssetProvider()
+        private async void LoadAssets()
         {
             var modelKeys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
             var models = await assetsProvider.LoadAll<IPublicModel>(modelKeys);

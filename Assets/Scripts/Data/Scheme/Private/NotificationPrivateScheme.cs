@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using NotificationType = Data.NotificationPublicModel.Type;
 
 namespace Data
 {
