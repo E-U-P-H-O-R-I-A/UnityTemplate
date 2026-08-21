@@ -7,7 +7,8 @@ namespace Data
     [Serializable]
     public class CurrencyPrivateScheme : PrivateScheme
     {
-        [SerializeField] private CurrencyType type;
+        [SchemeId] private CurrencyType type;
+        
         [SerializeField] private int value;
 
         public int Value => value;

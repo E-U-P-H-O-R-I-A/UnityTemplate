@@ -1,6 +1,4 @@
 using System;
-using Data;
-using UnityEngine.Serialization;
 using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Services.CurrencyService

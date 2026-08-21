@@ -7,9 +7,6 @@ namespace Data
     public class NotificationPublicScheme : PublicScheme
     {
         [SerializeField] private string id = string.Empty;
-
-        public override string ID => id;
-
         [SerializeField] private float fireAfterSeconds;
         [Space]
         [SerializeField] private string title = string.Empty;
@@ -20,6 +17,7 @@ namespace Data
         [Space]
         [SerializeField] private Color style = new(0.173f, 0.612f, 0.302f, 1f);
 
+        public override string ID => id;
         public Color Style => style;
 
         public string Title => title;

@@ -8,6 +8,8 @@ namespace Editor.Data_Editor
 {
     public abstract class DataModelService
     {
+        private const char HEADER_SEPARATOR = '\n';
+
         private readonly Dictionary<string, string> fileMeta = new();
 
         private string[] files = Array.Empty<string>();
@@ -27,9 +29,40 @@ namespace Editor.Data_Editor
         public bool HasPendingChanges { get; set; }
         public bool HasSelection => !string.IsNullOrEmpty(SelectedPath);
 
-        public abstract string Export();
+        public string Export()
+        {
+            if (SelectedModelType == null)
+                return null;
 
-        public abstract bool TryImport(string json, out string error);
+            string payload = ExportPayload();
+
+            return payload == null ? null : SelectedModelType.Name + HEADER_SEPARATOR + payload;
+        }
+
+        public bool TryImport(string json, out string error)
+        {
+            error = null;
+
+            if (SelectedModelType == null)
+            {
+                error = "No model selected.";
+                return false;
+            }
+
+            if (!TrySplitEnvelope(json, out string modelName, out string payload))
+            {
+                error = "Import data has no model header, export it from Data Utility first.";
+                return false;
+            }
+
+            if (modelName != SelectedModelType.Name)
+            {
+                error = $"Import data belongs to {modelName}, not to {SelectedModelType.Name}.";
+                return false;
+            }
+
+            return TryImportPayload(payload, out error);
+        }
 
         public void Refresh()
         {
@@ -159,6 +192,10 @@ namespace Editor.Data_Editor
 
         protected abstract string FileFilter { get; }
 
+        protected abstract string ExportPayload();
+
+        protected abstract bool TryImportPayload(string payload, out string error);
+
         protected abstract Type FindModelType(string path);
 
         protected abstract object LoadModel(string path);
@@ -181,6 +218,27 @@ namespace Editor.Data_Editor
 
         protected virtual void OnSelectionChanged()
         {
+        }
+
+        private static bool TrySplitEnvelope(string json, out string modelName, out string payload)
+        {
+            modelName = null;
+            payload = null;
+
+            if (string.IsNullOrWhiteSpace(json))
+                return false;
+
+            int separator = json.IndexOf(HEADER_SEPARATOR);
+
+            if (separator <= 0)
+                return false;
+
+            modelName = json.Substring(0, separator).Trim();
+            payload = json.Substring(separator + 1);
+
+            return modelName.Length > 0 &&
+                   !modelName.StartsWith("{") &&
+                   !string.IsNullOrWhiteSpace(payload);
         }
 
         private void LoadSelected(string path)

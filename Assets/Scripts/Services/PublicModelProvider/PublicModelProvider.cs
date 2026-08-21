@@ -52,6 +52,8 @@ namespace Services.PublicModelProvider
             if (models.TryGetValue(typeof(TModel), out var temp) && temp is TModel typed)
                 return typed;
 
+            logService.LogError($"[PublicModelProvider] Model {typeof(TModel).FullName} is not loaded", LogCategory.PublicModel);
+
             return default;
         }
 

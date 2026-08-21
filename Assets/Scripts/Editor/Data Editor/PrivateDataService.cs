@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Data;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace Editor.Data_Editor
     public class PrivateDataService : DataModelService
     {
         private const string FOLDER_NAME = "PrivateData";
+        private const string TEMP_EXTENSION = ".tmp";
 
         public override string Title => "Private Models";
         public override string ShortTitle => "Private";
@@ -17,27 +19,33 @@ namespace Editor.Data_Editor
 
         protected override string FileFilter => "*.json";
 
-        public override string Export() =>
+        protected override string ExportPayload() =>
             SelectedModel is IPrivateModel model ? model.ExportToJson() : null;
 
-        public override bool TryImport(string json, out string error)
+        protected override bool TryImportPayload(string payload, out string error)
         {
             error = null;
 
-            if (SelectedModelType == null)
-            {
-                error = "No model selected.";
-                return false;
-            }
-
             try
             {
-                var dump = JsonUtility.FromJson<SchemesDump>(json);
+                var dump = JsonUtility.FromJson<SchemesDump>(payload);
+
                 if (dump?.items == null || dump.items.Count == 0)
-                    throw new Exception("Clipboard JSON contains no schemes.");
+                    throw new Exception("Import data contains no schemes.");
 
                 var model = (IPrivateModel)Activator.CreateInstance(SelectedModelType);
-                model.ImportFromJson(json);
+                model.ImportFromJson(payload);
+
+                int applied = SchemeReflection.GetSchemes(model).Count();
+
+                if (applied == 0)
+                    throw new Exception($"None of the {dump.items.Count} scheme(s) fit {SelectedModelType.Name}.");
+
+                if (applied < dump.items.Count)
+                {
+                    Debug.LogWarning($"[Data Utility] {dump.items.Count - applied} scheme(s) were skipped " +
+                                     $"while importing into {SelectedModelType.Name}.");
+                }
 
                 ReplaceSelectedModel(model);
 
@@ -61,7 +69,16 @@ namespace Editor.Data_Editor
             return model;
         }
 
-        protected override void WriteModel(string path, object model) =>
-            File.WriteAllText(path, ((IPrivateModel)model).ExportToJson());
+        protected override void WriteModel(string path, object model)
+        {
+            string temporary = path + TEMP_EXTENSION;
+
+            File.WriteAllText(temporary, ((IPrivateModel)model).ExportToJson());
+
+            if (File.Exists(path))
+                File.Delete(path);
+
+            File.Move(temporary, path);
+        }
     }
 }

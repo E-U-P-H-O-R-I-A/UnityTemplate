@@ -38,8 +38,16 @@ namespace Services.NotificationService
         {
 #if UNITY_IOS
 
-            NotificationPublicScheme publicScheme = publicModel.GetScheme(type);
-            NotificationPrivateScheme privateScheme = privateModel.GetScheme(type.ToString());
+            NotificationPublicScheme publicScheme = publicModel?.GetScheme(type);
+            NotificationPrivateScheme privateScheme = privateModel?.GetScheme(type.ToString());
+
+            if (publicScheme == null || privateScheme == null)
+            {
+                logService.LogWarning(
+                    $"Notification '{type}' was not scheduled because its scheme is missing.",
+                    LogCategory.Service);
+                return;
+            }
             
             string id = CreateIdentifier(publicScheme);
             iOSNotification notification = CreateNotification(publicScheme, id);
@@ -56,7 +64,7 @@ namespace Services.NotificationService
         public void CancelNotification(NotificationType type)
         {
 #if UNITY_IOS
-            if (!privateModel.TryGetScheme(type.ToString(), out NotificationPrivateScheme privateScheme))
+            if (privateModel == null || !privateModel.TryGetScheme(type.ToString(), out NotificationPrivateScheme privateScheme))
                 return;
 
             iOSNotificationCenter.RemoveScheduledNotification(privateScheme.IosNotificationId);

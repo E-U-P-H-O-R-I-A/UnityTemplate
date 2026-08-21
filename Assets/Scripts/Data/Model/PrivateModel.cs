@@ -86,16 +86,23 @@ namespace Data
                 if (dump?.items == null)
                     return;
 
-                var map = schemes.ToDictionary(scheme => scheme.ID, scheme => scheme);
+                var map = new Dictionary<string, TScheme>();
+
+                foreach (var existing in schemes)
+                {
+                    if (existing != null && !string.IsNullOrEmpty(existing.ID))
+                        map[existing.ID] = existing;
+                }
 
                 foreach (var record in dump.items)
                 {
-                    if (string.IsNullOrEmpty(record.payload))
+                    if (record == null || string.IsNullOrEmpty(record.id) || string.IsNullOrEmpty(record.payload))
                         continue;
 
                     if (!map.TryGetValue(record.id, out var scheme))
                     {
                         scheme = CreateSchemeById(record.id);
+
                         if (scheme == null)
                             continue;
 
@@ -104,6 +111,12 @@ namespace Data
                     }
 
                     JsonUtility.FromJsonOverwrite(record.payload, scheme);
+
+                    if (scheme.ID == record.id)
+                        continue;
+
+                    schemes.Remove(scheme);
+                    map.Remove(record.id);
                 }
             }
 

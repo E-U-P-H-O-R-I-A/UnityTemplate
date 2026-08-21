@@ -24,10 +24,10 @@ namespace Editor.Data_Editor
         public static string GetAssetPath(Type modelType) =>
             $"{FOLDER}/{modelType.Name}{ASSET_EXTENSION}";
 
-        public override string Export() =>
+        protected override string ExportPayload() =>
             SelectedModel is ScriptableObject asset ? EditorJsonUtility.ToJson(asset, true) : null;
 
-        public override bool TryImport(string json, out string error)
+        protected override bool TryImportPayload(string payload, out string error)
         {
             error = null;
 
@@ -37,12 +37,16 @@ namespace Editor.Data_Editor
                 return false;
             }
 
+            string baseline = snapshot;
+
             try
             {
-                EditorJsonUtility.FromJsonOverwrite(json, asset);
+                EditorJsonUtility.FromJsonOverwrite(payload, asset);
 
                 EditorUtility.SetDirty(asset);
                 ReplaceSelectedModel(asset);
+
+                snapshot = baseline;
 
                 return true;
             }
@@ -64,7 +68,7 @@ namespace Editor.Data_Editor
             var asset = (ScriptableObject)model;
 
             EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(asset);
 
             var ids = SchemeReflection
                 .GetSchemes(asset)
@@ -79,8 +83,6 @@ namespace Editor.Data_Editor
 
         protected override void EnsureFiles()
         {
-            bool created = false;
-
             foreach (var modelType in SchemeReflection.GetConcreteTypes(typeof(IPublicModel)))
             {
                 string path = GetAssetPath(modelType);
@@ -92,11 +94,7 @@ namespace Editor.Data_Editor
                 asset.name = modelType.Name;
 
                 AssetDatabase.CreateAsset(asset, path);
-                created = true;
             }
-
-            if (created)
-                AssetDatabase.SaveAssets();
         }
 
         protected override void DeleteFile(string path) =>

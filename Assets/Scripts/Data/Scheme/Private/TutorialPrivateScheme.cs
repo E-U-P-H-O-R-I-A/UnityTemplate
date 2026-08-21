@@ -7,7 +7,8 @@ namespace Data
     [Serializable]
     public class TutorialPrivateScheme : PrivateScheme
     {
-        [SerializeField] private TutorialType type;
+        [SchemeId] private TutorialType type;
+        
         [SerializeField] private bool isComplete;
 
         public TutorialType Type => type;

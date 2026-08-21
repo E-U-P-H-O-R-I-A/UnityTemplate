@@ -102,7 +102,9 @@ namespace Editor.Data_Editor
             return !field.IsStatic &&
                    !field.IsInitOnly &&
                    !field.IsNotSerialized &&
-                   (field.IsPublic || field.GetCustomAttribute<SerializeField>() != null);
+                   (field.IsPublic ||
+                    field.GetCustomAttribute<SerializeField>() != null ||
+                    field.GetCustomAttribute<SchemeIdAttribute>() != null);
         }
 
         private static FieldInfo FindField(Type type, string fieldName)
