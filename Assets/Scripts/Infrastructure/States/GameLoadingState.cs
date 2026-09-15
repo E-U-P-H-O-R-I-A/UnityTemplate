@@ -17,10 +17,10 @@ namespace Infrastructure.States
         private readonly IEnumerable<IInitializableService> services;
         private readonly GameStateMachine gameStateMachine;
         private readonly IAssetsProvider assetsProvider;
-        private readonly ILoadingCurtain loadingCurtain;
+        private readonly ILoadingCurtainController loadingCurtain;
         private readonly ILogService logService;
 
-        public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, ILoadingCurtain loadingCurtain,
+        public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, ILoadingCurtainController loadingCurtain,
             IAssetsProvider assetsProvider, IPublicContainerProvider publicContainerProvider,
             IPrivateContainerProvider privateContainerProvider, IEnumerable<IInitializableService> services)
         {
@@ -37,7 +37,7 @@ namespace Infrastructure.States
         {
             logService.Log("GameLoadingState Enter", LogCategory.Infrastructure);
 
-            loadingCurtain.Show();
+            await loadingCurtain.Show(false);
 
             await loadingCurtain.AnimatePhase(assetsProvider.Initialize(), 0.20f);
             await loadingCurtain.AnimatePhase(publicContainerProvider.Initialize(), 0.50f);

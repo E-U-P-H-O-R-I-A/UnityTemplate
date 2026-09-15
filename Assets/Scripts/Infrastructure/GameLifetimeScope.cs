@@ -16,6 +16,7 @@ using Services.WindowsService.Factory;
 using Services.WindowsService.Windows;
 using Signals;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Utility.CoroutineRunner;
 using Utility.Factory;
 using Utility.LoadingCurtain;
@@ -29,7 +30,8 @@ namespace Infrastructure
     {
         [Space]
         [SerializeField] private WindowsRootView windowsRoot;
-        [SerializeField] private LoadingCurtain loadingCurtain;
+        [FormerlySerializedAs("loadingCurtain")]
+        [SerializeField] private LoadingCurtainView loadingCurtainView;
         [SerializeField] private CoroutineRunner coroutineRunner;
 
         protected override void Awake()
@@ -44,7 +46,8 @@ namespace Infrastructure
             builder.RegisterEntryPoint<GameBootstrapper>();
 
             builder.Register<GameStateMachine>(Lifetime.Singleton).AsSelf().As<IStateMachine>();
-            builder.RegisterComponentInNewPrefab(loadingCurtain, Lifetime.Singleton).As<ILoadingCurtain>();
+            builder.RegisterComponentInNewPrefab(loadingCurtainView, Lifetime.Singleton).AsSelf();
+            builder.Register<LoadingCurtainController>(Lifetime.Singleton).As<ILoadingCurtainController>();
             builder.RegisterComponentInNewPrefab(coroutineRunner, Lifetime.Singleton).As<ICoroutineRunner>();
             builder.RegisterComponentInNewPrefab(windowsRoot, Lifetime.Singleton);
 

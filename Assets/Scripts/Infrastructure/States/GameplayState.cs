@@ -9,11 +9,11 @@ namespace Infrastructure.States
 {
     public class GameplayState : IState
     {
-        private readonly ILoadingCurtain loadingCurtain;
+        private readonly ILoadingCurtainController loadingCurtain;
         private readonly ISceneProvider sceneProvider;
         private readonly ILogService logService;
 
-        public GameplayState(ILogService logService, ISceneProvider sceneProvider, ILoadingCurtain loadingCurtain)
+        public GameplayState(ILogService logService, ISceneProvider sceneProvider, ILoadingCurtainController loadingCurtain)
         {
             this.loadingCurtain = loadingCurtain;
             this.sceneProvider = sceneProvider;
@@ -24,7 +24,7 @@ namespace Infrastructure.States
         {
             logService.Log("GamePlayState Enter", LogCategory.Infrastructure);
             
-            loadingCurtain.Show();
+            await loadingCurtain.Show();
             
             var loadSceneTask = sceneProvider.Load(AssetsPath.GAMEPLAY_SCENE);
             
@@ -32,7 +32,7 @@ namespace Infrastructure.States
             
             await loadingCurtain.Finish();
 
-            loadingCurtain.Hide();
+            await loadingCurtain.Hide();
         }
         
         public async UniTask Exit()

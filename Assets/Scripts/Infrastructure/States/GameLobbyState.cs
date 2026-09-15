@@ -9,11 +9,11 @@ namespace Infrastructure.States
 {
     public class GameLobbyState : IState
     {
-        private readonly ILoadingCurtain loadingCurtain;
+        private readonly ILoadingCurtainController loadingCurtain;
         private readonly ISceneProvider sceneProvider;
         private readonly ILogService logService;
 
-        public GameLobbyState(ILogService logService, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider)
+        public GameLobbyState(ILogService logService, ILoadingCurtainController loadingCurtain, ISceneProvider sceneProvider)
         {
             this.loadingCurtain = loadingCurtain;
             this.sceneProvider = sceneProvider;
@@ -24,12 +24,12 @@ namespace Infrastructure.States
         {
             logService.Log("GameLobbyState Enter", LogCategory.Infrastructure);
 
-            loadingCurtain.Show();
+            await loadingCurtain.Show();
 
             await loadingCurtain.AnimatePhase(sceneProvider.Load(AssetsPath.LOBBY_SCENE), 0.90f);
             await loadingCurtain.Finish();
 
-            loadingCurtain.Hide();
+            await loadingCurtain.Hide();
         }
 
         public async UniTask Exit()
