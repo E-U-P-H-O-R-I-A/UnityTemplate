@@ -1,5 +1,5 @@
 using Data;
-using CurrencyType = Data.CurrencyPublicModel.Type;
+using CurrencyId = Data.CurrencyPublicContainer.Id;
 
 namespace Services.CurrencyService
 {
@@ -7,7 +7,7 @@ namespace Services.CurrencyService
     {
         void Initialize();
         
-        int GetAmountCurrency(CurrencyType currencyType);
+        int GetAmountCurrency(CurrencyId currencyType);
         void IncreaseCurrency(CurrencyTransaction transaction);
         bool IsEnoughCurrency(CurrencyTransaction transaction);
         bool DecreaseCurrency(CurrencyTransaction transaction);

@@ -9,7 +9,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
-using WindowType = Data.WindowsPublicModel.Type;
+using WindowType = Data.WindowPublicContainer.Id;
 
 namespace Services.WindowsService.Windows
 {

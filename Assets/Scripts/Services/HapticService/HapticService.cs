@@ -1,9 +1,9 @@
 using Cysharp.Threading.Tasks;
 using Data;
 using Lofelt.NiceVibrations;
-using Services.PrivateModelProvider;
+using Services.PrivateContainerProvider;
 using UnityEngine;
-using HapticType = Data.HapticPublicModel.Type;
+using HapticId = Data.HapticPublicContainer.Id;
 
 namespace Services.HapticService
 {
@@ -11,15 +11,15 @@ namespace Services.HapticService
     {
         private const float MIN_INTERVAL = 0.05f;
 
-        private readonly IPrivateModelProvider privateModelProvider;
+        private readonly IPrivateContainerProvider privateContainerProvider;
         
         private float lastPlayTime;
 
         public bool IsEnabled => 
             HapticController.hapticsEnabled;
 
-        public HapticService(IPrivateModelProvider privateModelProvider) => 
-            this.privateModelProvider = privateModelProvider;
+        public HapticService(IPrivateContainerProvider privateContainerProvider) => 
+            this.privateContainerProvider = privateContainerProvider;
 
         public void Initialize() => 
             HapticController.Init();
@@ -30,8 +30,8 @@ namespace Services.HapticService
             
             HapticController.hapticsEnabled = value;
             
-            GetScheme().Haptic = value;
-            privateModelProvider.SaveModel<SettingPrivateModel>();
+            GetRecord().HapticEnabled = value;
+            privateContainerProvider.SaveContainer<SettingsPrivateContainer>();
         }
 
         public void PlayCustom(HapticSetting setting)
@@ -54,45 +54,45 @@ namespace Services.HapticService
             }
         }
 
-        public void PlayPreset(HapticType preset)
+        public void PlayPreset(HapticId preset)
         {
             if (!IsCanPlay())
                 return;
             
             switch (preset)
             {
-                case HapticType.Selection:
+                case HapticId.Selection:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.Selection);
                     break;
-                case HapticType.Success:
+                case HapticId.Success:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.Success);
                     break;
-                case HapticType.Warning:
+                case HapticId.Warning:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.Warning);
                     break;
-                case HapticType.Failure:
+                case HapticId.Failure:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.Failure);
                     break;
-                case HapticType.LightImpact:
+                case HapticId.LightImpact:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.LightImpact);
                     break;
-                case HapticType.MediumImpact:
+                case HapticId.MediumImpact:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.MediumImpact);
                     break;
-                case HapticType.HeavyImpact:
+                case HapticId.HeavyImpact:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.HeavyImpact);
                     break;
-                case HapticType.RigidImpact:
+                case HapticId.RigidImpact:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.RigidImpact);
                     break;
-                case HapticType.SoftImpact:
+                case HapticId.SoftImpact:
                     HapticPatterns.PlayPreset(HapticPatterns.PresetType.SoftImpact);
                     break;
             }
         }
         
-        private SettingPrivateScheme GetScheme() => 
-            privateModelProvider.GetModel<SettingPrivateModel>().GetScheme();
+        private SettingsPrivateRecord GetRecord() => 
+            privateContainerProvider.GetContainer<SettingsPrivateContainer>().GetRecord();
         
         private bool IsCanPlay()
         {

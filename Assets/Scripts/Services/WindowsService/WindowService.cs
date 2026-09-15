@@ -4,12 +4,12 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Data;
 using Services.LogService;
-using Services.PublicModelProvider;
+using Services.PublicContainerProvider;
 using Services.WindowsService.Windows;
 using UnityEngine;
 using Utility.Factory;
 using VContainer;
-using WindowType = Data.WindowsPublicModel.Type;
+using WindowType = Data.WindowPublicContainer.Id;
 
 namespace Services.WindowsService
 {
@@ -21,19 +21,19 @@ namespace Services.WindowsService
         private readonly Stack<WindowRequest> windowHistory = new();
         private readonly List<WindowRequest> queue = new();
 
-        private IPublicModelProvider publicModelProvider;
+        private IPublicContainerProvider publicContainerProvider;
         private IFactory factory;
         private ILogService logService;
 
-        private WindowsPublicModel publicModel;
+        private WindowPublicContainer publicContainer;
         private BaseWindow currentWindow;
         
         private bool isProcessingOpenRequest;
 
         [Inject]
-        public void Construct(IPublicModelProvider publicModelProvider, IFactory factory, ILogService logService)
+        public void Construct(IPublicContainerProvider publicContainerProvider, IFactory factory, ILogService logService)
         {
-            this.publicModelProvider = publicModelProvider;
+            this.publicContainerProvider = publicContainerProvider;
             this.factory = factory;
             this.logService = logService;
         }
@@ -42,7 +42,7 @@ namespace Services.WindowsService
             DontDestroyOnLoad(this);
 
         public void Initialize() => 
-            publicModel = publicModelProvider.GetModel<WindowsPublicModel>();
+            publicContainer = publicContainerProvider.GetContainer<WindowPublicContainer>();
 
         public void OpenWindow(WindowType type, BaseWindowParams @params)
         {
@@ -72,19 +72,19 @@ namespace Services.WindowsService
         private BaseWindow GetWindow(WindowType type) => 
             windows.TryGetValue(type, out BaseWindow window) ? window : CreateWindow(type);
 
-        private WindowPublicScheme GetWindowScheme(WindowType type) => 
-            publicModel.GetScheme(type);
+        private WindowPublicRecord GetWindowRecord(WindowType type) => 
+            publicContainer.GetRecord(type);
 
         private WindowRequest CreateRequest(WindowType type, BaseWindowParams @params)
         {
-            var publicScheme = GetWindowScheme(type);
-            return new WindowRequest(type, @params, publicScheme.Priority);
+            var publicRecord = GetWindowRecord(type);
+            return new WindowRequest(type, @params, publicRecord.Priority);
         }
 
         private BaseWindow CreateWindow(WindowType type)
         {
-            var publicScheme = GetWindowScheme(type);
-            var window = factory.CreateFromPrefab(publicScheme.Prefab, canvas.transform);
+            var publicRecord = GetWindowRecord(type);
+            var window = factory.CreateFromPrefab(publicRecord.Prefab, canvas.transform);
             window.Closed += OnWindowClosed;
             
             windows[type] = window;

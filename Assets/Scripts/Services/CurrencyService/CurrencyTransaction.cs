@@ -1,12 +1,12 @@
 using System;
-using CurrencyType = Data.CurrencyPublicModel.Type;
+using CurrencyId = Data.CurrencyPublicContainer.Id;
 
 namespace Services.CurrencyService
 {
     [Serializable]
     public struct CurrencyTransaction
     {
-        public CurrencyType type;
+        public CurrencyId type;
         public int amount;
     }
 }

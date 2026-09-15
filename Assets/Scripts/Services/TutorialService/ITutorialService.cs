@@ -1,5 +1,5 @@
 using Data;
-using TutorialType = Data.TutorialPublicModel.Type;
+using TutorialId = Data.TutorialPublicContainer.Id;
 
 namespace Services.TutorialService
 {
@@ -7,6 +7,6 @@ namespace Services.TutorialService
     {
         void Initialize();
         void StopTutorial();
-        void StartTutorial(TutorialType startedTutorial);
+        void StartTutorial(TutorialId startedTutorial);
     }
 }

@@ -1,6 +1,6 @@
 
 using Data;
-using NotificationType = Data.NotificationPublicModel.Type;
+using NotificationId = Data.NotificationPublicContainer.Id;
 
 namespace Services.NotificationService
 {
@@ -8,8 +8,8 @@ namespace Services.NotificationService
     {
         void Initialize();
         
-        void SendNotification(NotificationType type);
+        void SendNotification(NotificationId type);
         
-        void CancelNotification(NotificationType type);
+        void CancelNotification(NotificationId type);
     }
 }

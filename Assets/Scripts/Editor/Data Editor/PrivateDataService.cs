@@ -6,21 +6,21 @@ using UnityEngine;
 
 namespace Editor.Data_Editor
 {
-    public class PrivateDataService : DataModelService
+    public class PrivateDataService : DataContainerService
     {
         private const string FOLDER_NAME = "PrivateData";
         private const string TEMP_EXTENSION = ".tmp";
 
-        public override string Title => "Private Models";
+        public override string Title => "Private Containers";
         public override string ShortTitle => "Private";
 
         public override string FolderPath =>
-            ModelNaming.NormalizePath(Path.Combine(Application.persistentDataPath, FOLDER_NAME));
+            ContainerNaming.NormalizePath(Path.Combine(Application.persistentDataPath, FOLDER_NAME));
 
         protected override string FileFilter => "*.json";
 
         protected override string ExportPayload() =>
-            SelectedModel is IPrivateModel model ? model.ExportToJson() : null;
+            SelectedContainer is IPrivateContainer container ? container.ExportToJson() : null;
 
         protected override bool TryImportPayload(string payload, out string error)
         {
@@ -28,26 +28,26 @@ namespace Editor.Data_Editor
 
             try
             {
-                var dump = JsonUtility.FromJson<SchemesDump>(payload);
+                var dump = JsonUtility.FromJson<RecordDump>(payload);
 
                 if (dump?.items == null || dump.items.Count == 0)
-                    throw new Exception("Import data contains no schemes.");
+                    throw new Exception("Import data contains no records.");
 
-                var model = (IPrivateModel)Activator.CreateInstance(SelectedModelType);
-                model.ImportFromJson(payload);
+                var container = (IPrivateContainer)Activator.CreateInstance(SelectedContainerType);
+                container.ImportFromJson(payload);
 
-                int applied = SchemeReflection.GetSchemes(model).Count();
+                int applied = RecordReflection.GetRecords(container).Count();
 
                 if (applied == 0)
-                    throw new Exception($"None of the {dump.items.Count} scheme(s) fit {SelectedModelType.Name}.");
+                    throw new Exception($"None of the {dump.items.Count} record(s) fit {SelectedContainerType.Name}.");
 
                 if (applied < dump.items.Count)
                 {
-                    Debug.LogWarning($"[Data Utility] {dump.items.Count - applied} scheme(s) were skipped " +
-                                     $"while importing into {SelectedModelType.Name}.");
+                    Debug.LogWarning($"[Data Utility] {dump.items.Count - applied} record(s) were skipped " +
+                                     $"while importing into {SelectedContainerType.Name}.");
                 }
 
-                ReplaceSelectedModel(model);
+                ReplaceSelectedContainer(container);
 
                 return true;
             }
@@ -58,22 +58,22 @@ namespace Editor.Data_Editor
             }
         }
 
-        protected override Type FindModelType(string path) =>
-            SchemeReflection.FindModelType(path, typeof(IPrivateModel));
+        protected override Type FindContainerType(string path) =>
+            RecordReflection.FindContainerType(path, typeof(IPrivateContainer));
 
-        protected override object LoadModel(string path)
+        protected override object LoadContainer(string path)
         {
-            var model = (IPrivateModel)Activator.CreateInstance(SelectedModelType);
-            model.ImportFromJson(File.Exists(path) ? File.ReadAllText(path) : string.Empty);
+            var container = (IPrivateContainer)Activator.CreateInstance(SelectedContainerType);
+            container.ImportFromJson(File.Exists(path) ? File.ReadAllText(path) : string.Empty);
 
-            return model;
+            return container;
         }
 
-        protected override void WriteModel(string path, object model)
+        protected override void WriteContainer(string path, object container)
         {
             string temporary = path + TEMP_EXTENSION;
 
-            File.WriteAllText(temporary, ((IPrivateModel)model).ExportToJson());
+            File.WriteAllText(temporary, ((IPrivateContainer)container).ExportToJson());
 
             if (File.Exists(path))
                 File.Delete(path);

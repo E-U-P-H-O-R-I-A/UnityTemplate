@@ -1,4 +1,4 @@
-using HapticType = Data.HapticPublicModel.Type;
+using HapticId = Data.HapticPublicContainer.Id;
 
 namespace Services.HapticService
 {
@@ -8,7 +8,7 @@ namespace Services.HapticService
 
         void Initialize();
         void ToggleHaptic();
-        void PlayPreset(HapticType preset);
+        void PlayPreset(HapticId preset);
         void PlayCustom(HapticSetting setting);
         void PlaySequence(HapticSequence sequence);
     }

@@ -1,17 +1,17 @@
 using Data;
-using TutorialType = Data.TutorialPublicModel.Type;
+using TutorialId = Data.TutorialPublicContainer.Id;
 
 namespace Services.TutorialService
 {
     public class Tutorial
     {
         public int StepIndex;
-        public TutorialType Type;
+        public TutorialId Type;
 
-        public TutorialPublicScheme PublicScheme;
-        public TutorialPrivateScheme PrivateScheme;
+        public TutorialPublicRecord PublicRecord;
+        public TutorialPrivateRecord PrivateRecord;
 
-        public bool IsRunning => Type is not TutorialType.None;
+        public bool IsRunning => Type is not TutorialId.None;
 
         public Tutorial()
         {
@@ -21,10 +21,10 @@ namespace Services.TutorialService
         public void Clear()
         {
             StepIndex = -1;
-            Type = TutorialType.None;
+            Type = TutorialId.None;
 
-            PublicScheme = null;
-            PrivateScheme = null;
+            PublicRecord = null;
+            PrivateRecord = null;
         }
 
         public override string ToString() =>

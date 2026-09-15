@@ -1,37 +1,37 @@
 using Data;
 using MessagePipe;
-using Services.PrivateModelProvider;
+using Services.PrivateContainerProvider;
 using Signals;
-using CurrencyType = Data.CurrencyPublicModel.Type;
+using CurrencyId = Data.CurrencyPublicContainer.Id;
 
 namespace Services.CurrencyService
 {
     public class CurrencyService : ICurrencyService
     {
-        private readonly IPrivateModelProvider privateModelProvider;
+        private readonly IPrivateContainerProvider privateContainerProvider;
         private readonly IPublisher<UpdateCurrencySignal> updateCurrencyPublisher;
 
-        private CurrencyPrivateModel currencyPrivateModel;
+        private CurrencyPrivateContainer currencyPrivateContainer;
 
-        public CurrencyService(IPrivateModelProvider privateModelProvider,
+        public CurrencyService(IPrivateContainerProvider privateContainerProvider,
             IPublisher<UpdateCurrencySignal> updateCurrencyPublisher)
         {
-            this.privateModelProvider = privateModelProvider;
+            this.privateContainerProvider = privateContainerProvider;
             this.updateCurrencyPublisher = updateCurrencyPublisher;
         }
 
         public void Initialize() => 
-            currencyPrivateModel = privateModelProvider.GetModel<CurrencyPrivateModel>();
+            currencyPrivateContainer = privateContainerProvider.GetContainer<CurrencyPrivateContainer>();
 
-        public int GetAmountCurrency(CurrencyType currencyType) => 
-            GetScheme(currencyType).Value;
+        public int GetAmountCurrency(CurrencyId currencyType) => 
+            GetRecord(currencyType).Value;
 
         public bool IsEnoughCurrency(CurrencyTransaction transaction) => 
-            GetScheme(transaction.type).IsEnoughCurrency(transaction.amount);
+            GetRecord(transaction.type).IsEnough(transaction.amount);
 
         public void IncreaseCurrency(CurrencyTransaction transaction)
         {
-            GetScheme(transaction.type).IncreaseCurrency(transaction.amount);
+            GetRecord(transaction.type).Increase(transaction.amount);
             Publish(transaction.type);
             Save();
         }
@@ -41,7 +41,7 @@ namespace Services.CurrencyService
             if (!IsEnoughCurrency(transaction))
                 return false;
             
-            GetScheme(transaction.type).DecreaseCurrency(transaction.amount);
+            GetRecord(transaction.type).Decrease(transaction.amount);
             Publish(transaction.type);
             Save();
 
@@ -49,12 +49,12 @@ namespace Services.CurrencyService
         }
 
         private void Save() => 
-            privateModelProvider.SaveModel<CurrencyPrivateModel>();
+            privateContainerProvider.SaveContainer<CurrencyPrivateContainer>();
 
-        private CurrencyPrivateScheme GetScheme(CurrencyType currencyType) => 
-            currencyPrivateModel.GetScheme(currencyType.ToString());
+        private CurrencyPrivateRecord GetRecord(CurrencyId currencyType) => 
+            currencyPrivateContainer.GetRecord(currencyType.ToString());
 
-        private void Publish(CurrencyType currencyType) => 
+        private void Publish(CurrencyId currencyType) => 
             updateCurrencyPublisher.Publish(new UpdateCurrencySignal(currencyType, GetAmountCurrency(currencyType)));
     }
 }

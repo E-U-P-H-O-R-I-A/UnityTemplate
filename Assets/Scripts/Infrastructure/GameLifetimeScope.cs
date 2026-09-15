@@ -6,8 +6,8 @@ using Services.HapticService;
 using Services.InputService;
 using Services.LogService;
 using Services.NotificationService;
-using Services.PrivateModelProvider;
-using Services.PublicModelProvider;
+using Services.PrivateContainerProvider;
+using Services.PublicContainerProvider;
 using Services.SceneProvider;
 using Services.TutorialService;
 using Services.WindowsService;
@@ -45,8 +45,8 @@ namespace Infrastructure
             builder.Register<GameplayState>(Lifetime.Singleton);
 
             // --- Services ---
-            builder.Register<PrivateModelProvider>(Lifetime.Singleton).As<IPrivateModelProvider>();
-            builder.Register<PublicModelProvider>(Lifetime.Singleton).As<IPublicModelProvider>();
+            builder.Register<PrivateContainerProvider>(Lifetime.Singleton).As<IPrivateContainerProvider>();
+            builder.Register<PublicContainerProvider>(Lifetime.Singleton).As<IPublicContainerProvider>();
             builder.Register<TutorialService>(Lifetime.Singleton).As<ITutorialService>();
             builder.Register<CurrencyService>(Lifetime.Singleton).As<ICurrencyService>();
             builder.Register<AssetsProvider>(Lifetime.Singleton).As<IAssetsProvider>();

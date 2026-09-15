@@ -1,10 +1,10 @@
 using System;
 using Data;
 using Services.LogService;
-using Services.PrivateModelProvider;
-using Services.PublicModelProvider;
+using Services.PrivateContainerProvider;
+using Services.PublicContainerProvider;
 using VContainer;
-using TutorialType = Data.TutorialPublicModel.Type;
+using TutorialId = Data.TutorialPublicContainer.Id;
 
 namespace Services.TutorialService
 {
@@ -12,42 +12,42 @@ namespace Services.TutorialService
     {
         private readonly Tutorial currentTutorial = new();
 
-        private readonly IPrivateModelProvider privateModelProvider;
-        private readonly IPublicModelProvider publicModelProvider;
+        private readonly IPrivateContainerProvider privateContainerProvider;
+        private readonly IPublicContainerProvider publicContainerProvider;
         private readonly IObjectResolver objectResolver;
         private readonly ILogService logService;
 
-        private TutorialPrivateModel privateModel;
-        private TutorialPublicModel publicModel;
+        private TutorialPrivateContainer privateContainer;
+        private TutorialPublicContainer publicContainer;
 
         private bool IsRunning => currentTutorial.IsRunning;
         
-        public TutorialService(IObjectResolver objectResolver, IPublicModelProvider publicModelProvider, 
-            IPrivateModelProvider privateModelProvider, ILogService logService)
+        public TutorialService(IObjectResolver objectResolver, IPublicContainerProvider publicContainerProvider, 
+            IPrivateContainerProvider privateContainerProvider, ILogService logService)
         {
             this.logService = logService;
             this.objectResolver = objectResolver;
-            this.publicModelProvider = publicModelProvider;
-            this.privateModelProvider = privateModelProvider;
+            this.publicContainerProvider = publicContainerProvider;
+            this.privateContainerProvider = privateContainerProvider;
         }
 
         public void Initialize()
         {
-            publicModel = publicModelProvider.GetModel<TutorialPublicModel>();
-            privateModel = privateModelProvider.GetModel<TutorialPrivateModel>();
+            publicContainer = publicContainerProvider.GetContainer<TutorialPublicContainer>();
+            privateContainer = privateContainerProvider.GetContainer<TutorialPrivateContainer>();
         }
 
-        public void StartTutorial(TutorialType tutorialType)
+        public void StartTutorial(TutorialId tutorialType)
         {
-            if (tutorialType is TutorialType.None)
+            if (tutorialType is TutorialId.None)
             {
                 logService.LogError("Tutorial type None can't be started.", LogCategory.Tutorial);
                 return;
             }
 
-            if (publicModel is null || privateModel is null)
+            if (publicContainer is null || privateContainer is null)
             {
-                logService.LogError("TutorialService is not initialized. Call Init() after model providers are initialized.", LogCategory.Tutorial);
+                logService.LogError("TutorialService is not initialized. Call Init() after container providers are initialized.", LogCategory.Tutorial);
                 return;
             }
 
@@ -57,32 +57,32 @@ namespace Services.TutorialService
                 return;
             }
             
-            currentTutorial.PrivateScheme = GetPrivateScheme(tutorialType);
+            currentTutorial.PrivateRecord = GetPrivateRecord(tutorialType);
 
-            if (currentTutorial.PrivateScheme is null)
+            if (currentTutorial.PrivateRecord is null)
             {
-                logService.LogError($"Missing tutorial private scheme: {tutorialType}", LogCategory.Tutorial);
+                logService.LogError($"Missing tutorial private record: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
 
-            if (currentTutorial.PrivateScheme is { IsComplete: true })
+            if (currentTutorial.PrivateRecord is { IsComplete: true })
             {
                 logService.Log($"Tutorial type: {tutorialType} was completed before.", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
 
-            currentTutorial.PublicScheme = GetPublicScheme(tutorialType);
+            currentTutorial.PublicRecord = GetPublicRecord(tutorialType);
             
-            if (currentTutorial.PublicScheme is null)
+            if (currentTutorial.PublicRecord is null)
             {
-                logService.LogError($"Missing tutorial public scheme: {tutorialType}", LogCategory.Tutorial);
+                logService.LogError($"Missing tutorial public record: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
                 return;
             }
 
-            if (currentTutorial.PublicScheme.Steps is null || currentTutorial.PublicScheme.Steps.Count == 0)
+            if (currentTutorial.PublicRecord.Steps is null || currentTutorial.PublicRecord.Steps.Count == 0)
             {
                 logService.LogError($"Tutorial has no steps: {tutorialType}", LogCategory.Tutorial);
                 StopInternal();
@@ -115,11 +115,11 @@ namespace Services.TutorialService
         private void StopInternal() => 
             currentTutorial.Clear();
 
-        private TutorialPublicScheme GetPublicScheme(TutorialType type) => 
-            publicModel.GetScheme(type);
+        private TutorialPublicRecord GetPublicRecord(TutorialId type) => 
+            publicContainer.GetRecord(type);
 
-        private TutorialPrivateScheme GetPrivateScheme(TutorialType type) => 
-            privateModel.GetScheme(type.ToString());
+        private TutorialPrivateRecord GetPrivateRecord(TutorialId type) => 
+            privateContainer.GetRecord(type.ToString());
 
         private void UnsubscribeFromCurrentStep()
         {
@@ -132,8 +132,8 @@ namespace Services.TutorialService
             if (!IsRunning)
                 return;
 
-            currentTutorial.PrivateScheme.CompleteTutorial();
-            privateModelProvider.SaveModel<TutorialPrivateModel>();
+            currentTutorial.PrivateRecord.Complete();
+            privateContainerProvider.SaveContainer<TutorialPrivateContainer>();
 
             logService.Log($"Tutorial {currentTutorial} completed.", LogCategory.Tutorial);
 
@@ -154,13 +154,13 @@ namespace Services.TutorialService
         {
             step = null;
 
-            if (!IsRunning || currentTutorial.PublicScheme?.Steps is null)
+            if (!IsRunning || currentTutorial.PublicRecord?.Steps is null)
                 return false;
 
-            if (currentTutorial.StepIndex < 0 || currentTutorial.StepIndex >= currentTutorial.PublicScheme.Steps.Count)
+            if (currentTutorial.StepIndex < 0 || currentTutorial.StepIndex >= currentTutorial.PublicRecord.Steps.Count)
                 return false;
 
-            step = currentTutorial.PublicScheme.Steps[currentTutorial.StepIndex];
+            step = currentTutorial.PublicRecord.Steps[currentTutorial.StepIndex];
             return step != null;
         }
 
@@ -192,14 +192,14 @@ namespace Services.TutorialService
             {
                 currentTutorial.StepIndex++;
 
-                if (currentTutorial.PublicScheme?.Steps is null)
+                if (currentTutorial.PublicRecord?.Steps is null)
                 {
                     logService.LogError($"Tutorial has no steps collection: {currentTutorial.Type}", LogCategory.Tutorial);
                     StopInternal();
                     return;
                 }
 
-                if (currentTutorial.PublicScheme.Steps.Count <= currentTutorial.StepIndex)
+                if (currentTutorial.PublicRecord.Steps.Count <= currentTutorial.StepIndex)
                 {
                     CompleteTutorial();
                     return;

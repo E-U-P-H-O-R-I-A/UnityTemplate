@@ -16,14 +16,14 @@ namespace Editor.Data_Editor
         private const float TAB_SPACING = 2f;
         private const float SEARCH_WIDTH = 200f;
 
-        private readonly DataModelService[] services =
+        private readonly DataContainerService[] services =
         {
             new PublicDataService(),
             new PrivateDataService()
         };
 
-        private readonly SchemeInspectorDrawer inspector = new();
-        private readonly SchemePropertyInspector propertyInspector = new();
+        private readonly RecordInspectorDrawer inspector = new();
+        private readonly RecordPropertyInspector propertyInspector = new();
 
         private string searchQuery = string.Empty;
         private Vector2 fileScroll;
@@ -32,7 +32,7 @@ namespace Editor.Data_Editor
         private DataEditorSkin skin;
         private int modeIndex;
 
-        private DataModelService Service => services[modeIndex];
+        private DataContainerService Service => services[modeIndex];
 
         [MenuItem("Tools/Data Utility")]
         public static void Open()
@@ -71,7 +71,7 @@ namespace Editor.Data_Editor
 
             using (new EditorGUILayout.HorizontalScope(skin.Body, GUILayout.ExpandHeight(true)))
             {
-                DrawModelList();
+                DrawContainerList();
                 GUILayout.Space(SPACING);
                 DrawInspectorPanel();
             }
@@ -153,14 +153,14 @@ namespace Editor.Data_Editor
             Event.current.Use();
         }
 
-        private void DrawModelList()
+        private void DrawContainerList()
         {
             var files = Service.Filter(searchQuery);
 
             using (new EditorGUILayout.VerticalScope(skin.Panel, GUILayout.Width(SIDEBAR_WIDTH),
                        GUILayout.ExpandHeight(true)))
             {
-                DrawPanelHeader("Models", null, DrawListActions);
+                DrawPanelHeader("Containers", null, DrawListActions);
 
                 fileScroll = EditorGUILayout.BeginScrollView(fileScroll, GUIStyle.none, GUI.skin.verticalScrollbar);
 
@@ -169,19 +169,19 @@ namespace Editor.Data_Editor
                     if (files.Length == 0)
                     {
                         DataEditorGUI.DrawEmptyState(skin, Service.FileCount == 0
-                            ? "No models yet"
+                            ? "No containers yet"
                             : "Nothing matches the search");
                     }
 
                     foreach (var file in files)
-                        DrawModelRow(file);
+                        DrawContainerRow(file);
                 }
 
                 EditorGUILayout.EndScrollView();
             }
         }
 
-        private void DrawModelRow(string file)
+        private void DrawContainerRow(string file)
         {
             bool isSelected = file == Service.SelectedPath;
             var rect = GUILayoutUtility.GetRect(0f, ROW_HEIGHT, GUILayout.ExpandWidth(true));
@@ -198,7 +198,7 @@ namespace Editor.Data_Editor
                 float textWidth = Mathf.Max(rect.xMax - 16f - textX, 20f);
 
                 GUI.Label(new Rect(textX, rect.y + 4f, textWidth, 16f),
-                    ModelNaming.GetDisplayName(file),
+                    ContainerNaming.GetDisplayName(file),
                     isSelected ? skin.RowTitleActive : skin.RowTitle);
 
                 GUI.Label(new Rect(textX, rect.y + 19f, textWidth, 13f),
@@ -217,7 +217,7 @@ namespace Editor.Data_Editor
                 return;
 
             GUI.FocusControl(null);
-            pendingAction = () => SelectModel(file);
+            pendingAction = () => SelectContainer(file);
             Event.current.Use();
         }
 
@@ -225,7 +225,7 @@ namespace Editor.Data_Editor
         {
             using (new EditorGUILayout.VerticalScope(skin.Panel, GUILayout.ExpandHeight(true)))
             {
-                DrawPanelHeader(GetInspectorTitle(), Service.GetFileMeta(Service.SelectedPath), DrawModelActions);
+                DrawPanelHeader(GetInspectorTitle(), Service.GetFileMeta(Service.SelectedPath), DrawContainerActions);
 
                 inspectorScroll = EditorGUILayout.BeginScrollView(
                     inspectorScroll, GUIStyle.none, GUI.skin.verticalScrollbar);
@@ -234,33 +234,33 @@ namespace Editor.Data_Editor
                 {
                     if (!string.IsNullOrEmpty(Service.LoadError))
                         EditorGUILayout.HelpBox(Service.LoadError, MessageType.Error);
-                    else if (Service.SelectedModel == null)
-                        DataEditorGUI.DrawEmptyState(skin, "Select a model");
+                    else if (Service.SelectedContainer == null)
+                        DataEditorGUI.DrawEmptyState(skin, "Select a container");
                     else
-                        DrawSelectedModel();
+                        DrawSelectedContainer();
                 }
 
                 EditorGUILayout.EndScrollView();
             }
         }
 
-        private void DrawSelectedModel()
+        private void DrawSelectedContainer()
         {
             float labelWidth = Mathf.Clamp(position.width * 0.24f, 140f, 260f);
             var service = Service;
 
-            if (service.SerializedModel != null)
+            if (service.SerializedContainer != null)
             {
-                if (propertyInspector.Draw(service.SerializedModel, skin, labelWidth))
+                if (propertyInspector.Draw(service.SerializedContainer, skin, labelWidth))
                     service.HasPendingChanges = true;
 
                 if (propertyInspector.TryTakePendingAction(out var action))
-                    pendingAction = () => RunSchemeAction(service, action);
+                    pendingAction = () => RunRecordAction(service, action);
 
                 return;
             }
 
-            if (inspector.Draw(service.SelectedModel, service.SelectedPath, skin, labelWidth))
+            if (inspector.Draw(service.SelectedContainer, service.SelectedPath, skin, labelWidth))
                 service.HasPendingChanges = true;
         }
 
@@ -278,19 +278,19 @@ namespace Editor.Data_Editor
             using (new EditorGUI.DisabledScope(Service.FileCount == 0))
             {
                 if (GUILayout.Button(skin.DeleteAllIcon, skin.DangerIconButton))
-                    pendingAction = DeleteAllModels;
+                    pendingAction = DeleteAllContainers;
             }
         }
 
-        private void DrawModelActions()
+        private void DrawContainerActions()
         {
-            using (new EditorGUI.DisabledScope(Service.SelectedModelType == null))
+            using (new EditorGUI.DisabledScope(Service.SelectedContainerType == null))
             {
                 if (GUILayout.Button(skin.ImportIcon, skin.IconButton))
                     pendingAction = ImportFromClipboard;
             }
 
-            using (new EditorGUI.DisabledScope(Service.SelectedModel == null))
+            using (new EditorGUI.DisabledScope(Service.SelectedContainer == null))
             {
                 if (GUILayout.Button(skin.ExportIcon, skin.IconButton))
                     pendingAction = ExportToClipboard;
@@ -299,7 +299,7 @@ namespace Editor.Data_Editor
             using (new EditorGUI.DisabledScope(!Service.HasPendingChanges))
             {
                 if (GUILayout.Button(skin.RevertIcon, skin.IconButton))
-                    pendingAction = RevertModel;
+                    pendingAction = RevertContainer;
             }
 
             using (new EditorGUI.DisabledScope(!Service.HasSelection))
@@ -310,7 +310,7 @@ namespace Editor.Data_Editor
                     pendingAction = Service.Save;
 
                 if (GUILayout.Button(skin.DeleteIcon, skin.DangerIconButton))
-                    pendingAction = DeleteSelectedModel;
+                    pendingAction = DeleteSelectedContainer;
             }
         }
 
@@ -368,11 +368,11 @@ namespace Editor.Data_Editor
 
         private string GetInspectorTitle()
         {
-            if (Service.SelectedModelType != null)
-                return ModelNaming.FormatTypeName(Service.SelectedModelType.Name);
+            if (Service.SelectedContainerType != null)
+                return ContainerNaming.FormatTypeName(Service.SelectedContainerType.Name);
 
             return Service.HasSelection
-                ? ModelNaming.GetDisplayName(Service.SelectedPath)
+                ? ContainerNaming.GetDisplayName(Service.SelectedPath)
                 : "Inspector";
         }
 
@@ -389,7 +389,7 @@ namespace Editor.Data_Editor
             Service.Refresh();
         }
 
-        private void SelectModel(string path)
+        private void SelectContainer(string path)
         {
             Service.Select(path);
             inspector.ResetFoldouts();
@@ -397,15 +397,15 @@ namespace Editor.Data_Editor
             inspectorScroll = Vector2.zero;
         }
 
-        private static void RunSchemeAction(DataModelService service, Action action)
+        private static void RunRecordAction(DataContainerService service, Action action)
         {
             action.Invoke();
             service.HasPendingChanges = true;
         }
 
-        private void RevertModel()
+        private void RevertContainer()
         {
-            string fileName = ModelNaming.GetDisplayName(Service.SelectedPath);
+            string fileName = ContainerNaming.GetDisplayName(Service.SelectedPath);
 
             bool confirmed = EditorUtility.DisplayDialog(
                 "Revert Changes",
@@ -422,9 +422,9 @@ namespace Editor.Data_Editor
             propertyInspector.ResetFoldouts();
         }
 
-        private void DeleteSelectedModel()
+        private void DeleteSelectedContainer()
         {
-            string fileName = ModelNaming.GetDisplayName(Service.SelectedPath);
+            string fileName = ContainerNaming.GetDisplayName(Service.SelectedPath);
 
             bool confirmed = EditorUtility.DisplayDialog(
                 "Delete Data File",
@@ -440,7 +440,7 @@ namespace Editor.Data_Editor
             propertyInspector.ResetFoldouts();
         }
 
-        private void DeleteAllModels()
+        private void DeleteAllContainers()
         {
             bool confirmed = EditorUtility.DisplayDialog(
                 "Delete All Data Files",

@@ -1,15 +1,15 @@
 using System;
 using Data;
 using Services.LogService;
-using Services.PrivateModelProvider;
-using Services.PublicModelProvider;
+using Services.PrivateContainerProvider;
+using Services.PublicContainerProvider;
 #if UNITY_ANDROID
 using Cysharp.Threading.Tasks;
 using Unity.Notifications.Android;
 #endif
 using UnityEngine;
 using VContainer;
-using NotificationType = Data.NotificationPublicModel.Type;
+using NotificationId = Data.NotificationPublicContainer.Id;
 
 namespace Services.NotificationService
 {
@@ -17,18 +17,18 @@ namespace Services.NotificationService
     {
         private const string CHANNEL_ID = "notification_channel";
 
-        [Inject] private IPrivateModelProvider privateModelProvider;
-        [Inject] private IPublicModelProvider publicModelProvider;
+        [Inject] private IPrivateContainerProvider privateContainerProvider;
+        [Inject] private IPublicContainerProvider publicContainerProvider;
         [Inject] private ILogService logService;
 
-        private NotificationPrivateModel privateModel;
-        private NotificationPublicModel publicModel;
+        private NotificationPrivateContainer privateContainer;
+        private NotificationPublicContainer publicContainer;
 
         public void Initialize()
         {
 #if UNITY_ANDROID
-            publicModel = publicModelProvider.GetModel<NotificationPublicModel>();
-            privateModel = privateModelProvider.GetModel<NotificationPrivateModel>();
+            publicContainer = publicContainerProvider.GetContainer<NotificationPublicContainer>();
+            privateContainer = privateContainerProvider.GetContainer<NotificationPrivateContainer>();
 
             AndroidNotificationChannel channel = CreateChannel();
             AndroidNotificationCenter.RegisterNotificationChannel(channel);
@@ -37,7 +37,7 @@ namespace Services.NotificationService
 #endif
         }
 
-        public void SendNotification(NotificationType type)
+        public void SendNotification(NotificationId type)
         {
 #if UNITY_ANDROID
             if (AndroidNotificationCenter.UserPermissionToPost != PermissionStatus.Allowed)
@@ -48,41 +48,41 @@ namespace Services.NotificationService
                 return;
             }
 
-            NotificationPublicScheme publicScheme = publicModel?.GetScheme(type);
-            NotificationPrivateScheme privateScheme = privateModel?.GetScheme(type.ToString());
+            NotificationPublicRecord publicRecord = publicContainer?.GetRecord(type);
+            NotificationPrivateRecord privateRecord = privateContainer?.GetRecord(type.ToString());
 
-            if (publicScheme == null || privateScheme == null)
+            if (publicRecord == null || privateRecord == null)
             {
                 logService.LogWarning(
-                    $"Notification '{type}' was not scheduled because its scheme is missing.",
+                    $"Notification '{type}' was not scheduled because its record is missing.",
                     LogCategory.Service);
                 return;
             }
             
-            AndroidNotification  androidNotification = CreateNotification(publicScheme);
+            AndroidNotification  androidNotification = CreateNotification(publicRecord);
             int id = AndroidNotificationCenter.SendNotification(androidNotification, CHANNEL_ID);
             
-            logService.Log($"Send notification id: {id}, {publicScheme.ID}, title: {publicScheme.Title}, " +
-                           $"message: {publicScheme.Message}; {publicScheme.FireAfterSeconds} seconds to shoot", LogCategory.Service);
+            logService.Log($"Send notification id: {id}, {publicRecord.Id}, title: {publicRecord.Title}, " +
+                           $"message: {publicRecord.Message}; {publicRecord.FireAfterSeconds} seconds to shoot", LogCategory.Service);
 
-            privateScheme.SaveNotificationAndroidID(id);
+            privateRecord.SetAndroidNotificationId(id);
             
-            privateModelProvider.SaveModel<NotificationPrivateModel>();
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
 #endif
         }
 
-        public void CancelNotification(NotificationType type)
+        public void CancelNotification(NotificationId type)
         {
 #if UNITY_ANDROID
-            if (privateModel == null || !privateModel.TryGetScheme(type.ToString(), out NotificationPrivateScheme privateScheme))
+            if (privateContainer == null || !privateContainer.TryGetRecord(type.ToString(), out NotificationPrivateRecord privateRecord))
                 return;
 
-            AndroidNotificationCenter.CancelNotification(privateScheme.AndroidNotificationId);
+            AndroidNotificationCenter.CancelNotification(privateRecord.AndroidNotificationId);
 
-            logService.Log($"Cancelled notification id: {privateScheme.AndroidNotificationId}, {type}", LogCategory.Service);
+            logService.Log($"Cancelled notification id: {privateRecord.AndroidNotificationId}, {type}", LogCategory.Service);
             
-            privateModel.DeleteSchemeById(privateScheme.ID);
-            privateModelProvider.SaveModel<NotificationPrivateModel>();
+            privateContainer.DeleteRecordById(privateRecord.Id);
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
 #endif
         }
         
@@ -110,7 +110,7 @@ namespace Services.NotificationService
             Description = "Generic notifications",
         };
 
-        private AndroidNotification CreateNotification(NotificationPublicScheme setting) => new()
+        private AndroidNotification CreateNotification(NotificationPublicRecord setting) => new()
         {
             Title = setting.Title,
             Text = setting.Message,

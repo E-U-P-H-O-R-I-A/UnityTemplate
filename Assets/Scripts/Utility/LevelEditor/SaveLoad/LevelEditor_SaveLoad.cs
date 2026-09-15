@@ -114,7 +114,7 @@ namespace Utility.LevelEditor
                 LevelElement prefab = GetElementPrefabByID(elementData.ElementID);
                 if (prefab == null)
                 {
-                    logService.LogWarning($"Element prefab not found by ID: {elementData.ElementID}", LogCategory.LevelEditor);
+                    logService.LogWarning($"Element prefab not found by Id: {elementData.ElementID}", LogCategory.LevelEditor);
                     continue;
                 }
 
@@ -159,7 +159,7 @@ namespace Utility.LevelEditor
             Material material = GetMaterialByID(materialID);
             if (material == null)
             {
-                logService.LogWarning($"Material not found by ID: {materialID}", LogCategory.LevelEditor);
+                logService.LogWarning($"Material not found by Id: {materialID}", LogCategory.LevelEditor);
                 return;
             }
 

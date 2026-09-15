@@ -5,8 +5,8 @@ using Services.HapticService;
 using Services.InputService;
 using Services.LogService;
 using Services.NotificationService;
-using Services.PrivateModelProvider;
-using Services.PublicModelProvider;
+using Services.PrivateContainerProvider;
+using Services.PublicContainerProvider;
 using Services.SceneProvider;
 using Services.TutorialService;
 using Services.WindowsService;
@@ -17,9 +17,9 @@ namespace Infrastructure.States
 {
     public class GameLoadingState : IState
     {
-        private readonly IPrivateModelProvider privateModelProvider;
+        private readonly IPrivateContainerProvider privateContainerProvider;
         private readonly INotificationService notificationService;
-        private readonly IPublicModelProvider publicModelProvider;
+        private readonly IPublicContainerProvider publicContainerProvider;
         private readonly GameStateMachine gameStateMachine;
         private readonly ITutorialService tutorialService;
         private readonly ICurrencyService currencyService;
@@ -30,15 +30,15 @@ namespace Infrastructure.States
         private readonly IInputService inputService;
         private readonly ILogService logService;
 
-        public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicModelProvider publicModelProvider,
-            IPrivateModelProvider privateModelProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
+        public GameLoadingState(GameStateMachine gameStateMachine, ILogService logService, IPublicContainerProvider publicContainerProvider,
+            IPrivateContainerProvider privateContainerProvider, ILoadingCurtain loadingCurtain, ICurrencyService currencyService, 
             IWindowService windowService, ITutorialService tutorialService, INotificationService notificationService,
             IHapticService hapticService, IAssetsProvider assetsProvider, IInputService inputService)
         {
             this.inputService = inputService;
-            this.privateModelProvider = privateModelProvider;
+            this.privateContainerProvider = privateContainerProvider;
             this.notificationService = notificationService;
-            this.publicModelProvider = publicModelProvider;
+            this.publicContainerProvider = publicContainerProvider;
             this.gameStateMachine = gameStateMachine;
             this.currencyService = currencyService;
             this.tutorialService = tutorialService;
@@ -58,10 +58,10 @@ namespace Infrastructure.States
             var assetProviderTask = assetsProvider.Initialize();
             await loadingCurtain.AnimatePhase(assetProviderTask, 0.20f);
             
-            var publicDataTask = publicModelProvider.Initialize();
+            var publicDataTask = publicContainerProvider.Initialize();
             await loadingCurtain.AnimatePhase(publicDataTask, 0.50f);
             
-            var privateDataTask = privateModelProvider.Initizele();
+            var privateDataTask = privateContainerProvider.Initizele();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
             notificationService.Initialize();

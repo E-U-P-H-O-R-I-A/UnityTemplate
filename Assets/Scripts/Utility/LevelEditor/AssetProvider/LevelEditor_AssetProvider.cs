@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Data;
 using Services.AssetProvider;
-using Services.PublicModelProvider;
+using Services.PublicContainerProvider;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -13,67 +13,67 @@ namespace Utility.LevelEditor
     /// </summary>
     public partial class LevelEditor
     {
-        private LevelElementsPublicModel elementsPublicModel;
-        private LevelMaterialPublicModel materialsPublicModel;
+        private LevelElementPublicContainer elementsPublicContainer;
+        private LevelMaterialPublicContainer materialsPublicContainer;
 
         private async void LoadAssets()
         {
-            var modelKeys = await assetsProvider.GetAssetsListByLabel<IPublicModel>(AssetsLabels.DATA);
-            var models = await assetsProvider.LoadAll<IPublicModel>(modelKeys);
+            var containerKeys = await assetsProvider.GetAssetsListByLabel<IPublicContainer>(AssetsLabels.DATA);
+            var containers = await assetsProvider.LoadAll<IPublicContainer>(containerKeys);
 
-            elementsPublicModel = models.OfType<LevelElementsPublicModel>().FirstOrDefault();
-            materialsPublicModel = models.OfType<LevelMaterialPublicModel>().FirstOrDefault();
+            elementsPublicContainer = containers.OfType<LevelElementPublicContainer>().FirstOrDefault();
+            materialsPublicContainer = containers.OfType<LevelMaterialPublicContainer>().FirstOrDefault();
         }
 
         private IEnumerable<ValueDropdownItem<LevelElement>> GetElementsList() =>
             GetElementsByType(typeLevelElement);
 
         private string GetElementID(LevelElement element) =>
-            elementsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.Prefab == element)?.ID ?? string.Empty;
+            elementsPublicContainer.Records
+                .FirstOrDefault(record => record != null && record.Prefab == element)?.Id ?? string.Empty;
 
         private string GetMaterialID(Material material) =>
-            materialsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.Material == material)?.ID ?? string.Empty;
+            materialsPublicContainer.Records
+                .FirstOrDefault(record => record != null && record.Material == material)?.Id ?? string.Empty;
         
         private LevelElement GetElementPrefabByID(string elementID)
         {
-            if (elementsPublicModel?.Schemes == null || string.IsNullOrEmpty(elementID))
+            if (elementsPublicContainer?.Records == null || string.IsNullOrEmpty(elementID))
                 return null;
 
-            return elementsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.ID == elementID)
+            return elementsPublicContainer.Records
+                .FirstOrDefault(record => record != null && record.Id == elementID)
                 ?.Prefab;
         }
 
         private Material GetMaterialByID(string materialID)
         {
-            if (materialsPublicModel?.Schemes == null || string.IsNullOrEmpty(materialID))
+            if (materialsPublicContainer?.Records == null || string.IsNullOrEmpty(materialID))
                 return null;
 
-            return materialsPublicModel.Schemes
-                .FirstOrDefault(scheme => scheme != null && scheme.ID == materialID)
+            return materialsPublicContainer.Records
+                .FirstOrDefault(record => record != null && record.Id == materialID)
                 ?.Material;
         }
 
         private IEnumerable<ValueDropdownItem<LevelElement>> GetElementsByType(LevelElementType type)
         {
-            if (elementsPublicModel?.Schemes == null)
+            if (elementsPublicContainer?.Records == null)
                 return Enumerable.Empty<ValueDropdownItem<LevelElement>>();
 
-            return elementsPublicModel.Schemes
-                .Where(scheme => scheme.LevelElementType == type)
-                .Select(scheme => new ValueDropdownItem<LevelElement>(scheme.ID, scheme.Prefab));
+            return elementsPublicContainer.Records
+                .Where(record => record.LevelElementType == type)
+                .Select(record => new ValueDropdownItem<LevelElement>(record.Id, record.Prefab));
         }
 
         private IEnumerable<ValueDropdownItem<Material>> GetMaterials()
         {
-            if (materialsPublicModel?.Schemes == null)
+            if (materialsPublicContainer?.Records == null)
                 return Enumerable.Empty<ValueDropdownItem<Material>>();
 
-            return materialsPublicModel.Schemes
-                .Where(scheme => scheme != null && scheme.Material != null)
-                .Select(scheme => new ValueDropdownItem<Material>(scheme.ID, scheme.Material));
+            return materialsPublicContainer.Records
+                .Where(record => record != null && record.Material != null)
+                .Select(record => new ValueDropdownItem<Material>(record.Id, record.Material));
         }
     }
 }

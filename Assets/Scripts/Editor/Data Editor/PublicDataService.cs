@@ -6,34 +6,34 @@ using UnityEngine;
 
 namespace Editor.Data_Editor
 {
-    public class PublicDataService : DataModelService
+    public class PublicDataService : DataContainerService
     {
         public const string FOLDER = "Assets/Resources_moved/Data";
         private const string ASSET_EXTENSION = ".asset";
 
-        private SerializedObject serializedModel;
+        private SerializedObject serializedContainer;
         private string snapshot;
 
-        public override string Title => "Public Models";
+        public override string Title => "Public Containers";
         public override string ShortTitle => "Public";
         public override string FolderPath => FOLDER;
-        public override SerializedObject SerializedModel => serializedModel;
+        public override SerializedObject SerializedContainer => serializedContainer;
 
         protected override string FileFilter => "*" + ASSET_EXTENSION;
 
-        public static string GetAssetPath(Type modelType) =>
-            $"{FOLDER}/{modelType.Name}{ASSET_EXTENSION}";
+        public static string GetAssetPath(Type containerType) =>
+            $"{FOLDER}/{containerType.Name}{ASSET_EXTENSION}";
 
         protected override string ExportPayload() =>
-            SelectedModel is ScriptableObject asset ? EditorJsonUtility.ToJson(asset, true) : null;
+            SelectedContainer is ScriptableObject asset ? EditorJsonUtility.ToJson(asset, true) : null;
 
         protected override bool TryImportPayload(string payload, out string error)
         {
             error = null;
 
-            if (SelectedModel is not ScriptableObject asset)
+            if (SelectedContainer is not ScriptableObject asset)
             {
-                error = "No model selected.";
+                error = "No container selected.";
                 return false;
             }
 
@@ -44,7 +44,7 @@ namespace Editor.Data_Editor
                 EditorJsonUtility.FromJsonOverwrite(payload, asset);
 
                 EditorUtility.SetDirty(asset);
-                ReplaceSelectedModel(asset);
+                ReplaceSelectedContainer(asset);
 
                 snapshot = baseline;
 
@@ -57,41 +57,41 @@ namespace Editor.Data_Editor
             }
         }
 
-        protected override Type FindModelType(string path) =>
-            SchemeReflection.FindModelType(path, typeof(IPublicModel));
+        protected override Type FindContainerType(string path) =>
+            RecordReflection.FindContainerType(path, typeof(IPublicContainer));
 
-        protected override object LoadModel(string path) =>
+        protected override object LoadContainer(string path) =>
             AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
 
-        protected override void WriteModel(string path, object model)
+        protected override void WriteContainer(string path, object container)
         {
-            var asset = (ScriptableObject)model;
+            var asset = (ScriptableObject)container;
 
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
 
-            var ids = SchemeReflection
-                .GetSchemes(asset)
-                .Select(scheme => scheme.ID)
+            var ids = RecordReflection
+                .GetRecords(asset)
+                .Select(record => record.Id)
                 .ToList();
 
             snapshot = EditorJsonUtility.ToJson(asset);
 
-            if (PublicModelCodeGenerator.Generate(asset.GetType(), ids))
+            if (PublicContainerCodeGenerator.Generate(asset.GetType(), ids))
                 AssetDatabase.Refresh();
         }
 
         protected override void EnsureFiles()
         {
-            foreach (var modelType in SchemeReflection.GetConcreteTypes(typeof(IPublicModel)))
+            foreach (var containerType in RecordReflection.GetConcreteTypes(typeof(IPublicContainer)))
             {
-                string path = GetAssetPath(modelType);
+                string path = GetAssetPath(containerType);
 
                 if (AssetDatabase.LoadAssetAtPath<ScriptableObject>(path) != null)
                     continue;
 
-                var asset = ScriptableObject.CreateInstance(modelType);
-                asset.name = modelType.Name;
+                var asset = ScriptableObject.CreateInstance(containerType);
+                asset.name = containerType.Name;
 
                 AssetDatabase.CreateAsset(asset, path);
             }
@@ -102,15 +102,15 @@ namespace Editor.Data_Editor
 
         protected override void OnSelectionChanged()
         {
-            var asset = SelectedModel as ScriptableObject;
+            var asset = SelectedContainer as ScriptableObject;
 
-            serializedModel = asset == null ? null : new SerializedObject(asset);
+            serializedContainer = asset == null ? null : new SerializedObject(asset);
             snapshot = asset == null ? null : EditorJsonUtility.ToJson(asset);
         }
 
         protected override void DiscardChanges()
         {
-            if (SelectedModel is not ScriptableObject asset || string.IsNullOrEmpty(snapshot))
+            if (SelectedContainer is not ScriptableObject asset || string.IsNullOrEmpty(snapshot))
                 return;
 
             EditorJsonUtility.FromJsonOverwrite(snapshot, asset);

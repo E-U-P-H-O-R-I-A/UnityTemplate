@@ -1,6 +1,6 @@
 using Data;
 using Services.WindowsService.Windows;
-using WindowType = Data.WindowsPublicModel.Type;
+using WindowType = Data.WindowPublicContainer.Id;
 
 namespace Services.WindowsService
 {

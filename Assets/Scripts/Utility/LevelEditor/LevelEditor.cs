@@ -1,6 +1,6 @@
 using Services.AssetProvider;
 using Services.LogService;
-using Services.PublicModelProvider;
+using Services.PublicContainerProvider;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
