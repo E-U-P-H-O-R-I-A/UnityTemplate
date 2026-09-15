@@ -7,11 +7,11 @@ namespace Utility.StateMachine
 {
     public abstract class StateMachine : IStateMachine
     {
-        private readonly Dictionary<Type, IState> registeredStates = new();
-        private readonly Queue<Type> pendingTransitions = new();
+        private readonly Dictionary<Type, IExitableState> registeredStates = new();
+        private readonly Queue<Transition> pendingTransitions = new();
         private readonly ILogService logService;
 
-        private IState currentState;
+        private IExitableState currentState;
         private bool isTransitioning;
 
         protected StateMachine(ILogService logService)
@@ -19,20 +19,26 @@ namespace Utility.StateMachine
             this.logService = logService;
         }
 
-        public void RegisterState(IState state) =>
+        public IExitableState CurrentState => currentState;
+
+        public void RegisterState(IExitableState state) =>
             registeredStates.Add(state.GetType(), state);
 
-        public void Enter<TState>() where TState : class, IState
-        {
-            var stateType = typeof(TState);
+        public void Enter<TState>() where TState : class, IState =>
+            EnqueueTransition(typeof(TState), state => ((IState)state).Enter());
 
+        public void Enter<TState, TPayload>(TPayload payload) where TState : class, IPayloadState<TPayload> =>
+            EnqueueTransition(typeof(TState), state => ((IPayloadState<TPayload>)state).Enter(payload));
+
+        private void EnqueueTransition(Type stateType, Func<IExitableState, UniTask> enterAction)
+        {
             if (!registeredStates.ContainsKey(stateType))
             {
                 logService.LogError($"[{GetType().Name}] State {stateType.Name} is not registered", LogCategory.Infrastructure);
                 return;
             }
 
-            pendingTransitions.Enqueue(stateType);
+            pendingTransitions.Enqueue(new Transition(stateType, enterAction));
 
             if (!isTransitioning)
                 ProcessTransitions().Forget();
@@ -44,8 +50,8 @@ namespace Utility.StateMachine
 
             try
             {
-                while (pendingTransitions.TryDequeue(out var stateType))
-                    await Transition(stateType);
+                while (pendingTransitions.TryDequeue(out var transition))
+                    await ApplyTransition(transition);
             }
             finally
             {
@@ -53,9 +59,9 @@ namespace Utility.StateMachine
             }
         }
 
-        private async UniTask Transition(Type stateType)
+        private async UniTask ApplyTransition(Transition transition)
         {
-            var nextState = registeredStates[stateType];
+            var nextState = registeredStates[transition.StateType];
 
             try
             {
@@ -64,11 +70,23 @@ namespace Utility.StateMachine
 
                 currentState = nextState;
 
-                await nextState.Enter();
+                await transition.EnterAction(nextState);
             }
             catch (Exception e)
             {
-                logService.LogError($"[{GetType().Name}] Transition to {stateType.Name} failed: {e}", LogCategory.Infrastructure);
+                logService.LogError($"[{GetType().Name}] Transition to {transition.StateType.Name} failed: {e}", LogCategory.Infrastructure);
+            }
+        }
+
+        private readonly struct Transition
+        {
+            public Type StateType { get; }
+            public Func<IExitableState, UniTask> EnterAction { get; }
+
+            public Transition(Type stateType, Func<IExitableState, UniTask> enterAction)
+            {
+                StateType = stateType;
+                EnterAction = enterAction;
             }
         }
     }

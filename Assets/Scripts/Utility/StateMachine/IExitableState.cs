@@ -2,8 +2,8 @@ using Cysharp.Threading.Tasks;
 
 namespace Utility.StateMachine
 {
-    public interface IState : IExitableState
+    public interface IExitableState
     {
-        UniTask Enter();
+        UniTask Exit();
     }
 }

@@ -22,6 +22,7 @@ namespace Services.LogService
         Windows = 7,
         LevelEditor = 8,
         PublicContainer = 9,
+        Gameplay = 10,
     }
     
     public static class LogSettings
@@ -45,6 +46,7 @@ namespace Services.LogService
             { LogCategory.PrivateContainer , true},
             { LogCategory.PublicContainer , true},
             { LogCategory.Infrastructure , true},
+            { LogCategory.Gameplay , true},
         };
         
         private static readonly Dictionary<LogCategory, Color> COLORS_SETTING = new()
@@ -59,6 +61,7 @@ namespace Services.LogService
             { LogCategory.PrivateContainer , new Color(0.71f, 0.90f, 0.90f)},
             { LogCategory.PublicContainer , new Color(0.62f, 0.84f, 0.98f)},
             { LogCategory.Infrastructure , new Color(0.36f, 0.73f, 0.94f)},
+            { LogCategory.Gameplay , new Color(0.99f, 0.65f, 0.55f)},
         };
 
         public static Color GetColor(LogCategory category) =>

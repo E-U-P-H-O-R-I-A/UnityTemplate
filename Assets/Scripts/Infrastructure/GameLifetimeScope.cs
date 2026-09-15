@@ -90,6 +90,7 @@ namespace Infrastructure
             MessagePipeOptions options = builder.RegisterMessagePipe();
 
             builder.RegisterMessageBroker<UpdateCurrencySignal>(options);
+            builder.RegisterMessageBroker<LevelFinishedSignal>(options);
         }
     }
 }

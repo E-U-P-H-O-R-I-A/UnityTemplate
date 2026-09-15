@@ -26,6 +26,8 @@ namespace Services.WindowsService
 
         private bool isProcessingOpenRequest;
 
+        public event Action<WindowType> WindowClosed;
+
         public WindowService(WindowsRootView rootView, IWindowFactory windowFactory,
             IPublicContainerProvider publicContainerProvider, ILogService logService)
         {
@@ -182,8 +184,24 @@ namespace Services.WindowsService
             ProcessQueue();
         }
 
-        private void OnWindowClosed(IWindowController closedWindow) =>
+        private void OnWindowClosed(IWindowController closedWindow)
+        {
+            NotifyWindowClosed(closedWindow);
+
             HandleWindowClosed(closedWindow).Forget();
+        }
+
+        private void NotifyWindowClosed(IWindowController closedWindow)
+        {
+            foreach ((WindowType type, Window window) in windows)
+            {
+                if (window.Controller != closedWindow)
+                    continue;
+
+                WindowClosed?.Invoke(type);
+                return;
+            }
+        }
 
         private async UniTaskVoid HandleWindowClosed(IWindowController closedWindow)
         {

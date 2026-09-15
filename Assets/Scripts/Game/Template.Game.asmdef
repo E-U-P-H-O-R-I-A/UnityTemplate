@@ -4,6 +4,7 @@
     "references": [
         "Template.Core",
         "Template.Infrastructure",
+        "MessagePipe",
         "UniTask",
         "VContainer",
         "UnityEngine.UI",
