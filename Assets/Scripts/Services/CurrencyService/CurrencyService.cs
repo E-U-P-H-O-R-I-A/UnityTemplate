@@ -1,5 +1,7 @@
 using Data;
+using MessagePipe;
 using Services.PrivateModelProvider;
+using Signals;
 using CurrencyType = Data.CurrencyPublicModel.Type;
 
 namespace Services.CurrencyService
@@ -7,12 +9,15 @@ namespace Services.CurrencyService
     public class CurrencyService : ICurrencyService
     {
         private readonly IPrivateModelProvider privateModelProvider;
-        
+        private readonly IPublisher<UpdateCurrencySignal> updateCurrencyPublisher;
+
         private CurrencyPrivateModel currencyPrivateModel;
 
-        public CurrencyService(IPrivateModelProvider privateModelProvider)
+        public CurrencyService(IPrivateModelProvider privateModelProvider,
+            IPublisher<UpdateCurrencySignal> updateCurrencyPublisher)
         {
             this.privateModelProvider = privateModelProvider;
+            this.updateCurrencyPublisher = updateCurrencyPublisher;
         }
 
         public void Initialize() => 
@@ -27,6 +32,7 @@ namespace Services.CurrencyService
         public void IncreaseCurrency(CurrencyTransaction transaction)
         {
             GetScheme(transaction.type).IncreaseCurrency(transaction.amount);
+            Publish(transaction.type);
             Save();
         }
 
@@ -36,6 +42,7 @@ namespace Services.CurrencyService
                 return false;
             
             GetScheme(transaction.type).DecreaseCurrency(transaction.amount);
+            Publish(transaction.type);
             Save();
 
             return true;
@@ -46,5 +53,8 @@ namespace Services.CurrencyService
 
         private CurrencyPrivateScheme GetScheme(CurrencyType currencyType) => 
             currencyPrivateModel.GetScheme(currencyType.ToString());
+
+        private void Publish(CurrencyType currencyType) => 
+            updateCurrencyPublisher.Publish(new UpdateCurrencySignal(currencyType, GetAmountCurrency(currencyType)));
     }
 }

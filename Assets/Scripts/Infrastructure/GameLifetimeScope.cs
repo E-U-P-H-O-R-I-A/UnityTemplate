@@ -1,4 +1,5 @@
 using Infrastructure.States;
+using MessagePipe;
 using Services.AssetProvider;
 using Services.CurrencyService;
 using Services.HapticService;
@@ -10,6 +11,7 @@ using Services.PublicModelProvider;
 using Services.SceneProvider;
 using Services.TutorialService;
 using Services.WindowsService;
+using Signals;
 using UnityEngine;
 using Utility.CoroutineRunner;
 using Utility.Factory;
@@ -64,6 +66,11 @@ namespace Infrastructure
 #elif UNITY_IOS
             builder.Register<NotificationIOSService>(Lifetime.Singleton).As<INotificationService>();
 #endif
+            
+            // --- Signals ---
+            MessagePipeOptions options = builder.RegisterMessagePipe();
+            
+            builder.RegisterMessageBroker<UpdateCurrencySignal>(options);
 
             DontDestroyOnLoad(this);
         }
