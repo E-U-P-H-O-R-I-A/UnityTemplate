@@ -1,4 +1,3 @@
-using Data;
 using WindowType = Data.WindowPublicContainer.Id;
 
 namespace Services.WindowsService.Windows
@@ -6,14 +5,14 @@ namespace Services.WindowsService.Windows
     public readonly struct WindowRequest
     {
         public WindowType WindowType { get; }
-        public BaseWindowParams Params { get; }
+        public WindowParams Params { get; }
         public int Priority { get; }
 
-        public WindowRequest(WindowType windowType, BaseWindowParams @params, int priority)
+        public WindowRequest(WindowType windowType, WindowParams windowParams, int priority)
         {
             WindowType = windowType;
             Priority = priority;
-            Params = @params;
+            Params = windowParams;
         }
     }
 }

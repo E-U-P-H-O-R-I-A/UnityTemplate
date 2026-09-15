@@ -1,17 +1,21 @@
+using System;
 using VContainer.Unity;
 
 namespace Game.UI.Lobby
 {
-    public class LobbyEntryPoint : IStartable
+    public class LobbyEntryPoint : IStartable, IDisposable
     {
-        private readonly Lobby lobby;
+        private readonly LobbyController lobbyController;
 
-        public LobbyEntryPoint(Lobby lobby)
+        public LobbyEntryPoint(LobbyController lobbyController)
         {
-            this.lobby = lobby;
+            this.lobbyController = lobbyController;
         }
 
         public void Start() =>
-            lobby.Initialize();
+            lobbyController.Initialize();
+
+        public void Dispose() =>
+            lobbyController.Dispose();
     }
 }

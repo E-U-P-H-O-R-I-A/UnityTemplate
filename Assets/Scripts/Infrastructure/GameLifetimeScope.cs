@@ -12,6 +12,8 @@ using Services.PublicContainerProvider;
 using Services.SceneProvider;
 using Services.TutorialService;
 using Services.WindowsService;
+using Services.WindowsService.Factory;
+using Services.WindowsService.Windows;
 using Signals;
 using UnityEngine;
 using Utility.CoroutineRunner;
@@ -26,7 +28,7 @@ namespace Infrastructure
     public class GameLifetimeScope : LifetimeScope
     {
         [Space]
-        [SerializeField] private WindowService windowService;
+        [SerializeField] private WindowsRootView windowsRoot;
         [SerializeField] private LoadingCurtain loadingCurtain;
         [SerializeField] private CoroutineRunner coroutineRunner;
 
@@ -44,9 +46,7 @@ namespace Infrastructure
             builder.Register<GameStateMachine>(Lifetime.Singleton).AsSelf().As<IStateMachine>();
             builder.RegisterComponentInNewPrefab(loadingCurtain, Lifetime.Singleton).As<ILoadingCurtain>();
             builder.RegisterComponentInNewPrefab(coroutineRunner, Lifetime.Singleton).As<ICoroutineRunner>();
-            builder.RegisterComponentInNewPrefab(windowService, Lifetime.Singleton)
-                .As<IWindowService>()
-                .As<IInitializableService>();
+            builder.RegisterComponentInNewPrefab(windowsRoot, Lifetime.Singleton);
 
             // --- Game states ---
             builder.Register<GameBootstrapState>(Lifetime.Singleton).AsSelf().As<IState>();
@@ -63,6 +63,8 @@ namespace Infrastructure
             builder.Register<Factory>(Lifetime.Singleton).As<IFactory>();
 
             // --- Services ---
+            builder.Register<WindowFactory>(Lifetime.Singleton).As<IWindowFactory>();
+            builder.Register<WindowService>(Lifetime.Singleton).As<IWindowService>().As<IInitializableService>();
             builder.Register<TutorialService>(Lifetime.Singleton).As<ITutorialService>().As<IInitializableService>();
             builder.Register<CurrencyService>(Lifetime.Singleton).As<ICurrencyService>().As<IInitializableService>();
             builder.Register<HapticService>(Lifetime.Singleton).As<IHapticService>().As<IInitializableService>();

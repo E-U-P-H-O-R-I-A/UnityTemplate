@@ -2,7 +2,7 @@ using Utility.TabManager;
 
 namespace Game.UI.Lobby.Tabs
 {
-    public class MarketTab : Tab
+    public class MarketTabView : TabView
     {
         public override TabType Type => TabType.Market;
     }

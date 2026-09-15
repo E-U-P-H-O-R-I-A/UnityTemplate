@@ -15,8 +15,7 @@ MonoBehaviour:
   records:
   - id: Shop
     priority: 100
-    prefab: {fileID: 0}
+    prefab: {fileID: 7144087832279046168, guid: 3e040e0c01775ac4fbc85fd072c0c82d, type: 3}
   - id: NoAds
     priority: 100
     prefab: {fileID: 0}
-

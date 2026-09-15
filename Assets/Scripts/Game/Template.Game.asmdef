@@ -6,7 +6,8 @@
         "Template.Infrastructure",
         "UniTask",
         "VContainer",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

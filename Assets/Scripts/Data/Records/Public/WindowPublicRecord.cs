@@ -10,10 +10,10 @@ namespace Data
     {
         [SerializeField] private string id;
         [SerializeField] private WindowPriority priority;
-        [SerializeField] private BaseWindow prefab;
+        [SerializeField] private WindowView prefab;
 
         public override string Id => id;
-        public BaseWindow Prefab => prefab;
+        public WindowView Prefab => prefab;
         public int Priority => (int)priority;
     }
 }

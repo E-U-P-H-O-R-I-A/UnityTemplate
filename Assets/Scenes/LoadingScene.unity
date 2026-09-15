@@ -264,7 +264,7 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7455479556625790735, guid: 4f25724b66db348478e3a2cdf2021dd0, type: 3}
-      propertyPath: windowService
+      propertyPath: windowsRoot
       value: 
       objectReference: {fileID: 5036185436134140285, guid: adf6ebf3e48ecbc4e8724765bd2b3cbc, type: 3}
     - target: {fileID: 7455479556625790735, guid: 4f25724b66db348478e3a2cdf2021dd0, type: 3}
