@@ -31,7 +31,7 @@ namespace Services.HapticService
             HapticController.hapticsEnabled = value;
             
             GetRecord().HapticEnabled = value;
-            privateContainerProvider.SaveContainer<SettingsPrivateContainer>();
+            privateContainerProvider.SaveContainer<SettingsPrivateContainer>().Forget();
         }
 
         public void PlayCustom(HapticSetting setting)

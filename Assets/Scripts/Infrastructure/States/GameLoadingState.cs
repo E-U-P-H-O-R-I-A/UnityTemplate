@@ -61,7 +61,7 @@ namespace Infrastructure.States
             var publicDataTask = publicContainerProvider.Initialize();
             await loadingCurtain.AnimatePhase(publicDataTask, 0.50f);
             
-            var privateDataTask = privateContainerProvider.Initizele();
+            var privateDataTask = privateContainerProvider.Initialize();
             await loadingCurtain.AnimatePhase(privateDataTask, 0.70f);
 
             notificationService.Initialize();

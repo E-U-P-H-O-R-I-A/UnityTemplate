@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using Data;
 using MessagePipe;
 using Services.PrivateContainerProvider;
@@ -49,7 +50,7 @@ namespace Services.CurrencyService
         }
 
         private void Save() => 
-            privateContainerProvider.SaveContainer<CurrencyPrivateContainer>();
+            privateContainerProvider.SaveContainer<CurrencyPrivateContainer>().Forget();
 
         private CurrencyPrivateRecord GetRecord(CurrencyId currencyType) => 
             currencyPrivateContainer.GetRecord(currencyType.ToString());

@@ -55,16 +55,18 @@ namespace Infrastructure
             builder.Register<LogService>(Lifetime.Singleton).As<ILogService>();
             builder.Register<Factory>(Lifetime.Singleton).As<IFactory>();
             
-#if UNITY_EDITOR
-            builder.Register<StandaloneInputService>(Lifetime.Singleton).As<IInputService>().As<ITickable>(); 
-#elif UNITY_ANDROID || UNITY_IOS
+#if !UNITY_EDITOR && (UNITY_ANDROID || UNITY_IOS)
             builder.Register<MobileInputService>(Lifetime.Singleton).As<IInputService>().As<ITickable>();
+#else
+            builder.Register<StandaloneInputService>(Lifetime.Singleton).As<IInputService>().As<ITickable>();
 #endif
             
 #if UNITY_ANDROID
             builder.Register<NotificationAndroidService>(Lifetime.Singleton).As<INotificationService>();
 #elif UNITY_IOS
             builder.Register<NotificationIOSService>(Lifetime.Singleton).As<INotificationService>();
+#else
+            builder.Register<NullNotificationService>(Lifetime.Singleton).As<INotificationService>();
 #endif
             
             // --- Signals ---

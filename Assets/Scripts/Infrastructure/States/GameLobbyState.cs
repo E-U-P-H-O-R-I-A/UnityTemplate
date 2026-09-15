@@ -29,6 +29,8 @@ namespace Infrastructure.States
         {
             logService.Log("GameLobbyState Enter", LogCategory.Infrastructure);
             
+            loadingCurtain.Show();
+            
             var loadSceneTask = sceneProvider.Load(AssetsPath.LOBBY_SCENE);
             
             await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
@@ -45,8 +47,6 @@ namespace Infrastructure.States
         public async UniTask Exit()
         {
             logService.Log("GameLobbyState Exit", LogCategory.Infrastructure);
-            
-            loadingCurtain.Show();
         }
 
         private void ResolveLobby()

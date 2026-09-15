@@ -19,6 +19,9 @@ namespace Utility.LoadingCurtain
 
         public void Show()
         {
+            if (gameObject.activeSelf)
+                return;
+
             gameObject.SetActive(true);
             canvasGroup.alpha = 1f;
             progressFill.value = 0f;

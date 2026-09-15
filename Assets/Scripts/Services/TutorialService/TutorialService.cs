@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using Data;
 using Services.LogService;
 using Services.PrivateContainerProvider;
@@ -133,7 +134,7 @@ namespace Services.TutorialService
                 return;
 
             currentTutorial.PrivateRecord.Complete();
-            privateContainerProvider.SaveContainer<TutorialPrivateContainer>();
+            privateContainerProvider.SaveContainer<TutorialPrivateContainer>().Forget();
 
             logService.Log($"Tutorial {currentTutorial} completed.", LogCategory.Tutorial);
 

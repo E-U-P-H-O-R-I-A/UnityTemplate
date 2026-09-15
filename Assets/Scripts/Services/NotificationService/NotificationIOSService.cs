@@ -6,6 +6,7 @@ using VContainer;
 using NotificationId = Data.NotificationPublicContainer.Id;
 #if UNITY_IOS
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Unity.Notifications.iOS;
 #endif
@@ -57,7 +58,7 @@ namespace Services.NotificationService
                            $"message: {publicRecord.Message}; {publicRecord.FireAfterSeconds} seconds to shoot", LogCategory.Service);
 
             privateRecord.SetIosNotificationId(id);
-            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>().Forget();
 #endif
         }
 
@@ -73,7 +74,7 @@ namespace Services.NotificationService
             logService.Log($"Cancelled notification id: {privateRecord.IosNotificationId}, {type}", LogCategory.Service);
 
             privateContainer.DeleteRecordById(privateRecord.Id);
-            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>().Forget();
 #endif
         }
 

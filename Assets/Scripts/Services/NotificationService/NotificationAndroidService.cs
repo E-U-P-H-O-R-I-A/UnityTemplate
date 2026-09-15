@@ -67,7 +67,7 @@ namespace Services.NotificationService
 
             privateRecord.SetAndroidNotificationId(id);
             
-            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>().Forget();
 #endif
         }
 
@@ -82,7 +82,7 @@ namespace Services.NotificationService
             logService.Log($"Cancelled notification id: {privateRecord.AndroidNotificationId}, {type}", LogCategory.Service);
             
             privateContainer.DeleteRecordById(privateRecord.Id);
-            privateContainerProvider.SaveContainer<NotificationPrivateContainer>();
+            privateContainerProvider.SaveContainer<NotificationPrivateContainer>().Forget();
 #endif
         }
         

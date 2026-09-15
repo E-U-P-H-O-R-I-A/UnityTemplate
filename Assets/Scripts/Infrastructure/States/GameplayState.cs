@@ -24,6 +24,8 @@ namespace Infrastructure.States
         {
             logService.Log("GamePlayState Enter", LogCategory.Infrastructure);
             
+            loadingCurtain.Show();
+            
             var loadSceneTask = sceneProvider.Load(AssetsPath.GAMEPLAY_SCENE);
             
             await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);

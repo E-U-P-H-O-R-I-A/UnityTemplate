@@ -15,6 +15,7 @@ namespace Services.PrivateContainerProvider
         private const string FOLDER_NAME = "PrivateData";
         private const string TEMP_EXTENSION = ".tmp";
         private const string CORRUPT_EXTENSION = ".corrupt";
+        private const string SYNC_TEMP_EXTENSION = ".sync.tmp";
 
         private readonly Dictionary<Type, IPrivateContainer> containers = new();
         private readonly Dictionary<Type, string> queuedJson = new();
@@ -26,9 +27,10 @@ namespace Services.PrivateContainerProvider
             this.logService = logService;
         }
         
-        public async UniTask Initizele(CancellationToken ct = default)
+        public async UniTask Initialize(CancellationToken ct = default)
         {
             containers.Clear();
+            SubscribeToApplicationEvents();
 
             var containerTypes = FindPrivateContainerTypes();
 
@@ -95,6 +97,48 @@ namespace Services.PrivateContainerProvider
         }
 
         #region Helpers
+
+        private void SubscribeToApplicationEvents()
+        {
+            Application.focusChanged -= OnFocusChanged;
+            Application.focusChanged += OnFocusChanged;
+            Application.quitting -= SaveAllSync;
+            Application.quitting += SaveAllSync;
+        }
+
+        private void OnFocusChanged(bool hasFocus)
+        {
+            if (!hasFocus)
+                SaveAllSync();
+        }
+
+        private void SaveAllSync()
+        {
+            foreach (var kv in containers)
+            {
+                try
+                {
+                    EnsureFolder();
+                    WriteAtomicSync(GetPathForType(kv.Key), kv.Value.ExportToJson());
+                }
+                catch (Exception e)
+                {
+                    logService.LogError($"[PrivateContainerProvider] Failed to save container {kv.Key.FullName} synchronously: {e}", LogCategory.PrivateContainer);
+                }
+            }
+        }
+
+        private static void WriteAtomicSync(string path, string json)
+        {
+            var temporary = path + SYNC_TEMP_EXTENSION;
+
+            File.WriteAllText(temporary, json);
+
+            if (File.Exists(path))
+                File.Delete(path);
+
+            File.Move(temporary, path);
+        }
 
         private async UniTask SaveTyped(Type type, IPrivateContainer container, CancellationToken ct)
         {
