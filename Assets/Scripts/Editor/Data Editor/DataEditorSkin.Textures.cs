@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public sealed partial class DataEditorSkin
     {

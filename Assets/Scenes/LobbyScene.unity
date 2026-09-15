@@ -836,7 +836,7 @@ PrefabInstance:
       objectReference: {fileID: 1054114494}
     - target: {fileID: 6386500484491795253, guid: 5cc987c092e62d9439439abf263f4cba, type: 3}
       propertyPath: m_Name
-      value: LobbyLifeTimeScope
+      value: LobbyLifetimeScope
       objectReference: {fileID: 0}
     - target: {fileID: 6878785848675361357, guid: 5cc987c092e62d9439439abf263f4cba, type: 3}
       propertyPath: m_LocalPosition.x

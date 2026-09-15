@@ -1,9 +1,10 @@
 using System;
 using UnityEngine;
+using VContainer.Unity;
 
 namespace Services.InputService
 {
-    public abstract class InputService : IInputService
+    public abstract class InputService : IInputService, ITickable
     {
         protected enum States
         {

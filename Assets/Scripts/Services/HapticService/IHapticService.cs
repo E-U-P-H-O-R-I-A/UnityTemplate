@@ -2,11 +2,10 @@ using HapticId = Data.HapticPublicContainer.Id;
 
 namespace Services.HapticService
 {
-    public interface IHapticService
+    public interface IHapticService : IInitializableService
     {
         bool IsEnabled { get;}
 
-        void Initialize();
         void ToggleHaptic();
         void PlayPreset(HapticId preset);
         void PlayCustom(HapticSetting setting);

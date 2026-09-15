@@ -1,12 +1,9 @@
 using Cysharp.Threading.Tasks;
-using Game.UI.Lobby;
 using Services.AssetProvider;
 using Services.LogService;
 using Services.SceneProvider;
 using Utility.LoadingCurtain;
 using Utility.StateMachine;
-using VContainer;
-using VContainer.Unity;
 
 namespace Infrastructure.States
 {
@@ -15,8 +12,6 @@ namespace Infrastructure.States
         private readonly ILoadingCurtain loadingCurtain;
         private readonly ISceneProvider sceneProvider;
         private readonly ILogService logService;
-        
-        private Lobby lobby;
 
         public GameLobbyState(ILogService logService, ILoadingCurtain loadingCurtain, ISceneProvider sceneProvider)
         {
@@ -28,17 +23,10 @@ namespace Infrastructure.States
         public async UniTask Enter()
         {
             logService.Log("GameLobbyState Enter", LogCategory.Infrastructure);
-            
+
             loadingCurtain.Show();
-            
-            var loadSceneTask = sceneProvider.Load(AssetsPath.LOBBY_SCENE);
-            
-            await loadingCurtain.AnimatePhase(loadSceneTask, 0.90f);
-            
-            ResolveLobby();
-            
-            lobby.Initialize();
-            
+
+            await loadingCurtain.AnimatePhase(sceneProvider.Load(AssetsPath.LOBBY_SCENE), 0.90f);
             await loadingCurtain.Finish();
 
             loadingCurtain.Hide();
@@ -47,13 +35,6 @@ namespace Infrastructure.States
         public async UniTask Exit()
         {
             logService.Log("GameLobbyState Exit", LogCategory.Infrastructure);
-        }
-
-        private void ResolveLobby()
-        {
-            var lobbyScope = LifetimeScope.Find<LobbyLifeTimeScope>();
-            
-            lobby = lobbyScope.Container.Resolve<Lobby>();
         }
     }
 }

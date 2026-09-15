@@ -1,6 +1,6 @@
 namespace Services.LogService
 {
-    public interface ILogService : IService
+    public interface ILogService
     {
         public string GetAllLogs();
         public string GetLogsBySeverity(LogSeverity severity);

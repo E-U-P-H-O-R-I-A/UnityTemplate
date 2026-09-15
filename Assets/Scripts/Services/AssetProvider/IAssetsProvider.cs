@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 
 namespace Services.AssetProvider
 {
-    public interface IAssetsProvider : IService
+    public interface IAssetsProvider
     {
         UniTask Initialize();
         UniTask<TAsset> Load<TAsset>(AssetReference assetReference) where TAsset : class;

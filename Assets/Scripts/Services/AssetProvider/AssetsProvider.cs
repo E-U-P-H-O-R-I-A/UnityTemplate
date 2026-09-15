@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using Services.LogService;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace Services.AssetProvider
 {
     public class AssetsProvider : IAssetsProvider
     {
-        private readonly Dictionary<string, AsyncOperationHandle> assetRequests = new ();
+        private readonly Dictionary<(string key, Type type), AsyncOperationHandle> assetRequests = new();
         private readonly ILogService logService;
 
         public AssetsProvider(ILogService logService)
@@ -19,85 +20,39 @@ namespace Services.AssetProvider
             this.logService = logService;
         }
 
-        public async UniTask Initialize() => 
+        public async UniTask Initialize() =>
             await Addressables.InitializeAsync().ToUniTask();
 
         public async UniTask<TAsset> Load<TAsset>(string key) where TAsset : class
         {
-            AsyncOperationHandle handle;
-
             try
             {
-                if (!assetRequests.TryGetValue(key, out handle))
-                {
-                    handle = Addressables.LoadAssetAsync<TAsset>(key);
-                    assetRequests.Add(key, handle);
-                }
+                var handle = GetOrCreateHandle<TAsset>(key);
 
                 await handle.ToUniTask();
-                
+
                 return handle.Result as TAsset;
             }
             catch (Exception e)
             {
                 logService.LogError($"Failed to load asset with key {key}, error : {e}", LogCategory.Service);
-                
+
                 return null;
             }
         }
-        
+
         public async UniTask<TAsset> LoadPrefab<TAsset>(string key) where TAsset : class
         {
-            AsyncOperationHandle handle;
+            var prefab = await Load<GameObject>(key);
 
-            try
-            {
-                if (!assetRequests.TryGetValue(key, out handle))
-                {
-                    handle = Addressables.LoadAssetAsync<GameObject>(key);
-                    assetRequests.Add(key, handle);
-                }
-
-                await handle.ToUniTask();
-                var prefab = handle.Result as GameObject;
-                
-                return prefab.GetComponent<TAsset>();
-            }
-            catch (Exception e)
-            {
-                logService.LogError($"Failed to load asset with key {key}, error : {e}", LogCategory.Service);
-                
-                return null;
-            }
+            return prefab == null ? null : prefab.GetComponent<TAsset>();
         }
 
-        public async UniTask<TAsset> Load<TAsset>(AssetReference assetReference) where TAsset : class
-        {
-            try
-            {
-                return await Load<TAsset>(assetReference.AssetGUID);
-            }
-            catch (Exception e)
-            {
-                logService.LogError($"Failed to load asset with reference {assetReference}, error : {e}", LogCategory.Service);
-                
-                return null;
-            }
-        }
+        public async UniTask<TAsset> Load<TAsset>(AssetReference assetReference) where TAsset : class =>
+            await Load<TAsset>(assetReference.AssetGUID);
 
-        public async UniTask<List<string>> GetAssetsListByLabel<TAsset>(string label)
-        {
-            try
-            {
-                return await GetAssetsListByLabel(label, typeof(TAsset));
-            }
-            catch (Exception e)
-            {
-                logService.LogError($"Failed to get assets list by label {label}, error : {e}", LogCategory.Service);
-                
-                return new List<string>();
-            }
-        }
+        public async UniTask<List<string>> GetAssetsListByLabel<TAsset>(string label) =>
+            await GetAssetsListByLabel(label, typeof(TAsset));
 
         public async UniTask<List<string>> GetAssetsListByLabel(string label, Type type = null)
         {
@@ -106,12 +61,10 @@ namespace Services.AssetProvider
                 var operationHandle = Addressables.LoadResourceLocationsAsync(label, type);
                 var locations = await operationHandle.ToUniTask();
 
-                List<string> assetKeys = new List<string>(locations.Count);
+                var assetKeys = new List<string>(locations.Count);
 
                 foreach (IResourceLocation location in locations)
-                {
                     assetKeys.Add(location.PrimaryKey);
-                }
 
                 Addressables.Release(operationHandle);
 
@@ -120,67 +73,58 @@ namespace Services.AssetProvider
             catch (Exception e)
             {
                 logService.LogError($"Failed to get assets list by label {label}, error : {e}", LogCategory.Service);
-                
+
                 return new List<string>();
             }
         }
 
         public async UniTask<TAsset[]> LoadAll<TAsset>(List<string> keys) where TAsset : class
         {
-            try
-            {
-                List<UniTask<TAsset>> tasks = new List<UniTask<TAsset>>(keys.Count);
+            var tasks = new List<UniTask<TAsset>>(keys.Count);
 
-                foreach (string key in keys)
-                {
-                    tasks.Add(Load<TAsset>(key));
-                }
+            foreach (string key in keys)
+                tasks.Add(Load<TAsset>(key));
 
-                return await UniTask.WhenAll(tasks);
-            }
-            catch (Exception e)
-            {
-                logService.LogError($"Failed to load all assets, error : {e}", LogCategory.Service);
-                
-                return Array.Empty<TAsset>();
-            }
+            return await UniTask.WhenAll(tasks);
         }
 
         public async UniTask WarmupAssetsByLabel(string label)
         {
-            try
-            {
-                var assetsList = await GetAssetsListByLabel(label);
-                await LoadAll<object>(assetsList);
-            }
-            catch (Exception e)
-            {
-                logService.LogError($"Failed to warmup assets by label {label}, error : {e}", LogCategory.Service);
-            }
+            var assetsList = await GetAssetsListByLabel(label);
+            await LoadAll<object>(assetsList);
         }
 
         public async UniTask ReleaseAssetsByLabel(string label)
         {
             var assetsList = await GetAssetsListByLabel(label);
-            
-            foreach (var assetKey in assetsList)
+            var keysToRelease = new HashSet<string>(assetsList);
+
+            foreach (var cacheKey in assetRequests.Keys.Where(cacheKey => keysToRelease.Contains(cacheKey.key)).ToList())
             {
-                if (assetRequests.TryGetValue(assetKey, out var handler))
-                {
-                    Addressables.Release(handler);
-                    assetRequests.Remove(assetKey);
-                }
+                Addressables.Release(assetRequests[cacheKey]);
+                assetRequests.Remove(cacheKey);
             }
         }
 
         public void Cleanup()
         {
             foreach (var assetRequest in assetRequests)
-            {
                 Addressables.Release(assetRequest.Value);
-            }
 
             assetRequests.Clear();
+        }
+
+        private AsyncOperationHandle GetOrCreateHandle<TAsset>(string key) where TAsset : class
+        {
+            var cacheKey = (key, typeof(TAsset));
+
+            if (assetRequests.TryGetValue(cacheKey, out var handle))
+                return handle;
+
+            handle = Addressables.LoadAssetAsync<TAsset>(key);
+            assetRequests.Add(cacheKey, handle);
+
+            return handle;
         }
     }
 }

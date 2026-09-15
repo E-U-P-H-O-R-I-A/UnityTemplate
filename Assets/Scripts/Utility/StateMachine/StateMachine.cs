@@ -19,8 +19,8 @@ namespace Utility.StateMachine
             this.logService = logService;
         }
 
-        public void RegisterState<TState>(TState state) where TState : IState =>
-            registeredStates.Add(typeof(TState), state);
+        public void RegisterState(IState state) =>
+            registeredStates.Add(state.GetType(), state);
 
         public void Enter<TState>() where TState : class, IState
         {

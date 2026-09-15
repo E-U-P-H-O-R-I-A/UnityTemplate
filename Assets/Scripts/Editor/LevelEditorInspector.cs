@@ -1,9 +1,9 @@
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
-using Utility.LevelEditor;
+using Tools.LevelEditor;
 
-namespace Editor
+namespace EditorTools
 {
     [CustomEditor(typeof(LevelEditor))]
     public class LevelEditorInspector : OdinEditor

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public static class ContainerNaming
     {

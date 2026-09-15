@@ -46,7 +46,6 @@ namespace Services.WindowsService.Windows
         private bool isProcessingClosing;
         
         private ILogService logService;
-        private ILogService LogService => logService ??= new global::Services.LogService.LogService();
 
         protected TParams Params { get; private set; }
 
@@ -87,7 +86,7 @@ namespace Services.WindowsService.Windows
             }
             catch (Exception ex)
             {
-                LogService.LogError($"[{name}] Failed to open window: {ex}", LogCategory.Windows);
+                logService?.LogError($"[{name}] Failed to open window: {ex}", LogCategory.Windows);
                 DisableButtons();
                 ForceHide();
             }
@@ -122,7 +121,7 @@ namespace Services.WindowsService.Windows
             }
             catch (Exception ex)
             {
-                LogService.LogError($"[{name}] Failed to close window: {ex}", LogCategory.Windows);
+                logService?.LogError($"[{name}] Failed to close window: {ex}", LogCategory.Windows);
                 ForceHide();
                 RaiseClosed();
             }
@@ -209,7 +208,7 @@ namespace Services.WindowsService.Windows
 
             UnityEditor.EditorUtility.SetDirty(this);
 
-            LogService.Log($"[{name}] Found {windowAnimations.Count} BaseWindowAnimation components.", LogCategory.Windows);
+            Debug.Log($"[{name}] Found {windowAnimations.Count} BaseWindowAnimation components.");
         }
 
 #endif

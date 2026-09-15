@@ -17,9 +17,6 @@ namespace Utility.Factory
             this.assetsProvider = assetsProvider;
         }
 
-        public TObject Create<TObject>() => 
-            resolver.Resolve<TObject>();
-        
         public TObject CreateFromPrefab<TObject>(TObject prefab, Transform parent = null)
             where TObject : Component
         {

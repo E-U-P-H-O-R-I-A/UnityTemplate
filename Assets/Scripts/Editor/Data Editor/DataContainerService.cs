@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public abstract class DataContainerService
     {

@@ -177,7 +177,10 @@ namespace Services.WindowsService
             }
         }
         
-        private async void OnWindowClosed(BaseWindow closedWindow)
+        private void OnWindowClosed(BaseWindow closedWindow) =>
+            HandleWindowClosed(closedWindow).Forget();
+
+        private async UniTaskVoid HandleWindowClosed(BaseWindow closedWindow)
         {
             if (closedWindow != currentWindow)
                 return;

@@ -42,7 +42,10 @@ namespace Services.HapticService
             HapticPatterns.PlayConstant(setting.Amplitude, setting.Frequency, setting.Duration);
         }
 
-        public async void PlaySequence(HapticSequence sequence)
+        public void PlaySequence(HapticSequence sequence) =>
+            PlaySequenceAsync(sequence).Forget();
+
+        private async UniTaskVoid PlaySequenceAsync(HapticSequence sequence)
         {
             if (!IsCanPlay())
                 return;

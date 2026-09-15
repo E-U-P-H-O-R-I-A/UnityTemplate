@@ -3,10 +3,8 @@ using CurrencyId = Data.CurrencyPublicContainer.Id;
 
 namespace Services.CurrencyService
 {
-    public interface ICurrencyService
+    public interface ICurrencyService : IInitializableService
     {
-        void Initialize();
-        
         int GetAmountCurrency(CurrencyId currencyType);
         void IncreaseCurrency(CurrencyTransaction transaction);
         bool IsEnoughCurrency(CurrencyTransaction transaction);

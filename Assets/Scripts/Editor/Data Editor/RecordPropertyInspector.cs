@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public class RecordPropertyInspector
     {

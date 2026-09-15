@@ -52,9 +52,7 @@ namespace Services.PublicContainerProvider
             if (containers.TryGetValue(typeof(TContainer), out var temp) && temp is TContainer typed)
                 return typed;
 
-            logService.LogError($"[PublicContainerProvider] Container {typeof(TContainer).FullName} is not loaded", LogCategory.PublicContainer);
-
-            return default;
+            throw new InvalidOperationException($"[PublicContainerProvider] Container {typeof(TContainer).FullName} is not loaded");
         }
 
         #region Helpers

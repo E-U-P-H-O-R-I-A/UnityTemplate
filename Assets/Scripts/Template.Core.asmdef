@@ -1,0 +1,28 @@
+{
+    "name": "Template.Core",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "UniTask.Addressables",
+        "VContainer",
+        "MessagePipe",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Unity.InputSystem",
+        "Unity.Notifications",
+        "Unity.Notifications.Android",
+        "Unity.Notifications.iOS",
+        "Lofelt.NiceVibrations",
+        "UnityEngine.UI",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

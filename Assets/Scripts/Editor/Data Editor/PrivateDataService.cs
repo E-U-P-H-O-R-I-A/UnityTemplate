@@ -4,7 +4,7 @@ using System.Linq;
 using Data;
 using UnityEngine;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public class PrivateDataService : DataContainerService
     {

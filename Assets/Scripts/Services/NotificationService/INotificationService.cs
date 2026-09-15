@@ -4,10 +4,8 @@ using NotificationId = Data.NotificationPublicContainer.Id;
 
 namespace Services.NotificationService
 {
-    public interface INotificationService
+    public interface INotificationService : IInitializableService
     {
-        void Initialize();
-        
         void SendNotification(NotificationId type);
         
         void CancelNotification(NotificationId type);

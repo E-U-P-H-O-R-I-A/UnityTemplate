@@ -233,7 +233,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6386500484491795253, guid: b13313f365e1545d297edd45708d3a40, type: 3}
       propertyPath: m_Name
-      value: SceneLifeTimeScope
+      value: SceneLifetimeScope
       objectReference: {fileID: 0}
     - target: {fileID: 6878785848675361357, guid: b13313f365e1545d297edd45708d3a40, type: 3}
       propertyPath: m_LocalPosition.x

@@ -7,7 +7,7 @@ using System.Reflection;
 using Data;
 using UnityEngine;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public static class RecordReflection
     {

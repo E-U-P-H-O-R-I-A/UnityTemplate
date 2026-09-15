@@ -1,0 +1,20 @@
+{
+    "name": "Template.Infrastructure",
+    "rootNamespace": "",
+    "references": [
+        "Template.Core",
+        "UniTask",
+        "VContainer",
+        "MessagePipe",
+        "MessagePipe.VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

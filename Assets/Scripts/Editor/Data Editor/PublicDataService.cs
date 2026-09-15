@@ -4,11 +4,11 @@ using Data;
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor.Data_Editor
+namespace EditorTools.DataEditor
 {
     public class PublicDataService : DataContainerService
     {
-        public const string FOLDER = "Assets/Resources_moved/Data";
+        public const string FOLDER = "Assets/Data";
         private const string ASSET_EXTENSION = ".asset";
 
         private SerializedObject serializedContainer;

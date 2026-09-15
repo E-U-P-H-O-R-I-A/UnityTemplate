@@ -4,7 +4,7 @@ using Data;
 
 namespace Services.PrivateContainerProvider
 {
-    public interface IPrivateContainerProvider : IService
+    public interface IPrivateContainerProvider
     {
         public UniTask Initialize(CancellationToken ct = default);
         public UniTask SaveAll(CancellationToken ct = default);

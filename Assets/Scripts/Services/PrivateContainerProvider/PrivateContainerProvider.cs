@@ -66,9 +66,7 @@ namespace Services.PrivateContainerProvider
             if (containers.TryGetValue(typeof(TContainer), out var temp) && temp is TContainer typed)
                 return typed;
 
-            logService.LogError($"[PrivateContainerProvider] Container {typeof(TContainer).FullName} is not registered", LogCategory.PrivateContainer);
-
-            return default;
+            throw new InvalidOperationException($"[PrivateContainerProvider] Container {typeof(TContainer).FullName} is not registered");
         }
 
         public async UniTask SaveAll(CancellationToken ct = default)
@@ -86,12 +84,6 @@ namespace Services.PrivateContainerProvider
         public async UniTask SaveContainer<TContainer>(CancellationToken ct = default) where TContainer : IPrivateContainer
         {
             var container = GetContainer<TContainer>();
-
-            if (container == null)
-            {
-                logService.LogError($"[PrivateContainerProvider] Nothing was saved, container {typeof(TContainer).FullName} is not registered", LogCategory.PrivateContainer);
-                return;
-            }
 
             await SaveTyped(typeof(TContainer), container, ct);
         }

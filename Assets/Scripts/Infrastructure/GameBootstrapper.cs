@@ -1,5 +1,6 @@
+using System.Collections.Generic;
 using Infrastructure.States;
-using Utility.Factory;
+using Utility.StateMachine;
 using VContainer.Unity;
 
 namespace Infrastructure
@@ -7,21 +8,19 @@ namespace Infrastructure
     public class GameBootstrapper : IStartable
     {
         private readonly GameStateMachine gameStateMachine;
-        private readonly IFactory factory;
-        
-        public GameBootstrapper(GameStateMachine gameStateMachine, IFactory factory)
+        private readonly IEnumerable<IState> states;
+
+        public GameBootstrapper(GameStateMachine gameStateMachine, IEnumerable<IState> states)
         {
             this.gameStateMachine = gameStateMachine;
-            this.factory = factory;
+            this.states = states;
         }
 
         public void Start()
         {
-            gameStateMachine.RegisterState(factory.Create<GameBootstrapState>());
-            gameStateMachine.RegisterState(factory.Create<GameLoadingState>());
-            gameStateMachine.RegisterState(factory.Create<GameLobbyState>());
-            gameStateMachine.RegisterState(factory.Create<GameplayState>()); 
-            
+            foreach (var state in states)
+                gameStateMachine.RegisterState(state);
+
             gameStateMachine.Enter<GameBootstrapState>();
         }
     }

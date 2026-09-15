@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace Services.InputService
 {
-    internal sealed class StandaloneInputService : InputService
+    public sealed class StandaloneInputService : InputService
     {
         private Mouse mouse;
 

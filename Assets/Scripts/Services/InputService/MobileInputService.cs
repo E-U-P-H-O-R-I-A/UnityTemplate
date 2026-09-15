@@ -4,7 +4,7 @@ using InputSystemTouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 namespace Services.InputService
 {
-    internal sealed class MobileInputService : InputService
+    public sealed class MobileInputService : InputService
     {
         private float? previousPinchDistance;
 
